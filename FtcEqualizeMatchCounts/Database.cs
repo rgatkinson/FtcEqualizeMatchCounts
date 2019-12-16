@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Data.Sqlite;
+
 namespace FtcEqualizeMatchCounts
     {
     class Database : IDisposable
@@ -11,7 +13,7 @@ namespace FtcEqualizeMatchCounts
         //---------------------------------------------------------------------------------------------------
 
         string fileName = null;
-        SQLiteConnection connection = null;
+        SqliteConnection connection = null;
         bool disposed = false;
 
         //---------------------------------------------------------------------------------------------------
@@ -59,9 +61,9 @@ namespace FtcEqualizeMatchCounts
             Close();
 
             string uri = new System.Uri(fileName).AbsoluteUri;
-            string cs = "URI=file://" + fileName;
+            string cs = "Filename=" + fileName;
 
-            connection = new SQLiteConnection(cs);
+            connection = new SqliteConnection(cs);
             connection.Open();
             }
 
@@ -80,12 +82,12 @@ namespace FtcEqualizeMatchCounts
 
         public List<List<object>> ExecuteQuery(string query)
             {
-            using var cmd = new SQLiteCommand(connection);
+            using var cmd = connection.CreateCommand();
             cmd.CommandText = query;
             cmd.Prepare();
 
             List<List<object>> result = new List<List<object>>();
-            SQLiteDataReader rdr = cmd.ExecuteReader();
+            SqliteDataReader rdr = cmd.ExecuteReader();
             while (rdr.Read())
                 {
                 List<object> row = new List<object>();
@@ -120,7 +122,7 @@ namespace FtcEqualizeMatchCounts
             return result;
             }
 
-        protected byte[] GetBytes(SQLiteDataReader rdr, int i)
+        protected byte[] GetBytes(SqliteDataReader rdr, int i)
             {
             long cb = rdr.GetBytes(i, 0, null, 0, 0);
             byte[] bytes = new byte[cb];

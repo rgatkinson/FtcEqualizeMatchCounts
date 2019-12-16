@@ -80,11 +80,17 @@ namespace FtcEqualizeMatchCounts
         // Querying
         //---------------------------------------------------------------------------------------------------
 
+        // See
+        //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
+        //  https://stackoverflow.com/questions/51933421/system-data-sqlite-vs-microsoft-data-sqlite
+        //
+        // "we embrace the fact that SQLite only supports four primitive types (INTEGER, REAL, TEXT, and BLOB)
+        // and implement ADO.NET APIs in a way that helps you coerce values between these and .NET types"
+        // 
         public List<List<object>> ExecuteQuery(string query)
             {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = query;
-            cmd.Prepare();
 
             List<List<object>> result = new List<List<object>>();
             SqliteDataReader rdr = cmd.ExecuteReader();
@@ -97,22 +103,26 @@ namespace FtcEqualizeMatchCounts
                     object value = null;
                     if (rdr.IsDBNull(i)) { value = null; }
                     else if (type == typeof(Int64))  { value = rdr.GetInt64(i); }
-                    else if (type == typeof(Int32))  { value = rdr.GetInt32(i); }
-                    else if (type == typeof(Int16))  { value = rdr.GetInt16(i); }
-                    else if (type == typeof(bool))   { value = rdr.GetBoolean(i); }
-                    else if (type == typeof(char))   { value = rdr.GetChar(i); }
+                    else if (type == typeof(Double)) { value = rdr.GetDouble(i); }
                     else if (type == typeof(string)) { value = rdr.GetString(i); }
                     else if (type == typeof(byte[])) { value = GetBytes(rdr, i); }
-                    else
-                        {
-                        try { 
-                            value = GetBytes(rdr, i);
-                            }
-                        catch (Exception e)
+                    //
+                    else {
+                             if (type == typeof(Int32))  { value = rdr.GetInt32(i); }
+                        else if (type == typeof(Int16))  { value = rdr.GetInt16(i); }
+                        else if (type == typeof(bool))   { value = rdr.GetBoolean(i); }
+                        else if (type == typeof(char))   { value = rdr.GetChar(i); }
+                        else
                             {
-                            Console.Out.WriteLine($"exception: {e}");
+                            try { 
+                                value = GetBytes(rdr, i);
+                                }
+                            catch (Exception e)
+                                {
+                                Console.Out.WriteLine($"exception: {e}");
+                                }
+                            Console.Error.WriteLine($"unhandled type: {type}");
                             }
-                        Console.Error.WriteLine($"unhandled type: {type}");
                         }
                     row.Add(value);
                     }

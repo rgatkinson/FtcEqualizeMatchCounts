@@ -5,10 +5,12 @@ using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Security.Permissions;
+using System.Text;
 using Microsoft.Data.Sqlite;
 
 
-namespace FtcEqualizeMatchCounts
+namespace FEMC
     {
     // Notes:
     //      FMSMatchId is a UUID
@@ -25,12 +27,15 @@ namespace FtcEqualizeMatchCounts
     // Table
     //--------------------------------------------------------------------------------------------------------------------------
 
-    abstract class Table
+    abstract class Table<Row_T> where Row_T : TableRow, new()
         {
+        public List<Row_T> Rows;
         protected Database database;
+
 
         protected Table(Database database)
             {
+            Rows = new List<Row_T>();
             this.database = database;
             }
 
@@ -43,7 +48,7 @@ namespace FtcEqualizeMatchCounts
             return table;
             }
 
-        public List<Row_T> Load<Row_T>() where Row_T : TableRow, new()
+        public void Load()
             {
             List<Row_T> result = new List<Row_T>();
 
@@ -62,7 +67,7 @@ namespace FtcEqualizeMatchCounts
                 result.Add(row);
                 }
 
-            return result;
+            Rows = result;
             }
         }
 
@@ -72,6 +77,26 @@ namespace FtcEqualizeMatchCounts
         //----------------------------------------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------------------------------------
+
+        public override string ToString()
+            {
+            Type type = GetType();
+            StringBuilder result = new StringBuilder();
+
+            bool first = true;
+            foreach (FieldInfo field in type.GetFields())
+                {
+                object value = field.GetValue(this);
+                if (!first)
+                    {
+                    result.Append(", ");
+                    }
+                result.Append(value?.ToString() ?? "null");
+                first = false;
+                }
+
+            return result.ToString();
+            }
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
@@ -117,208 +142,5 @@ namespace FtcEqualizeMatchCounts
     // Columns
     //--------------------------------------------------------------------------------------------------------------------------
 
-    abstract class TableColumn
-        {
-        public virtual void SetValue(object value)
-            {
-            }
-        }
 
-    abstract class GuidColumn : TableColumn
-        {
-        public System.Guid? Value = null;
-
-        public override string ToString()
-            {
-            return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
-            }
-
-        public void SetValue(System.Guid? guid)
-            {
-            Value = guid;
-            }
-
-        public void SetValue(byte[] bytes)
-            {
-            if (bytes == null)
-                SetValue((Guid?)null);
-            else
-                {
-                if (bytes.Length == 0)
-                    {
-                    bytes = new byte[16]; // account for quirky RowVersion seen in practice (are they *really* guids?)
-                    }
-                SetValue(new Guid(bytes));
-                }
-            }
-
-        public void SetValue(string value)
-            {
-            SetValue(new Guid(value));
-            }
-        }
-
-
-    class GuidColumnAsString : GuidColumn
-        {
-        public override void SetValue(object value)
-            {
-            this.SetValue((string)value);
-            }
-        }
-
-    class GuidColumnAsBlob : GuidColumn
-        {
-        public override void SetValue(object value)
-            {
-            this.SetValue((byte[]) value);
-            }
-        }
-
-    class FMSMatchId : GuidColumnAsBlob
-        {
-        }
-
-    class FMSMatchIdAsString : GuidColumnAsString
-        {
-        }
-
-    class FMSEventId : GuidColumnAsBlob
-        {
-        }
-
-    class FMSRegionId : GuidColumnAsBlob
-        {
-        }
-
-    class FMSScheduleDetailId : GuidColumnAsBlob
-        {
-        }
-
-    class FMSScheduleDetailIdAsString : GuidColumnAsString
-        {
-        }
-
-    class FMSTeamId : GuidColumnAsBlob
-        {
-        }
-
-    class FMSHomeCMPId : GuidColumnAsBlob
-        {
-
-        }
-
-    class RowVersion : GuidColumnAsBlob // seen: size=0, size=16, but all zeros
-        {
-
-        }
-
-    //------------------------------------
-
-    class DateTimeColumn : TableColumn
-        {
-        public System.DateTimeOffset? Value;
-
-        public System.DateTime? DateTime => Value?.UtcDateTime.ToUniversalTime();
-
-        public override string ToString()
-            {
-            // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string
-            // ISO8601 with 3 decimal places
-            return DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? "null";
-            }
-
-        public void SetValue(System.DateTimeOffset? dateTimeOffset)
-            {
-            Value = dateTimeOffset;
-            }
-
-        public void SetValue(string value)
-            {
-            SetValue(value == null ? (DateTimeOffset?)null : DateTimeOffset.Parse(value));
-            }
-
-        public void SetValue(long msSince1970UnixEpoch)
-            {
-            SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
-            }
-        }
-
-    class DateTimeAsInteger : DateTimeColumn
-        {
-        public override void SetValue(object value)
-            {
-            SetValue((long) value);
-            }
-        }
-
-    class DateTimeAsString : DateTimeColumn // Nullable always?
-        {
-        // e.g.:
-        //  2019-12-15T00:41:31.957Z
-        //  2019-12-15T00:40:28.120Z
-        public override void SetValue(object value)
-            {
-            SetValue((string) value);
-            }
-        }
-
-    class BooleanAsInteger : TableColumn // boolean stored as 'integer' in schema instead of 'boolean'
-        {
-        public bool Value;
-
-        public override string ToString()
-            {
-            return Value.ToString();
-            }
-
-        public void SetValue(bool value)
-            {
-            Value = value;
-            }
-
-        public void SetValue(long value)
-            {
-            SetValue(value != 0);
-            }
-
-        public override void SetValue(object value)
-            {
-            SetValue((long)value);
-            }
-        }
-
-    //------------------------------------
-
-    abstract class BlobColumn : TableColumn
-        {
-        public byte[] Value;
-
-        public override string ToString()
-            {
-            return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
-            }
-
-        public void SetValue(byte[] value)
-            {
-            Value = value;
-            }
-
-        public override void SetValue(object value)
-            {
-            SetValue((byte[]) value);
-            }
-        }
-
-    class ScoreDetails : BlobColumn // size=348 bytes (!)
-        {
-        }
-
-    class FieldConfigurationDetails : BlobColumn
-        {
-        }
-
-    class GameSpecifics : BlobColumn
-        {
-        }
     }

@@ -1,10 +1,13 @@
-﻿namespace FtcEqualizeMatchCounts
+﻿namespace FEMC
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Match (probably don't need: written when match is *scored*)
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_Match : Table
+    /**
+     * Keeps track of Matches actually played: one row for each play of a match
+     */
+    class Table_Match : Table<Table_Match.Row>
         {
         public class Row : TableRow
             {
@@ -46,10 +49,5 @@
             }
 
         public override string TableName => "Match";
-
-        public void Load()
-            {
-            Load<Row>();
-            }
         }
     }

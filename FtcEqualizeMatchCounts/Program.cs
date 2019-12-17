@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Mono.Options;
 
-namespace FtcEqualizeMatchCounts
+namespace FEMC
     {
     class ProgramOptions
         {

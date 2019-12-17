@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace FtcEqualizeMatchCounts
+namespace FEMC
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Match Schedule
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_matchSchedule : Table
+    class Table_MatchSchedule : Table<Table_MatchSchedule.Row>
         {
         public class Row : TableRow
             {
@@ -16,15 +16,10 @@ namespace FtcEqualizeMatchCounts
             public string            Label;
             }
 
-        public Table_matchSchedule(Database database) : base(database)
+        public Table_MatchSchedule(Database database) : base(database)
             {
             }
 
         public override string TableName => "matchSchedule";
-
-        public void Load()
-            {
-            Load<Row>();
-            }
         }
     }

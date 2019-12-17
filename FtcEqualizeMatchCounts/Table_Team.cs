@@ -1,10 +1,10 @@
-﻿namespace FtcEqualizeMatchCounts
+﻿namespace FEMC
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Team
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_Team : Table
+    class Table_Team : Table<Table_Team.Row>
         {
         public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
             {
@@ -38,10 +38,5 @@
             }
 
         public override string TableName => "Team";
-
-        public void Load()
-            {
-            Load<Row>();
-            }
         }
     }

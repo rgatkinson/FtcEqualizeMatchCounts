@@ -1,10 +1,10 @@
-﻿namespace FtcEqualizeMatchCounts
+﻿namespace FEMC
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // ScheduleDetail
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_ScheduleDetail : Table
+    class Table_ScheduleDetail : Table<Table_ScheduleDetail.Row>
         {
         public class Row : TableRow
             {
@@ -13,6 +13,7 @@
             public long TournamentLevel;    // 2 for quals?
             public long MatchNumber;        // see quals.Match
             public long FieldType;          // 1 for everything we've seen
+            public string Description;
             public DateTimeAsString StartTime;
             public FieldConfigurationDetails FieldConfigurationDetails;
             public DateTimeAsString CreatedOn;    // null is ok
@@ -24,7 +25,6 @@
 
         public Table_ScheduleDetail(Database database) : base(database)
             {
-
             }
 
         public override string TableName => "ScheduleDetail";

@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{03046B29-BC0D-461D-ACD1-D38616472B4D}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FtcEqualizeMatchCounts</RootNamespace>
+    <RootNamespace>FEMC</RootNamespace>
     <AssemblyName>FtcEqualizeMatchCounts</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -95,10 +95,32 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="TableColumn\BlobColumn.cs" />
+    <Compile Include="TableColumn\BooleanAsInteger.cs" />
+    <Compile Include="TableColumn\DateTimeAsInteger.cs" />
+    <Compile Include="TableColumn\DateTimeAsString.cs" />
+    <Compile Include="TableColumn\DateTimeColumn.cs" />
+    <Compile Include="TableColumn\FieldConfigurationDetails.cs" />
+    <Compile Include="TableColumn\FMSEventId.cs" />
+    <Compile Include="TableColumn\FMSHomeCMPId.cs" />
+    <Compile Include="TableColumn\FMSMatchId.cs" />
+    <Compile Include="TableColumn\FMSMatchIdAsString.cs" />
+    <Compile Include="TableColumn\FMSRegionId.cs" />
+    <Compile Include="TableColumn\FMSScheduleDetailId.cs" />
+    <Compile Include="TableColumn\FMSScheduleDetailIdAsString.cs" />
+    <Compile Include="TableColumn\FMSTeamId.cs" />
+    <Compile Include="TableColumn\GameSpecifics.cs" />
+    <Compile Include="TableColumn\GuidColumn.cs" />
+    <Compile Include="TableColumn\GuidColumnAsBlob.cs" />
+    <Compile Include="TableColumn\GuidColumnAsString.cs" />
+    <Compile Include="TableColumn\RowVersion.cs" />
+    <Compile Include="TableColumn\ScoreDetails.cs" />
+    <Compile Include="TableColumn\TableColumn.cs" />
+    <Compile Include="Tables.cs" />
     <Compile Include="Table_Match.cs" />
-    <Compile Include="Table_matchSchedule.cs" />
-    <Compile Include="Table_qualsData.cs" />
-    <Compile Include="Table_quals.cs" />
+    <Compile Include="Table_MatchSchedule.cs" />
+    <Compile Include="Table_QualsData.cs" />
+    <Compile Include="Table_Quals.cs" />
     <Compile Include="Table_ScheduleDetail.cs" />
     <Compile Include="Table_ScheduleStation.cs" />
     <Compile Include="Table_Team.cs" />
@@ -119,6 +141,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.2\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.2\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

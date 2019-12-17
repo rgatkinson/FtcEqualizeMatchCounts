@@ -4,7 +4,7 @@ using System.IO;
 
 using Microsoft.Data.Sqlite;
 
-namespace FtcEqualizeMatchCounts
+namespace FEMC
     {
     class Database : IDisposable
         {
@@ -12,29 +12,8 @@ namespace FtcEqualizeMatchCounts
         // State
         //---------------------------------------------------------------------------------------------------
 
-        public class Tables_T
-            {
-            public Table_Match Match;
-            public Table_matchSchedule MatchSchedule;
-            public Table_Team Team;
-
-            public Tables_T(Database db)
-                {
-                Match = new Table_Match(db);
-                MatchSchedule = new Table_matchSchedule(db);
-                Team = new Table_Team(db);
-                }
-
-            public void Load()
-                {
-                MatchSchedule.Load();
-                Match.Load();
-                Team.Load();
-                }
-            }
-
         public SqliteConnection Connection = null;
-        public Tables_T Tables;
+        public Tables Tables;
 
         string fileName = null;
         bool disposed = false;
@@ -46,7 +25,7 @@ namespace FtcEqualizeMatchCounts
         public Database(string fileName)
             {
             this.fileName = Path.GetFullPath(fileName);
-            this.Tables = new Tables_T(this);
+            this.Tables = new Tables(this);
             
             Open();
             }

@@ -96,6 +96,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="DBObject.cs" />
+    <Compile Include="ScheduledMatch.cs" />
+    <Compile Include="PlayedMatch.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
@@ -125,12 +128,12 @@
     <Compile Include="TableColumn\TableColumn.cs" />
     <Compile Include="TableRow.cs" />
     <Compile Include="Tables.cs" />
-    <Compile Include="Table\Match.cs" />
+    <Compile Include="Table\PlayedMatch.cs" />
     <Compile Include="Table\MatchSchedule.cs" />
     <Compile Include="Table\QualsData.cs" />
     <Compile Include="Table\Quals.cs" />
-    <Compile Include="Table\ScheduleDetail.cs" />
-    <Compile Include="Table\ScheduleStation.cs" />
+    <Compile Include="Table\ScheduledMatch.cs" />
+    <Compile Include="Table\ScheduledMatchStation.cs" />
     <Compile Include="Table\Team.cs" />
     <Compile Include="Team.cs" />
     <Compile Include="Util.cs" />

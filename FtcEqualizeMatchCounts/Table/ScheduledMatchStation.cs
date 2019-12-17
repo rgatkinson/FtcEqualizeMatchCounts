@@ -6,7 +6,7 @@ namespace FEMC.DBTables
     // ScheduleStation
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduleStation : Table<ScheduleStation.Row, Tuple<FMSScheduleDetailId, LongColumn, LongColumn>>
+    class ScheduledMatchStation : Table<ScheduledMatchStation.Row, Tuple<FMSScheduleDetailId, LongColumn, LongColumn>>
         {
         // Four records for each match Alliance (1,2) x Station (1,2)
         public class Row : TableRow<Tuple<FMSScheduleDetailId, LongColumn, LongColumn>>
@@ -25,7 +25,7 @@ namespace FEMC.DBTables
             public override Tuple<FMSScheduleDetailId, LongColumn, LongColumn> PrimaryKey => new Tuple<FMSScheduleDetailId, LongColumn, LongColumn>(FMSScheduleDetailId, Alliance, Station);
             }
 
-        public ScheduleStation(Database database) : base(database)
+        public ScheduledMatchStation(Database database) : base(database)
             {
             }
 

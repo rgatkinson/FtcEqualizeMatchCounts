@@ -4,35 +4,34 @@ namespace FEMC
     {
     class Tables
         {
-        public Match Match;
-        public MatchSchedule MatchSchedule;
-        public Quals Quals;
-        public QualsData QualsData;
-        public ScheduleDetail ScheduleDetail;
-        public ScheduleStation ScheduleStation;
+        public DBTables.PlayedMatch PlayedMatch;
+        public DBTables.MatchSchedule MatchSchedule;
+        public DBTables.Quals Quals;
+        public DBTables.QualsData QualsData;
+        public DBTables.ScheduledMatch ScheduledMatch;
+        public DBTables.ScheduledMatchStation ScheduledMatchStation;
         public DBTables.Team Team;
 
         public Tables(Database db)
             {
-            Match = new Match(db);
-            MatchSchedule = new MatchSchedule(db);
-            Quals = new Quals(db);
-            QualsData = new QualsData(db);
-            ScheduleDetail = new ScheduleDetail(db);
-            ScheduleStation = new ScheduleStation(db);
+            PlayedMatch = new DBTables.PlayedMatch(db);
+            MatchSchedule = new DBTables.MatchSchedule(db);
+            Quals = new DBTables.Quals(db);
+            QualsData = new DBTables.QualsData(db);
+            ScheduledMatch = new DBTables.ScheduledMatch(db);
+            ScheduledMatchStation = new DBTables.ScheduledMatchStation(db);
             Team = new DBTables.Team(db);
             }
 
         public void Load()
             {
-            Team.Load();
-
             MatchSchedule.Load();
-            Match.Load();
+            PlayedMatch.Load();
             Quals.Load();
             QualsData.Load();
-            ScheduleDetail.Load();
-            ScheduleStation.Load();
+            ScheduledMatch.Load();
+            ScheduledMatchStation.Load();
+            Team.Load();
             }
         }
     }

@@ -18,6 +18,9 @@ namespace FEMC
         public IDictionary<long, Team> TeamsByNumber = new Dictionary<long, Team>();
         public IDictionary<FMSTeamId, Team> TeamsById = new Dictionary<FMSTeamId, Team>();
 
+        public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
+        public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
+
         string fileName = null;
         bool disposed = false;
 
@@ -96,10 +99,21 @@ namespace FEMC
             {
             foreach (DBTables.Team.Row row in Tables.Team.Rows)
                 {
-                Team team = new Team(Tables, row);
-                Console.Out.WriteLine($"name={team.Name} number={team.TeamNumber} id={team.TeamId}");
+                Team team = new Team(this, row);
                 TeamsByNumber[team.TeamNumber] = team;
                 TeamsById[team.TeamId] = team;
+                }
+
+            foreach (DBTables.ScheduledMatch.Row row in Tables.ScheduledMatch.Rows)
+                {
+                ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
+                ScheduledMatchesByNumber[scheduledMatch.MatchNumber] = scheduledMatch;
+                ScheduledMatchesById[scheduledMatch.FMSScheduleDetailId] = scheduledMatch;
+                }
+
+            foreach (DBTables.PlayedMatch.Row row in Tables.PlayedMatch.Rows)
+                {
+
                 }
             }
         }

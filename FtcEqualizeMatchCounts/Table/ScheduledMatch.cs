@@ -4,7 +4,7 @@
     // ScheduleDetail
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduleDetail : Table<ScheduleDetail.Row, FMSScheduleDetailId>
+    class ScheduledMatch : Table<ScheduledMatch.Row, FMSScheduleDetailId>
         {
         public class Row : TableRow<FMSScheduleDetailId>
             {
@@ -17,7 +17,7 @@
             public DateTimeAsString StartTime;
             public FieldConfigurationDetails FieldConfigurationDetails;
             public DateTimeAsString CreatedOn;    // null is ok
-            public StringColumn CreatedBy;              // e.g.: "FTC Match Maker"
+            public StringColumn CreatedBy;        // e.g.: "FTC Match Maker"
             public DateTimeAsString ModifiedOn;   // null is ok
             public StringColumn ModifiedBy;
             public RowVersion RowVersion;
@@ -25,7 +25,7 @@
             public override FMSScheduleDetailId PrimaryKey => FMSScheduleDetailId;
             }
 
-        public ScheduleDetail(Database database) : base(database)
+        public ScheduledMatch(Database database) : base(database)
             {
             }
 

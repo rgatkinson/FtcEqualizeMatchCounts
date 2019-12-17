@@ -7,7 +7,7 @@
     /**
      * Keeps track of Matches actually played: one row for each play of a match
      */
-    class Match : Table<Match.Row, FMSMatchId>
+    class PlayedMatch : Table<PlayedMatch.Row, FMSMatchId>
         {
         public class Row : TableRow<FMSMatchId>
             {
@@ -46,7 +46,7 @@
             public override FMSMatchId PrimaryKey => FMSMatchId;
             }
 
-        public Match(Database database) : base(database)
+        public PlayedMatch(Database database) : base(database)
             {
             }
 

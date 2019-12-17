@@ -6,16 +6,6 @@ using System.Threading.Tasks;
 
 namespace FEMC
     {
-    abstract class DBObject
-        {
-        protected Tables Tables;
-
-        protected DBObject(Tables tables)
-            {
-            Tables = tables;
-            }
-        }
-
     class Team : DBObject
         {
         public FMSTeamId TeamId;
@@ -27,7 +17,7 @@ namespace FEMC
             return $"Team {TeamNumber}: {Name}";
             }
 
-        public Team(Tables tables, DBTables.Team.Row row) : base(tables)
+        public Team(Database database, DBTables.Team.Row row) : base(database)
             {
             TeamId = row.FMSTeamId;
             TeamNumber = row.TeamNumber.Value.Value;

@@ -23,11 +23,16 @@ namespace FEMC
         public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
 
+        public IDictionary<long, List<PlayedMatch>> PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
+
+        public IDictionary<long, LeagueHistoryMatch> LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
+
+
         public IDictionary<string, Event> EventsByCode = new Dictionary<string, Event>();
 
-        public string ThisEventCode => Tables.Config.Map["code"].Value.Value;
+        public string ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
         public Event ThisEvent => EventsByCode[ThisEventCode];
-        public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.Value);
+        public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
 
         public List<Event> OtherEvents
             {
@@ -130,6 +135,8 @@ namespace FEMC
             ScheduledMatchesById.Clear();
             ScheduledMatchesByNumber.Clear();
             EventsByCode.Clear();
+            PlayedMatchesByNumber.Clear();
+            LeagueHistoryMatchesByNumber.Clear();
             }
 
         public void LoadDataAccessLayer()
@@ -159,6 +166,12 @@ namespace FEMC
             foreach (var row in Tables.PlayedMatch.Rows)
                 {
                 PlayedMatch playedMatch = new PlayedMatch(this, row);
+                if (!PlayedMatchesByNumber.TryGetValue(playedMatch.MatchNumber, out List<PlayedMatch> playedMatches))
+                    {
+                    playedMatches = new List<PlayedMatch>();
+                    PlayedMatchesByNumber[playedMatch.MatchNumber] = playedMatches;
+                    }
+                playedMatches.Add(playedMatch);
                 }
 
             foreach (var row in Tables.LeagueHistory.Rows)
@@ -194,7 +207,7 @@ namespace FEMC
                 }
             }
 
-        public void ReportTeams(IndentedTextWriter writer)
+        public void ReportTeams(IndentedTextWriter writer, bool verbose)
             {
             bool firstTeam = true;
             foreach (Team team in Teams)

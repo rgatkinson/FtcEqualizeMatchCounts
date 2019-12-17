@@ -6,7 +6,7 @@
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public long MatchNumber;
+        private long matchNumber;
         public string Description;
 
         public Team Red1;
@@ -20,8 +20,11 @@
 
         public override ScheduledMatch Scheduled => this;
 
+        public override long MatchNumber => matchNumber;
+
+
         // Does this team play in this match?
-        public bool Plays(Team team)
+        public override bool Plays(Team team)
             {
             if (!Red1Surrogate && Red1 == team) return true;
             if (!Red2Surrogate && Red2 == team) return true;
@@ -37,8 +40,8 @@
         public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;
-            MatchNumber = row.MatchNumber.NonNullValue;
-            Description = row.Description.Value;
+            matchNumber = row.MatchNumber.NonNullValue;
+            Description = row.Description.NonNullValue;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber];
 

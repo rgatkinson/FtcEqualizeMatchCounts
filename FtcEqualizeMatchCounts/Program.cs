@@ -15,6 +15,7 @@ namespace FEMC
         public string       Filename = null;
         public int?         MatchCount = MatchCountDefault;
         public bool         ShowUsage = false;
+        public bool         Verbose = false;
         public List<String> ExtraOptions = new List<string>();
         public string       IndentString = "   ";
 
@@ -34,6 +35,7 @@ namespace FEMC
                     { "c=|count=", $"equalize to the indicated number of matches; default: {MatchCountDefault}", (int count) => MatchCount = count },
                     { "m|max",     $"equalize to the maximum number of matches already played by any team", (string m) => MatchCount = null },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
+                    { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
                 };
             }
@@ -175,7 +177,7 @@ namespace FEMC
 
             Database.ReportEvents(programOptions.StdOut);
 
-            // Database.ReportTeams(programOptions.StdOut);
+            Database.ReportTeams(programOptions.StdOut, programOptions.Verbose);
 
             Database.Close();
             }

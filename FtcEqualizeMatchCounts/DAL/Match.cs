@@ -13,8 +13,13 @@ namespace FEMC.DAL
         //----------------------------------------------------------------------------------------
 
         public abstract string EventCode { get; }
+        public abstract long MatchNumber { get; }
+
+        public abstract bool Plays(Team team);
 
         public Event Event => Database.EventsByCode[EventCode];
+
+        public override string ToString() => $"{GetType().Name}: Event={EventCode} MatchNumber={MatchNumber}";
 
         //----------------------------------------------------------------------------------------
         // Construction

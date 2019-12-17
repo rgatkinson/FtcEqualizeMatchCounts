@@ -8,11 +8,14 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public long MatchNumber;
-        public ISet<Team> Teams = new HashSet<Team>();
         private string eventCode;
+        private long matchNumber;
+        public ISet<Team> Teams = new HashSet<Team>();
 
         public override string EventCode => eventCode;
+        public override long MatchNumber => matchNumber;
+
+        public override bool Plays(Team team) => Teams.Contains(team);
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -24,13 +27,12 @@ namespace FEMC.DAL
 
         public static void Process(Database db, DBTables.LeagueHistory.Row row)
             {
-            Event theEvent = db.EventsByCode[row.EventCode.Value];
-            if (!theEvent.PreviousEventMatchesByNumber.TryGetValue(row.Match.NonNullValue, out LeagueHistoryMatch previousEventMatch))
+            if (!db.LeagueHistoryMatchesByNumber.TryGetValue(row.Match.NonNullValue, out LeagueHistoryMatch previousEventMatch))
                 {
                 previousEventMatch = new LeagueHistoryMatch(db);
-                previousEventMatch.eventCode = theEvent.EventCode;
-                previousEventMatch.MatchNumber = row.Match.NonNullValue;
-                theEvent.PreviousEventMatchesByNumber[previousEventMatch.MatchNumber] = previousEventMatch;
+                previousEventMatch.eventCode = row.EventCode.NonNullValue;
+                previousEventMatch.matchNumber = row.Match.NonNullValue;
+                db.LeagueHistoryMatchesByNumber[previousEventMatch.matchNumber] = previousEventMatch;
                 }
 
             Team team = db.TeamsByNumber[row.Team.NonNullValue];

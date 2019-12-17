@@ -17,6 +17,7 @@ namespace FEMC
             Value = guid;
             }
 
+        // It seems that the ScoreKeeper database uses big-endian Guids, whereas .Net uses little-endian
         public void SetValue(byte[] bytes)
             {
             if (bytes == null)
@@ -28,7 +29,12 @@ namespace FEMC
                     bytes = new byte[16]; // account for quirky RowVersion seen in practice (are they *really* guids?)
                     }
                 Trace.Assert(bytes.Length == 16);
-                SetValue(new Guid(bytes));
+                Guid guid = new Guid(bytes);
+                if (BitConverter.IsLittleEndian)
+                    {
+                    guid = MiscUtil.ByteSwap(guid);
+                    }
+                SetValue(guid);
                 }
             }
 

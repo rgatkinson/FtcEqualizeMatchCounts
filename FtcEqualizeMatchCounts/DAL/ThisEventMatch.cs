@@ -13,13 +13,16 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public FMSEventId FMSEventId;
+        private FMSEventId fmsEventId;
         public FMSScheduleDetailId FMSScheduleDetailId;
+
+        public FMSEventId FMSEventId => fmsEventId.Value==null ? Scheduled.FMSEventId : fmsEventId;
 
         public override string EventCode => Equals(Database.FMSEventId, FMSEventId) ? Database.ThisEventCode : null;
         public virtual ScheduledMatch Scheduled => Database.ScheduledMatchesById[FMSScheduleDetailId];
+        public override long MatchNumber => Scheduled.MatchNumber;
 
-        public bool Plays(Team team) => Scheduled.Plays(team);
+        public override bool Plays(Team team) => Scheduled.Plays(team);
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -27,7 +30,7 @@ namespace FEMC.DAL
 
         protected ThisEventMatch(Database db, FMSEventId eventId, FMSScheduleDetailId detailId) : base(db)
             {
-            FMSEventId = eventId;
+            fmsEventId = eventId;
             FMSScheduleDetailId = detailId;
             }
 

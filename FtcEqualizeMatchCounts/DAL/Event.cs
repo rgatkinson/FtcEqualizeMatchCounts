@@ -14,10 +14,10 @@ namespace FEMC.DAL
         public string Name;
         public DateTime? Start;
 
-        public IDictionary<long, LeagueHistoryMatch> PreviousEventMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
-
         public DateTime StartNonNull => Start ?? StartIfNull;
         public static DateTime StartIfNull = new DateTime(2019, 09, 01); // arbitrary
+
+        public override string ToString() => $"{GetType().Name}: EventCode={EventCode} Name={Name}";
 
         //----------------------------------------------------------------------------------------
         // Construction

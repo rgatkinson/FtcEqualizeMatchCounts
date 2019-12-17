@@ -1,4 +1,5 @@
 ﻿using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.IO;
 
 namespace FEMC.DAL
@@ -18,53 +19,62 @@ namespace FEMC.DAL
             return $"Team {TeamNumber}: {Name}";
             }
 
-        public int PlayedMatchCount
+        public int ScheduledMatchCountThisEvent => ScheduledMatchesThisEvent.Count;
+        public int LeagueHistoryMatchCount => LeagueHistoryMatches.Count;
+        public int PlayedMatchCountThisEvent => PlayedMatchesThisEvent.Count;
+
+        public List<PlayedMatch> PlayedMatchesThisEvent
             {
-            get {
-                int result = 0;
-                foreach (var row in Database.Tables.PlayedMatch.Rows)
+            get
+                {
+                var result = new List<PlayedMatch>();
+                foreach (var matches in Database.PlayedMatchesByNumber.Values)
                     {
-                    ScheduledMatch scheduledMatch = Database.ScheduledMatchesById[row.FMSScheduleDetailId];
-                    if (scheduledMatch.Plays(this))
-                        {
-                        result += 1;
+                    foreach (var match in matches)
+                        { 
+                        if (match.Plays(this))
+                            {
+                            result.Add(match);
+                            }
                         }
                     }
                 return result;
                 }
             }
 
-        public int ScheduledMatchCount
+        public List<ScheduledMatch> ScheduledMatchesThisEvent
             {
-            get {
-                int result = 0;
-                foreach (ScheduledMatch scheduledMatch in Database.ScheduledMatchesById.Values)
+            get
+                {
+                var result = new List<ScheduledMatch>();
+                foreach (var match in Database.ScheduledMatchesByNumber.Values)
                     {
-                    if (scheduledMatch.Plays(this))
+                    if (match.Plays(this))
                         {
-                        result += 1;
+                        result.Add(match);
                         }
                     }
                 return result;
                 }
             }
 
-        public int PreviousEventMatchCount
+        public List<LeagueHistoryMatch> LeagueHistoryMatches
             {
-            get {
-                int result = 0;
-                foreach (DBTables.LeagueHistory.Row row in Database.Tables.LeagueHistory.Rows)
+            get
+                {
+                var result = new List<LeagueHistoryMatch>();
+                foreach (var match in Database.LeagueHistoryMatchesByNumber.Values)
                     {
-                    if (row.Team.Value.Value == TeamNumber && row.MatchIsCounted && row.EventCode.Value != Database.ThisEventCode)
+                    if (match.Plays(this))
                         {
-                        result += 1;
+                        result.Add(match);
                         }
                     }
                 return result;
                 }
             }
 
-        public int TotalMatchCountPlayed => PreviousEventMatchCount + PlayedMatchCount;
+        public int TotalMatchCountPlayed => LeagueHistoryMatchCount + PlayedMatchCountThisEvent;
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -73,8 +83,8 @@ namespace FEMC.DAL
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
             TeamId = row.FMSTeamId;
-            TeamNumber = (int)row.TeamNumber.Value.Value;
-            Name = row.TeamNameShort.Value;
+            TeamNumber = (int)row.TeamNumber.NonNullValue;
+            Name = row.TeamNameShort.NonNullValue;
             }
 
         //----------------------------------------------------------------------------------------
@@ -86,9 +96,9 @@ namespace FEMC.DAL
             writer.WriteLine($"Team {TeamNumber}: {Name}:");
             writer.Indent++;
             writer.WriteLine($"total: played match count: { TotalMatchCountPlayed }");
-            writer.WriteLine($"previous events: played match count: { PreviousEventMatchCount }");
-            writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCount }");
-            writer.WriteLine($"this event: played match count: { PlayedMatchCount }");
+            writer.WriteLine($"previous events: played match count: { LeagueHistoryMatchCount }");
+            writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCountThisEvent }");
+            writer.WriteLine($"this event: played match count: { PlayedMatchCountThisEvent }");
             writer.Indent--;
             }
         }

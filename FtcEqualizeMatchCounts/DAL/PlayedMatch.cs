@@ -8,6 +8,10 @@
 
         public FMSMatchId FmsMatchId;
         public long PlayNumber;
+        private long redScore;
+        private long redPenalty;
+        private long blueScore;
+        private long bluePenalty;
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -17,6 +21,10 @@
             {
             FmsMatchId = row.FMSMatchId;
             PlayNumber = row.PlayNumber.NonNullValue;
+            redScore = row.RedScore.NonNullValue;
+            redPenalty = row.RedPenalty.NonNullValue;
+            blueScore = row.BlueScore.NonNullValue;
+            bluePenalty = row.BluePenalty.NonNullValue;
             }
         }
     }

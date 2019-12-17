@@ -3,6 +3,7 @@ using System;
 
 namespace FEMC.DBTables
     {
+    // Note: league history does not contain rows for a team's participation as a surrogate
     class LeagueHistory: Table<LeagueHistory.Row, Tuple<NullableLong, StringColumn, NullableLong>>
         {
         public class Row : TableRow<Tuple<NullableLong, StringColumn, NullableLong>>

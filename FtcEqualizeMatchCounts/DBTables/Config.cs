@@ -9,7 +9,7 @@ namespace FEMC.DBTables
             public StringColumn Key;
             public StringColumn Value;
 
-            public override string PrimaryKey => Key.Value;
+            public override string PrimaryKey => Key.NonNullValue;
             }
 
         public Config(Database database) : base(database)

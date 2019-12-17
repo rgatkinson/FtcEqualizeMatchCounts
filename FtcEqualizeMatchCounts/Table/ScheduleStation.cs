@@ -1,12 +1,15 @@
-﻿namespace FEMC.DBTables
+﻿using System;
+
+namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // ScheduleStation
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduleStation : Table<ScheduleStation.Row>
+    class ScheduleStation : Table<ScheduleStation.Row, Tuple<FMSScheduleDetailId, LongColumn, LongColumn>>
         {
-        public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
+        // Four records for each match Alliance (1,2) x Station (1,2)
+        public class Row : TableRow<Tuple<FMSScheduleDetailId, LongColumn, LongColumn>>
             {
             public FMSScheduleDetailId FMSScheduleDetailId;  // primary
             public LongColumn Alliance; // primary
@@ -18,6 +21,8 @@
             public StringColumn CreatedBy; // e.g. "FTC Match Maker"
             public DateTimeAsString ModifedOn;
             public StringColumn ModifiedBy;
+
+            public override Tuple<FMSScheduleDetailId, LongColumn, LongColumn> PrimaryKey => new Tuple<FMSScheduleDetailId, LongColumn, LongColumn>(FMSScheduleDetailId, Alliance, Station);
             }
 
         public ScheduleStation(Database database) : base(database)

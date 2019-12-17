@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FEMC
     {
-    abstract class TableRow
+    abstract class TableRow<PrimaryKey_T>
         {
         //----------------------------------------------------------------------------------------------------------------------
         // Accessing
@@ -30,6 +30,8 @@ namespace FEMC
 
             return result.ToString();
             }
+
+        public abstract PrimaryKey_T PrimaryKey { get; }
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585

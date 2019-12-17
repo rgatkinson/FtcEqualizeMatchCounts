@@ -7,9 +7,9 @@
     /**
      * Keeps track of Matches actually played: one row for each play of a match
      */
-    class Match : Table<Match.Row>
+    class Match : Table<Match.Row, FMSMatchId>
         {
-        public class Row : TableRow
+        public class Row : TableRow<FMSMatchId>
             {
             public FMSMatchId FMSMatchId; // primary
             public FMSScheduleDetailId FMSScheduleDetailId;
@@ -41,7 +41,9 @@
             public DateTimeAsString ModifiedOn;
             public StringColumn ModifiedBy;
             public FMSEventId FMSEventId;
-            public RowVersion RowVersion; 
+            public RowVersion RowVersion;
+
+            public override FMSMatchId PrimaryKey => FMSMatchId;
             }
 
         public Match(Database database) : base(database)

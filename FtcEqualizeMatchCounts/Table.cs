@@ -1,44 +1,43 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Security.Permissions;
 using Microsoft.Data.Sqlite;
 
 
 namespace FEMC
     {
-    // Notes:
-    //      FMSMatchId is a UUID
-    //          in qualsData, stored as text
-    //
-    //      FMSScheduleDetailId is a UUID
-    //          in qualsData, stored as text
-    //          in ScheduleDetail, stored as blob
-    //              so is FMSEventId: is this *also* a UUID?
-    //          ditto in ScheduleStation
-    //              ditto FMSEventId, FMSTeamId therein
-
     //--------------------------------------------------------------------------------------------------------------------------
     // Table
     //--------------------------------------------------------------------------------------------------------------------------
 
-    abstract class Table<Row_T> where Row_T : TableRow, new()
+    abstract class Table<Row_T, PrimaryKey_T> where Row_T : TableRow<PrimaryKey_T>, new()
         {
+        //----------------------------------------------------------------------------------------------------------------------
+        // State
+        //----------------------------------------------------------------------------------------------------------------------
+
         public List<Row_T> Rows;
+        public IDictionary<PrimaryKey_T, Row_T> Map;
         protected Database database;
-        
+
+        public abstract string TableName { get; }
+
+        //----------------------------------------------------------------------------------------------------------------------
+        // Construction
+        //----------------------------------------------------------------------------------------------------------------------
+
         protected Table(Database database)
             {
             Rows = new List<Row_T>();
             this.database = database;
             }
 
-        public abstract string TableName { get; }
+        //----------------------------------------------------------------------------------------------------------------------
+        // Loading
+        //----------------------------------------------------------------------------------------------------------------------
 
         public void Load()
             {
-            List<Row_T> result = new List<Row_T>();
+            Rows = new List<Row_T>();
+            Map = new Dictionary<PrimaryKey_T, Row_T>();
 
             using var cmd = database.Connection.CreateCommand();
             cmd.CommandText = $"SELECT * FROM { TableName }";
@@ -52,10 +51,10 @@ namespace FEMC
                     object value = rdr.IsDBNull(i) ? null : rdr[i];
                     row.SetField(i, value);
                     }
-                result.Add(row);
-                }
 
-            Rows = result;
+                Rows.Add(row);
+                Map[row.PrimaryKey] = row;
+                }
             }
         }
     }

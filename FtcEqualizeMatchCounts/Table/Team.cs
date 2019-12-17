@@ -4,9 +4,9 @@
     // Team
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Team : Table<Team.Row>
+    class Team : Table<Team.Row, FMSTeamId>
         {
-        public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
+        public class Row : TableRow<FMSTeamId> // Four records for each match Alliance (1,2) x Station (1,2)
             {
             public FMSTeamId FMSTeamId;     // primary
             public FMSSeasonId FMSSeasonId;
@@ -31,6 +31,8 @@
             public StringColumn CreatedBy; // e.g. "Team Data Download"
             public DateTimeAsString ModifedOn;
             public StringColumn ModifiedBy; // e.g. "Team Data Download"
+
+            public override FMSTeamId PrimaryKey => FMSTeamId;
             }
 
         public Team(Database database) : base(database)

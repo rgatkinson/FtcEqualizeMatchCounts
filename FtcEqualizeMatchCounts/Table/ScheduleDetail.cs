@@ -4,9 +4,9 @@
     // ScheduleDetail
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduleDetail : Table<ScheduleDetail.Row>
+    class ScheduleDetail : Table<ScheduleDetail.Row, FMSScheduleDetailId>
         {
-        public class Row : TableRow
+        public class Row : TableRow<FMSScheduleDetailId>
             {
             public FMSScheduleDetailId FMSScheduleDetailId; // primary
             public FMSEventId FMSEventId;
@@ -21,6 +21,8 @@
             public DateTimeAsString ModifiedOn;   // null is ok
             public StringColumn ModifiedBy;
             public RowVersion RowVersion;
+
+            public override FMSScheduleDetailId PrimaryKey => FMSScheduleDetailId;
             }
 
         public ScheduleDetail(Database database) : base(database)

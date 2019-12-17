@@ -10,6 +10,8 @@ namespace FEMC
         {
         public T? Value;
 
+        public T NonNullValue => Value.Value;
+
         public override string ToString()
             {
             return Value?.ToString() ?? "null";

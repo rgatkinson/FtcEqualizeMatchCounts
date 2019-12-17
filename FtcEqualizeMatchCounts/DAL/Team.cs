@@ -5,6 +5,10 @@ namespace FEMC.DAL
     {
     class Team : DBObject
         {
+        //----------------------------------------------------------------------------------------
+        // Accessing
+        //----------------------------------------------------------------------------------------
+
         public FMSTeamId TeamId;
         public int TeamNumber;
         public string Name;
@@ -62,12 +66,20 @@ namespace FEMC.DAL
 
         public int TotalMatchCountPlayed => PreviousEventMatchCount + PlayedMatchCount;
 
+        //----------------------------------------------------------------------------------------
+        // Construction
+        //----------------------------------------------------------------------------------------
+
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
             TeamId = row.FMSTeamId;
             TeamNumber = (int)row.TeamNumber.Value.Value;
             Name = row.TeamNameShort.Value;
             }
+
+        //----------------------------------------------------------------------------------------
+        // Reporting
+        //----------------------------------------------------------------------------------------
 
         public void Report(IndentedTextWriter writer)
             {

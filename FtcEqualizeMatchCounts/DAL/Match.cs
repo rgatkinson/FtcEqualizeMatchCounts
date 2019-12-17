@@ -1,22 +1,28 @@
-﻿namespace FEMC.DAL
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FEMC.DAL
     {
-    class PlayedMatch : ThisEventMatch
+    abstract class Match : DBObject
         {
         //----------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public FMSMatchId FmsMatchId;
-        public long PlayNumber;
+        public abstract string EventCode { get; }
+
+        public Event Event => Database.EventsByCode[EventCode];
 
         //----------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------
-
-        public PlayedMatch(Database db, DBTables.PlayedMatch.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
+        
+        protected Match(Database db) : base(db)
             {
-            FmsMatchId = row.FMSMatchId;
-            PlayNumber = row.PlayNumber.NonNullValue;
             }
+
         }
     }

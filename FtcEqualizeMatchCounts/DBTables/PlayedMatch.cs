@@ -12,7 +12,7 @@ namespace FEMC.DBTables
         {
         public class Row : TableRow<FMSMatchId>
             {
-            public FMSMatchId FMSMatchId; // primary
+            public FMSMatchId FMSMatchId; // primary, a new allocated for every play of a given MatchNumber
             public FMSScheduleDetailId FMSScheduleDetailId;
             public NullableLong PlayNumber;
             public NullableLong FieldType;

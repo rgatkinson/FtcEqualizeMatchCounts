@@ -96,6 +96,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DAL\LeagueHistoryMatch.cs" />
+    <Compile Include="DAL\ThisEventMatch.cs" />
+    <Compile Include="DAL\Match.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="DAL\DBObject.cs" />
     <Compile Include="DBTables\Config.cs" />

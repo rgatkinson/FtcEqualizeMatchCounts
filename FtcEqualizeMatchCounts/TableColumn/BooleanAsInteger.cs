@@ -4,6 +4,8 @@
         {
         public bool? Value;
 
+        public bool NonNullValue => Value.Value;
+
         public override string ToString()
             {
             return Value?.ToString() ?? "null";

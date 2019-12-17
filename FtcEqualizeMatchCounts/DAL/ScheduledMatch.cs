@@ -1,8 +1,11 @@
 ﻿namespace FEMC.DAL
     {
-    class ScheduledMatch : DBObject
+    class ScheduledMatch : ThisEventMatch
         {
-        public FMSScheduleDetailId FMSScheduleDetailId;
+        //----------------------------------------------------------------------------------------
+        // Accessing
+        //----------------------------------------------------------------------------------------
+
         public long MatchNumber;
         public string Description;
 
@@ -15,6 +18,9 @@
         public Team Blue2;
         public bool Blue2Surrogate;
 
+        public override ScheduledMatch Scheduled => this;
+
+        // Does this team play in this match?
         public bool Plays(Team team)
             {
             if (!Red1Surrogate && Red1 == team) return true;
@@ -24,23 +30,27 @@
             return false;
             }
 
-        public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db)
+        //----------------------------------------------------------------------------------------
+        // Construction
+        //----------------------------------------------------------------------------------------
+
+        public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;
-            MatchNumber = row.MatchNumber.Value.Value;
+            MatchNumber = row.MatchNumber.NonNullValue;
             Description = row.Description.Value;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber];
 
-            Red1 = db.TeamsByNumber[qual.Red1.Value.Value];
-            Red2 = db.TeamsByNumber[qual.Red2.Value.Value];
-            Blue1 = db.TeamsByNumber[qual.Blue1.Value.Value];
-            Blue2 = db.TeamsByNumber[qual.Blue2.Value.Value];
+            Red1 = db.TeamsByNumber[qual.Red1.NonNullValue];
+            Red2 = db.TeamsByNumber[qual.Red2.NonNullValue];
+            Blue1 = db.TeamsByNumber[qual.Blue1.NonNullValue];
+            Blue2 = db.TeamsByNumber[qual.Blue2.NonNullValue];
 
-            Red1Surrogate = qual.Red1Surrogate.Value.Value;
-            Red2Surrogate = qual.Red2Surrogate.Value.Value;
-            Blue1Surrogate = qual.Blue1Surrogate.Value.Value;
-            Blue2Surrogate = qual.Blue2Surrogate.Value.Value;
+            Red1Surrogate = qual.Red1Surrogate.NonNullValue;
+            Red2Surrogate = qual.Red2Surrogate.NonNullValue;
+            Blue1Surrogate = qual.Blue1Surrogate.NonNullValue;
+            Blue2Surrogate = qual.Blue2Surrogate.NonNullValue;
             }
         }
     }

@@ -20,8 +20,8 @@ namespace FEMC
 
         public string       EventCode = null;
 
-        public IndentedTextWriter StdOut => MakeIndentedTextWriter(Console.Out);
-        public IndentedTextWriter StdErr => MakeIndentedTextWriter(Console.Error);
+        public IndentedTextWriter StdOut;
+        public IndentedTextWriter StdErr;
 
         private OptionSet options;
         private Program program;
@@ -60,6 +60,9 @@ namespace FEMC
                     Usage(null);
                     }
                 Validate();
+                
+                StdOut = MakeIndentedTextWriter(Console.Out);
+                StdErr = MakeIndentedTextWriter(Console.Error);
                 }
             catch (OptionException e)
                 {
@@ -170,7 +173,9 @@ namespace FEMC
             Database = new Database(programOptions.Filename);
             Database.Load();
 
-            Database.ReportTeams(programOptions.StdOut);
+            Database.ReportEvents(programOptions.StdOut);
+
+            // Database.ReportTeams(programOptions.StdOut);
 
             Database.Close();
             }

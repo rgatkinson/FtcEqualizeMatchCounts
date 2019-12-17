@@ -29,6 +29,22 @@ namespace FEMC
         public Event ThisEvent => EventsByCode[ThisEventCode];
         public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.Value);
 
+        public List<Event> OtherEvents
+            {
+            get {
+                List<Event> result = new List<Event>();
+                foreach (var anEvent in EventsByCode.Values)
+                    {
+                    if (anEvent != ThisEvent)
+                        {
+                        result.Add(anEvent);
+                        }
+                    }
+                result.Sort((a,b) => (int)(a.StartNonNull.ToUniversalTime().Ticks - b.StartNonNull.ToUniversalTime().Ticks));
+                return result;
+                }
+            }
+
 
         string fileName = null;
         bool disposed = false;
@@ -102,7 +118,7 @@ namespace FEMC
             {
             Clear();
             Tables.Load();
-            LoadData();
+            LoadDataAccessLayer();
             }
 
         void Clear()
@@ -116,7 +132,7 @@ namespace FEMC
             EventsByCode.Clear();
             }
 
-        public void LoadData()
+        public void LoadDataAccessLayer()
             {
             foreach (var row in Tables.LeagueMeets.Rows)
                 {
@@ -144,11 +160,38 @@ namespace FEMC
                 {
                 PlayedMatch playedMatch = new PlayedMatch(this, row);
                 }
+
+            foreach (var row in Tables.LeagueHistory.Rows)
+                {
+                LeagueHistoryMatch.Process(this, row);
+                }
             }
 
-        public void ReportEvent(IndentedTextWriter writer)
+        public void ReportEvents(IndentedTextWriter writer)
             {
+            writer.WriteLine("This event:");
+            writer.Indent++;
+            ThisEvent.Report(writer);
+            writer.Indent--;
 
+            List<Event> otherEvents = OtherEvents;
+            if (otherEvents.Count > 0)
+                {
+                writer.WriteLine();
+                writer.WriteLine("Previous events:");
+                bool first = true;
+                writer.Indent++;
+                foreach (var otherEvent in otherEvents)
+                    {
+                    if (!first)
+                        {
+                        writer.WriteLine();
+                        }
+                    otherEvent.Report(writer);
+                    first = false;
+                    }
+                writer.Indent--;
+                }
             }
 
         public void ReportTeams(IndentedTextWriter writer)

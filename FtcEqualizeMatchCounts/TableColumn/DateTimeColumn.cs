@@ -8,6 +8,7 @@ namespace FEMC
         public System.DateTimeOffset? Value;
 
         public System.DateTime? DateTime => Value?.UtcDateTime.ToUniversalTime();
+        public System.DateTime? LocalDateTime => DateTime?.ToLocalTime();
 
         public override string ToString()
             {

@@ -4,7 +4,7 @@
     // ScheduleDetail
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_ScheduleDetail : Table<Table_ScheduleDetail.Row>
+    class ScheduleDetail : Table<ScheduleDetail.Row>
         {
         public class Row : TableRow
             {
@@ -23,7 +23,7 @@
             public RowVersion RowVersion;
             }
 
-        public Table_ScheduleDetail(Database database) : base(database)
+        public ScheduleDetail(Database database) : base(database)
             {
             }
 

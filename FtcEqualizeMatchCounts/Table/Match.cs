@@ -7,7 +7,7 @@
     /**
      * Keeps track of Matches actually played: one row for each play of a match
      */
-    class Table_Match : Table<Table_Match.Row>
+    class Match : Table<Match.Row>
         {
         public class Row : TableRow
             {
@@ -44,7 +44,7 @@
             public RowVersion RowVersion; 
             }
 
-        public Table_Match(Database database) : base(database)
+        public Match(Database database) : base(database)
             {
             }
 

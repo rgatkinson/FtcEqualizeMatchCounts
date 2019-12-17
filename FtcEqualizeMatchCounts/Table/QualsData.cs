@@ -4,7 +4,7 @@
     // Quals
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_QualsData : Table<Table_QualsData.Row>
+    class QualsData : Table<QualsData.Row>
         {
         public class Row : TableRow
             {
@@ -18,7 +18,7 @@
             public FMSScheduleDetailIdAsString FMSScheduleDetailId;
             }
 
-        public Table_QualsData(Database database) : base(database)
+        public QualsData(Database database) : base(database)
             {
             }
 

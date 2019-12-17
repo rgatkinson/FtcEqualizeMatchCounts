@@ -4,7 +4,7 @@
     // Quals
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_Quals : Table<Table_Quals.Row>
+    class Quals : Table<Quals.Row>
         {
         public class Row : TableRow
             {
@@ -19,7 +19,7 @@
             public BooleanAsInteger Blue2Surrogate;
             }
 
-        public Table_Quals(Database database) : base(database)
+        public Quals(Database database) : base(database)
             {
             }
 

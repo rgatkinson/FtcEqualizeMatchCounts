@@ -116,14 +116,15 @@
     <Compile Include="TableColumn\RowVersion.cs" />
     <Compile Include="TableColumn\ScoreDetails.cs" />
     <Compile Include="TableColumn\TableColumn.cs" />
+    <Compile Include="TableRow.cs" />
     <Compile Include="Tables.cs" />
-    <Compile Include="Table_Match.cs" />
-    <Compile Include="Table_MatchSchedule.cs" />
-    <Compile Include="Table_QualsData.cs" />
-    <Compile Include="Table_Quals.cs" />
-    <Compile Include="Table_ScheduleDetail.cs" />
-    <Compile Include="Table_ScheduleStation.cs" />
-    <Compile Include="Table_Team.cs" />
+    <Compile Include="Table\Match.cs" />
+    <Compile Include="Table\MatchSchedule.cs" />
+    <Compile Include="Table\QualsData.cs" />
+    <Compile Include="Table\Quals.cs" />
+    <Compile Include="Table\ScheduleDetail.cs" />
+    <Compile Include="Table\ScheduleStation.cs" />
+    <Compile Include="Table\Team.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

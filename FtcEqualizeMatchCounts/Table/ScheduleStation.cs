@@ -4,7 +4,7 @@
     // ScheduleStation
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_ScheduleStation : Table<Table_ScheduleStation.Row>
+    class ScheduleStation : Table<ScheduleStation.Row>
         {
         public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
             {
@@ -20,7 +20,7 @@
             public string ModifiedBy;
             }
 
-        public Table_ScheduleStation(Database database) : base(database)
+        public ScheduleStation(Database database) : base(database)
             {
             }
 

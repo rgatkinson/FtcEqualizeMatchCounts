@@ -6,7 +6,7 @@ namespace FEMC
     // Match Schedule
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_MatchSchedule : Table<Table_MatchSchedule.Row>
+    class MatchSchedule : Table<MatchSchedule.Row>
         {
         public class Row : TableRow
             {
@@ -16,7 +16,7 @@ namespace FEMC
             public string            Label;
             }
 
-        public Table_MatchSchedule(Database database) : base(database)
+        public MatchSchedule(Database database) : base(database)
             {
             }
 

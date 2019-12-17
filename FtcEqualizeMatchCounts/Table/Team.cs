@@ -4,7 +4,7 @@
     // Team
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_Team : Table<Table_Team.Row>
+    class Team : Table<Team.Row>
         {
         public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
             {
@@ -33,7 +33,7 @@
             public string ModifiedBy; // e.g. "Team Data Download"
             }
 
-        public Table_Team(Database database) : base(database)
+        public Team(Database database) : base(database)
             {
             }
 

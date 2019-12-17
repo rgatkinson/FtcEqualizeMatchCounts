@@ -12,8 +12,31 @@ namespace FtcEqualizeMatchCounts
         // State
         //---------------------------------------------------------------------------------------------------
 
+        public class Tables_T
+            {
+            public Table_Match Match;
+            public Table_matchSchedule MatchSchedule;
+            public Table_Team Team;
+
+            public Tables_T(Database db)
+                {
+                Match = new Table_Match(db);
+                MatchSchedule = new Table_matchSchedule(db);
+                Team = new Table_Team(db);
+                }
+
+            public void Load()
+                {
+                MatchSchedule.Load();
+                Match.Load();
+                Team.Load();
+                }
+            }
+
+        public SqliteConnection Connection = null;
+        public Tables_T Tables;
+
         string fileName = null;
-        SqliteConnection connection = null;
         bool disposed = false;
 
         //---------------------------------------------------------------------------------------------------
@@ -23,6 +46,7 @@ namespace FtcEqualizeMatchCounts
         public Database(string fileName)
             {
             this.fileName = Path.GetFullPath(fileName);
+            this.Tables = new Tables_T(this);
             
             Open();
             }
@@ -63,22 +87,27 @@ namespace FtcEqualizeMatchCounts
             string uri = new System.Uri(fileName).AbsoluteUri;
             string cs = "Filename=" + fileName;
 
-            connection = new SqliteConnection(cs);
-            connection.Open();
+            Connection = new SqliteConnection(cs);
+            Connection.Open();
             }
 
         public void Close()
             {
-            if (connection != null)
+            if (Connection != null)
                 {
-                connection.Close();
-                connection = null;
+                Connection.Close();
+                Connection = null;
                 }
             }
 
         //---------------------------------------------------------------------------------------------------
         // Querying
         //---------------------------------------------------------------------------------------------------
+
+        public void Load()
+            {
+            Tables.Load();
+            }
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
@@ -89,7 +118,7 @@ namespace FtcEqualizeMatchCounts
         // 
         public List<List<object>> ExecuteQuery(string query)
             {
-            using var cmd = connection.CreateCommand();
+            using var cmd = Connection.CreateCommand();
             cmd.CommandText = query;
 
             List<List<object>> result = new List<List<object>>();
@@ -107,7 +136,7 @@ namespace FtcEqualizeMatchCounts
                     else if (type == typeof(string)) { value = rdr.GetString(i); }
                     else if (type == typeof(byte[])) { value = GetBytes(rdr, i); }
                     //
-                    else {
+                    else { // not used in Microsoft.Data.Sqllite
                              if (type == typeof(Int32))  { value = rdr.GetInt32(i); }
                         else if (type == typeof(Int16))  { value = rdr.GetInt16(i); }
                         else if (type == typeof(bool))   { value = rdr.GetBoolean(i); }

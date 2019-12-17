@@ -95,6 +95,13 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="Table_Match.cs" />
+    <Compile Include="Table_matchSchedule.cs" />
+    <Compile Include="Table_qualsData.cs" />
+    <Compile Include="Table_quals.cs" />
+    <Compile Include="Table_ScheduleDetail.cs" />
+    <Compile Include="Table_ScheduleStation.cs" />
+    <Compile Include="Table_Team.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

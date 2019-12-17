@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
+using System.Globalization;
+using System.Reflection;
+using System.Security.Cryptography;
+using Microsoft.Data.Sqlite;
 
 
 namespace FtcEqualizeMatchCounts
@@ -17,7 +22,7 @@ namespace FtcEqualizeMatchCounts
     //              ditto FMSEventId, FMSTeamId therein
 
     //--------------------------------------------------------------------------------------------------------------------------
-    // Base classes
+    // Table
     //--------------------------------------------------------------------------------------------------------------------------
 
     abstract class Table
@@ -37,282 +42,283 @@ namespace FtcEqualizeMatchCounts
             List<List<object>> table = database.ExecuteQuery(query);
             return table;
             }
+
+        public List<Row_T> Load<Row_T>() where Row_T : TableRow, new()
+            {
+            List<Row_T> result = new List<Row_T>();
+
+            using var cmd = database.Connection.CreateCommand();
+            cmd.CommandText = $"SELECT * FROM { TableName }";
+
+            SqliteDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+                {
+                Row_T row = new Row_T();
+                for (int i = 0; i < rdr.FieldCount; i++)
+                    {
+                    object value = rdr.IsDBNull(i) ? null : rdr[i];
+                    row.SetField(i, value);
+                    }
+                result.Add(row);
+                }
+
+            return result;
+            }
         }
 
 
-    abstract class TableRecord
+    abstract class TableRow
         {
         //----------------------------------------------------------------------------------------------------------------------
-        // Column Types
+        // Accessing
         //----------------------------------------------------------------------------------------------------------------------
 
-        public abstract class GuidColumn
+        // See
+        //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
+        //  https://stackoverflow.com/questions/51933421/system-data-sqlite-vs-microsoft-data-sqlite
+        //
+        // "we embrace the fact that SQLite only supports four primitive types (INTEGER, REAL, TEXT, and BLOB)
+        // and implement ADO.NET APIs in a way that helps you coerce values between these and .NET types"
+        // 
+        public void SetField(int index, object value)
             {
-            public Guid Guid;
-            public bool StoreAsText = false;    // stores as a 16byte blob otherwise
-            }
+            Type type = GetType();
 
-        public class FMSMatchId : GuidColumn
-            {
-            }
+            FieldInfo field = type.GetFields()[index];
+            Trace.Assert(field.IsPublic);   // TableRow are of limited structure
 
-        public class FMSEventId : GuidColumn
-            {
-            }
-
-        public class FMSRegionId : GuidColumn
-            {
-            }
-
-        public class FMSScheduleDetailId : GuidColumn
-            {
-            }
-
-        public class FMSTeamId : GuidColumn
-            {
-            }
-
-        public class FMSHomeCMPId : GuidColumn
-            {
-
-            }
-
-        public class RowVersion : GuidColumn // seen: size=0, size=16, but all zeros
-            {
-
-            }
-
-        //------------------------------------
-
-        public class StringDateTime // Nullable always?
-            {
-            // e.g.:
-            //  2019-12-15T00:41:31.957Z
-            //  2019-12-15T00:40:28.120Z
-
-            }
-
-        public class IntegerBool // boolean stored as 'integer' in schema instead of 'boolean'
-            {
-
-            }
-
-        //------------------------------------
-
-        public abstract class BlobColumn
-            {
-
-            }
-
-        public class ScoreDetails : BlobColumn // size=348 bytes (!)
-            {
-
-            }
-
-        public class FieldConfigurationDetails : BlobColumn
-            {
-            }
-
-        public class GameSpecifics : BlobColumn
-            {
+            if (field.FieldType == typeof(string))
+                {
+                field.SetValue(this, value);
+                }
+            else if (field.FieldType == typeof(long))
+                {
+                field.SetValue(this, value);
+                }
+            else if (field.FieldType == typeof(double))
+                {
+                field.SetValue(this, value);
+                }
+            else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                {
+                TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
+                column.SetValue(value);
+                field.SetValue(this, column);
+                }
+            else
+                {
+                // not yet handled
+                }
             }
 
         }
 
     //--------------------------------------------------------------------------------------------------------------------------
-    // Match (probably don't need: written when match is *scored*)
+    // Columns
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_Match : Table
+    abstract class TableColumn
         {
-        public class Record : TableRecord
-            {
-            public FMSMatchId FMSMatchId;
-            public FMSScheduleDetailId FMSScheduleDetailId;
-            public long PlayNumber;
-            public long FieldType;
-            public StringDateTime InitialPrestartTime;
-            public StringDateTime FinalPreStartTime;
-            public long PreStartCount;
-            public StringDateTime AutoStartTime;
-            public StringDateTime AutoEndTime;
-            public StringDateTime TeleopStartTime;
-            public StringDateTime TeleopEndTime;
-            public StringDateTime RefCommitTime;
-            public StringDateTime ScoreKeeperCommitTime;
-            public StringDateTime PostMatchTime;
-            public StringDateTime CancelMatchTime;
-            public StringDateTime CycleTime;
-            public long RedScore;
-            public long BlueScore;
-            public long RedPenalty;
-            public long BluePenalty;
-            public long RedAutoScore;
-            public long BlueAutoScore;
-            public ScoreDetails ScoreDetails;   
-            public long HeadRefReview;
-            public string VideoUrl;
-            public StringDateTime CreatedOn;
-            public string CreatedBy;     // e.g.: "Scorekeeper Commit"
-            public StringDateTime ModifiedOn;
-            public string ModifiedBy;
-            public FMSEventId FMSEventId;
-            public RowVersion RowVersion; 
-            }
-
-        public Table_Match(Database database) : base(database)
+        public virtual void SetValue(object value)
             {
             }
-
-        public override string TableName => "Match";
         }
 
-    //--------------------------------------------------------------------------------------------------------------------------
-    // Match Schedule
-    //--------------------------------------------------------------------------------------------------------------------------
-
-    class Table_matchSchedule : Table
+    abstract class GuidColumn : TableColumn
         {
-        public class Record : TableRecord
+        public System.Guid? Value = null;
+
+        public override string ToString()
             {
-            public DateTime     start;
-            public DateTime     end;
-            public long         type;
-            public string       label;
+            return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
             }
 
-        public Table_matchSchedule(Database database) : base(database)
+        public void SetValue(System.Guid? guid)
             {
+            Value = guid;
             }
 
-        public override string TableName => "matchSchedule";
+        public void SetValue(byte[] bytes)
+            {
+            if (bytes == null)
+                SetValue((Guid?)null);
+            else
+                {
+                if (bytes.Length == 0)
+                    {
+                    bytes = new byte[16]; // account for quirky RowVersion seen in practice (are they *really* guids?)
+                    }
+                SetValue(new Guid(bytes));
+                }
+            }
+
+        public void SetValue(string value)
+            {
+            SetValue(new Guid(value));
+            }
         }
 
-    //--------------------------------------------------------------------------------------------------------------------------
-    // Quals
-    //--------------------------------------------------------------------------------------------------------------------------
 
-    class Table_quals : Table
+    class GuidColumnAsString : GuidColumn
         {
-        public class Record : TableRecord
+        public override void SetValue(object value)
             {
-            public long Match;  // small integer match number: 1, 2, 3, 4, 5, ...; see ScheduleDetail.MatchNumber
-            public long Red1;
-            public bool Red1Surrogate;
-            public long Red2;
-            public bool Red2Surrogate;
-            public long Blue1;
-            public bool Blue1Surrogate;
-            public long Blue2;
-            public bool Blue2Surrogate;
+            this.SetValue((string)value);
             }
-
-        public Table_quals(Database database) : base(database)
-            {
-            }
-
-        public override string TableName => "quals";
         }
 
-    //--------------------------------------------------------------------------------------------------------------------------
-    // ScheduleDetail
-    //--------------------------------------------------------------------------------------------------------------------------
-
-    class Table_ScheduleDetail : Table
+    class GuidColumnAsBlob : GuidColumn
         {
-        public class Record : TableRecord
+        public override void SetValue(object value)
             {
-            public FMSScheduleDetailId FMSScheduleDetailId;
-            public FMSEventId FMSEventId;
-            public long TournamentLevel;    // 2 for quals?
-            public long MatchNumber;        // see quals.Match
-            public long FieldType;          // 1 for everything we've seen
-            public StringDateTime StartTime;
-            public FieldConfigurationDetails FieldConfigurationDetails;
-            public StringDateTime CreatedOn;    // null is ok
-            public string CreatedBy;            // e.g.: "FTC Match Maker"
-            public StringDateTime ModifiedOn;   // null is ok
-            public string ModifiedBy;
-            public RowVersion RowVersion;
+            this.SetValue((byte[]) value);
             }
-
-        public Table_ScheduleDetail(Database database) : base(database)
-            {
-
-            }
-
-        public override string TableName => "ScheduleDetail";
         }
 
-    //--------------------------------------------------------------------------------------------------------------------------
-    // ScheduleStation
-    //--------------------------------------------------------------------------------------------------------------------------
-
-    class Table_ScheduleStation : Table
+    class FMSMatchId : GuidColumnAsBlob
         {
-        public class Record : TableRecord // Four records for each match Alliance (1,2) x Station (1,2)
-            {
-            public FMSScheduleDetailId FMSScheduleDetailId;
-            public long Alliance;
-            public long Station;
-            public FMSEventId FmsEventId;
-            public FMSTeamId FmsTeamId;
-            public long IsSurrogate;
-            public StringDateTime CreatedOn; // can be null
-            public string CreatedBy; // e.g. "FTC Match Maker"
-            public StringDateTime ModifedOn;
-            public string ModifiedBy;
-            }
-
-
-        public Table_ScheduleStation(Database database) : base(database)
-            {
-
-            }
-
-        public override string TableName => "ScheduleStation";
         }
 
-
-    //--------------------------------------------------------------------------------------------------------------------------
-    // Team
-    //--------------------------------------------------------------------------------------------------------------------------
-
-    class Table_Team : Table
+    class FMSMatchIdAsString : GuidColumnAsString
         {
-        public class Record : TableRecord // Four records for each match Alliance (1,2) x Station (1,2)
-            {
-            public FMSEventId FMSEventId;
-            public FMSTeamId FMSTeamId;
-            public FMSRegionId FMSRegionId;
-            public long TeamId; // eg: 1029074, 1028838, 1029022, etc; not sure how used?
-            public long TeamNumber;
-            public string TeamNameLong;
-            public string TeamNameShort;
-            public string RobotName;
-            public string City;
-            public string StateProv;
-            public string Country;
-            public long RookieYear;
-            public IntegerBool WasAddedFromUI;
-            public IntegerBool CMPPrequalified;
-            public string SchoolName;
-            public IntegerBool DemoTeam;
-            public FMSHomeCMPId FMSHomeCMPId;
-            public GameSpecifics GameSpecifics;
-            public StringDateTime CreatedOn;
-            public string CreatedBy; // e.g. "Team Data Download"
-            public StringDateTime ModifedOn;
-            public string ModifiedBy; // e.g. "Team Data Download"
-            }
-
-        public Table_Team(Database database) : base(database)
-            {
-            }
-
-        public override string TableName => "Team";
         }
 
+    class FMSEventId : GuidColumnAsBlob
+        {
+        }
 
+    class FMSRegionId : GuidColumnAsBlob
+        {
+        }
 
+    class FMSScheduleDetailId : GuidColumnAsBlob
+        {
+        }
+
+    class FMSScheduleDetailIdAsString : GuidColumnAsString
+        {
+        }
+
+    class FMSTeamId : GuidColumnAsBlob
+        {
+        }
+
+    class FMSHomeCMPId : GuidColumnAsBlob
+        {
+
+        }
+
+    class RowVersion : GuidColumnAsBlob // seen: size=0, size=16, but all zeros
+        {
+
+        }
+
+    //------------------------------------
+
+    class DateTimeColumn : TableColumn
+        {
+        public System.DateTimeOffset? Value;
+
+        public System.DateTime? DateTime => Value?.UtcDateTime.ToUniversalTime();
+
+        public override string ToString()
+            {
+            // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string
+            // ISO8601 with 3 decimal places
+            return DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? "null";
+            }
+
+        public void SetValue(System.DateTimeOffset? dateTimeOffset)
+            {
+            Value = dateTimeOffset;
+            }
+
+        public void SetValue(string value)
+            {
+            SetValue(value == null ? (DateTimeOffset?)null : DateTimeOffset.Parse(value));
+            }
+
+        public void SetValue(long msSince1970UnixEpoch)
+            {
+            SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
+            }
+        }
+
+    class DateTimeAsInteger : DateTimeColumn
+        {
+        public override void SetValue(object value)
+            {
+            SetValue((long) value);
+            }
+        }
+
+    class DateTimeAsString : DateTimeColumn // Nullable always?
+        {
+        // e.g.:
+        //  2019-12-15T00:41:31.957Z
+        //  2019-12-15T00:40:28.120Z
+        public override void SetValue(object value)
+            {
+            SetValue((string) value);
+            }
+        }
+
+    class BooleanAsInteger : TableColumn // boolean stored as 'integer' in schema instead of 'boolean'
+        {
+        public bool Value;
+
+        public override string ToString()
+            {
+            return Value.ToString();
+            }
+
+        public void SetValue(bool value)
+            {
+            Value = value;
+            }
+
+        public void SetValue(long value)
+            {
+            SetValue(value != 0);
+            }
+
+        public override void SetValue(object value)
+            {
+            SetValue((long)value);
+            }
+        }
+
+    //------------------------------------
+
+    abstract class BlobColumn : TableColumn
+        {
+        public byte[] Value;
+
+        public override string ToString()
+            {
+            return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
+            }
+
+        public void SetValue(byte[] value)
+            {
+            Value = value;
+            }
+
+        public override void SetValue(object value)
+            {
+            SetValue((byte[]) value);
+            }
+        }
+
+    class ScoreDetails : BlobColumn // size=348 bytes (!)
+        {
+        }
+
+    class FieldConfigurationDetails : BlobColumn
+        {
+        }
+
+    class GameSpecifics : BlobColumn
+        {
+        }
     }

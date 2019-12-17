@@ -108,8 +108,7 @@ namespace FtcEqualizeMatchCounts
 
             using (Database db = new Database(programOptions.Filename))
                 {
-                var table = new Table_ScheduleStation(db);
-                var values = table.SelectAll();
+                db.Load();
                 }
             }
 

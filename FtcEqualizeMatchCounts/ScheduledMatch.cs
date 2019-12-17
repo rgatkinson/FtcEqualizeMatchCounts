@@ -21,6 +21,15 @@ namespace FEMC
         public Team Blue2;
         public bool Blue2Surrogate;
 
+        public bool Plays(Team team)
+            {
+            if (!Red1Surrogate && Red1 == team) return true;
+            if (!Red2Surrogate && Red2 == team) return true;
+            if (!Blue1Surrogate && Blue1 == team) return true;
+            if (!Blue2Surrogate && Blue2 == team) return true;
+            return false;
+            }
+
         public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db)
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;

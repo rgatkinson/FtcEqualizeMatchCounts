@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace FEMC
     class Team : DBObject
         {
         public FMSTeamId TeamId;
-        public long TeamNumber;
+        public int TeamNumber;
         public string Name;
 
         public override string ToString()
@@ -33,11 +34,33 @@ namespace FEMC
                 }
             }
 
+        public int ScheduledMatchCount
+            {
+            get {
+                int result = 0;
+                foreach (ScheduledMatch scheduledMatch in Database.ScheduledMatchesById.Values)
+                    {
+                    if (scheduledMatch.Plays(this))
+                        {
+                        result += 1;
+                        }
+                    }
+                return result;
+                }
+            }
+
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
             TeamId = row.FMSTeamId;
-            TeamNumber = row.TeamNumber.Value.Value;
+            TeamNumber = (int)row.TeamNumber.Value.Value;
             Name = row.TeamNameShort.Value;
+            }
+
+        public void Report(TextWriter writer)
+            {
+            writer.WriteLine($"Team {TeamNumber}: {Name}:");
+            writer.WriteLine($"    scheduled match count: {ScheduledMatchCount}");
+            writer.WriteLine($"    played match count: {PlayedMatchCount}");
             }
         }
     }

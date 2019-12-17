@@ -17,6 +17,7 @@ namespace FEMC
 
         public IDictionary<long, Team> TeamsByNumber = new Dictionary<long, Team>();
         public IDictionary<FMSTeamId, Team> TeamsById = new Dictionary<FMSTeamId, Team>();
+        public List<Team> Teams = new List<Team>();
 
         public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
@@ -92,17 +93,19 @@ namespace FEMC
         public void Load()
             {
             Tables.Load();
-            LoadTeams();
+            LoadData();
             }
 
-        public void LoadTeams()
+        public void LoadData()
             {
             foreach (DBTables.Team.Row row in Tables.Team.Rows)
                 {
                 Team team = new Team(this, row);
                 TeamsByNumber[team.TeamNumber] = team;
                 TeamsById[team.TeamId] = team;
+                Teams.Add(team);
                 }
+            Teams.Sort((a, b) => a.TeamNumber - b.TeamNumber);
 
             foreach (DBTables.ScheduledMatch.Row row in Tables.ScheduledMatch.Rows)
                 {
@@ -113,7 +116,21 @@ namespace FEMC
 
             foreach (DBTables.PlayedMatch.Row row in Tables.PlayedMatch.Rows)
                 {
+                PlayedMatch playedMatch = new PlayedMatch(this, row);
+                }
+            }
 
+        public void Report(TextWriter writer)
+            {
+            bool first = true;
+            foreach (Team team in Teams)
+                {
+                if (!first)
+                    {
+                    writer.WriteLine("");
+                    }
+                team.Report(writer);
+                first = false;
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using Mono.Options;
 
@@ -100,16 +101,19 @@ namespace FEMC
 
     class Program
         {
-        ProgramOptions programOptions = new ProgramOptions();
+        public ProgramOptions programOptions = new ProgramOptions();
+        public Database Database = null;
 
         void DoMain(string[] args)
             {
             programOptions.Parse(args);
 
-            using (Database db = new Database(programOptions.Filename))
-                {
-                db.Load();
-                }
+            Database = new Database(programOptions.Filename);
+            Database.Load();
+
+            Database.Report(Console.Out);
+
+            Database.Close();
             }
 
         static void Main(string[] args)

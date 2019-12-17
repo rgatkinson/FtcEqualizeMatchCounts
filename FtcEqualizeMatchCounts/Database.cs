@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using FEMC.DAL;
@@ -145,10 +146,13 @@ namespace FEMC
                 }
             }
 
-        public void Report(TextWriter writer)
+        public void ReportEvent(IndentedTextWriter writer)
             {
-            writer.WriteLine();
 
+            }
+
+        public void ReportTeams(IndentedTextWriter writer)
+            {
             bool firstTeam = true;
             foreach (Team team in Teams)
                 {

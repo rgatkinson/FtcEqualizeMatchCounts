@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Atkinson Labs")]
 [assembly: AssemblyProduct("FtcEqualizeMatchCounts")]
-[assembly: AssemblyCopyright("Copyright (c) Robert Atkinson 2019")]
+[assembly: AssemblyCopyright("Copyright (c) 2019 Robert Atkinson")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

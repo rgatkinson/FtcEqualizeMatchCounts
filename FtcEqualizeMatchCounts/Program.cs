@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Mono.Options;
+using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Mono.Options;
 
 namespace FEMC
     {
@@ -16,25 +16,33 @@ namespace FEMC
         public int?         MatchCount = MatchCountDefault;
         public bool         ShowUsage = false;
         public List<String> ExtraOptions = new List<string>();
-        public bool         ReportOnly = false;
+        public string       IndentString = "   ";
 
         public string       EventCode = null;
 
-        public TextWriter   StdOut => Console.Out;
-        public TextWriter   StdErr => Console.Error;
+        public IndentedTextWriter StdOut => MakeIndentedTextWriter(Console.Out);
+        public IndentedTextWriter StdErr => MakeIndentedTextWriter(Console.Error);
 
         private OptionSet options;
+        private Program program;
 
-        public ProgramOptions()
+        public ProgramOptions(Program program)
             {
+            this.program = program;
             options = new OptionSet
                 {
                     { "c=|count=", $"equalize to the indicated number of matches; default: {MatchCountDefault}", (int count) => MatchCount = count },
                     { "m|max",     $"equalize to the maximum number of matches already played by any team", (string m) => MatchCount = null },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
-                    { "r|report",  $"make no changes; just report on the current contents of the database", (string r) => ReportOnly = r != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
                 };
+            }
+
+        private IndentedTextWriter MakeIndentedTextWriter(TextWriter writer)
+            {
+            var result = new IndentedTextWriter(writer, IndentString);
+            result.Indent = 0;
+            return result;
             }
 
         public void Parse(string[] args)
@@ -83,7 +91,9 @@ namespace FEMC
 
         private void Usage(OptionException e)
             {
-            TextWriter writer = Console.Error;
+            IndentedTextWriter writer = StdErr;
+
+            program.OutputBannerAndCopyright(writer);
 
             if (e != null)
                 {
@@ -91,10 +101,12 @@ namespace FEMC
                 }
 
             writer.WriteLine($"Usage: { ProgramName } [OPTIONS]* scoringDatabase.db:");
+            writer.Indent++;
             writer.WriteLine("Equalize the number of matches played by all teams in the FTC scoring database");
-            writer.WriteLine("by adding un-played surrogate matches as necessary. These added matches should");
-            writer.WriteLine("then be manually scored as 0-0 ties in the FTC ScoreKeeper");
+            writer.WriteLine("by adding un-played Equalization Matches as necessary. These added matches need");
+            writer.WriteLine("to then be manually scored as 0-0 ties using the FTC ScoreKeeper.");
             writer.WriteLine();
+            writer.Indent--;
             writer.WriteLine("Options:");
             options.WriteOptionDescriptions(writer);
             Environment.Exit(e == null ? 0 : -1);
@@ -107,8 +119,14 @@ namespace FEMC
 
     class Program
         {
-        public ProgramOptions programOptions = new ProgramOptions();
-        public Database Database = null;
+        public ProgramOptions programOptions;
+        public Database Database;
+
+        public Program()
+            {
+            programOptions = new ProgramOptions(this);
+            Database = null;
+            }
 
         string ProgramVersionString()
             {
@@ -141,6 +159,7 @@ namespace FEMC
             writer.WriteLine(banner);
             writer.WriteLine(ProgramCopyrightNotice());
             writer.WriteLine(under);
+            writer.WriteLine();
             }
 
         void DoMain(string[] args)
@@ -151,7 +170,7 @@ namespace FEMC
             Database = new Database(programOptions.Filename);
             Database.Load();
 
-            Database.Report(programOptions.StdOut);
+            Database.ReportTeams(programOptions.StdOut);
 
             Database.Close();
             }

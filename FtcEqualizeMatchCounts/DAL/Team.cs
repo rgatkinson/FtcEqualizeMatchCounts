@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.CodeDom.Compiler;
+using System.IO;
 
 namespace FEMC.DAL
     {
@@ -68,13 +69,15 @@ namespace FEMC.DAL
             Name = row.TeamNameShort.Value;
             }
 
-        public void Report(TextWriter writer)
+        public void Report(IndentedTextWriter writer)
             {
             writer.WriteLine($"Team {TeamNumber}: {Name}:");
-            writer.WriteLine($"    total: played match count: { TotalMatchCountPlayed }");
-            writer.WriteLine($"    previous events: played match count: { PreviousEventMatchCount }");
-            writer.WriteLine($"    this event: scheduled match count: { ScheduledMatchCount }");
-            writer.WriteLine($"    this event: played match count: { PlayedMatchCount }");
+            writer.Indent++;
+            writer.WriteLine($"total: played match count: { TotalMatchCountPlayed }");
+            writer.WriteLine($"previous events: played match count: { PreviousEventMatchCount }");
+            writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCount }");
+            writer.WriteLine($"this event: played match count: { PlayedMatchCount }");
+            writer.Indent--;
             }
         }
     }

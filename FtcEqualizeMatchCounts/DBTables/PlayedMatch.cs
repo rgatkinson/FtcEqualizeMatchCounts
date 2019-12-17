@@ -1,4 +1,5 @@
-﻿namespace FEMC.DBTables
+﻿#pragma warning disable 649
+namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Match (probably don't need: written when match is *scored*)

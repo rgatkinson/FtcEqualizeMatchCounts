@@ -177,6 +177,7 @@ namespace FEMC
 
             Database.ReportEvents(programOptions.StdOut);
 
+            programOptions.StdOut.WriteLine();
             Database.ReportTeams(programOptions.StdOut, programOptions.Verbose);
 
             Database.Close();

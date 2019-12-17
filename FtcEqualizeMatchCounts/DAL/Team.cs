@@ -22,11 +22,27 @@ namespace FEMC.DAL
         public int ScheduledMatchCountThisEvent => ScheduledMatchesThisEvent.Count;
         public int LeagueHistoryMatchCount => LeagueHistoryMatches.Count;
         public int PlayedMatchCountThisEvent => PlayedMatchesThisEvent.Count;
+        public int EqualizationMatchCount => EqualizationMatches.Count;
+
+        public List<Match> EqualizationMatches
+            {
+            get {
+                var result = new List<Match>();
+                result.AddRange(LeagueHistoryMatches);
+                foreach (var match in ScheduledMatchesThisEvent)
+                    {
+                    if (match.IsEqualizationMatch)
+                        {
+                        result.Add(match);
+                        }
+                    }
+                return result;
+                }
+            }
 
         public List<PlayedMatch> PlayedMatchesThisEvent
             {
-            get
-                {
+            get {
                 var result = new List<PlayedMatch>();
                 foreach (var matches in Database.PlayedMatchesByNumber.Values)
                     {
@@ -44,8 +60,7 @@ namespace FEMC.DAL
 
         public List<ScheduledMatch> ScheduledMatchesThisEvent
             {
-            get
-                {
+            get {
                 var result = new List<ScheduledMatch>();
                 foreach (var match in Database.ScheduledMatchesByNumber.Values)
                     {
@@ -58,14 +73,14 @@ namespace FEMC.DAL
                 }
             }
 
+        // Only the matches not actually in *this*event*
         public List<LeagueHistoryMatch> LeagueHistoryMatches
             {
-            get
-                {
+            get {
                 var result = new List<LeagueHistoryMatch>();
                 foreach (var match in Database.LeagueHistoryMatchesByNumber.Values)
                     {
-                    if (match.Plays(this))
+                    if (match.EventCode != Database.ThisEventCode && match.Plays(this))
                         {
                         result.Add(match);
                         }
@@ -91,14 +106,18 @@ namespace FEMC.DAL
         // Reporting
         //----------------------------------------------------------------------------------------
 
-        public void Report(IndentedTextWriter writer)
+        public void Report(IndentedTextWriter writer, bool verbose, int max)
             {
             writer.WriteLine($"Team {TeamNumber}: {Name}:");
             writer.Indent++;
-            writer.WriteLine($"total: played match count: { TotalMatchCountPlayed }");
-            writer.WriteLine($"previous events: played match count: { LeagueHistoryMatchCount }");
-            writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCountThisEvent }");
-            writer.WriteLine($"this event: played match count: { PlayedMatchCountThisEvent }");
+            writer.WriteLine($"equalization match count: { EqualizationMatchCount }");
+            writer.WriteLine($"equalization match count deficit: { max - EqualizationMatchCount }");
+            if (verbose)
+                {
+                writer.WriteLine($"previous events: played match count: { LeagueHistoryMatchCount }");
+                writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCountThisEvent }");
+                writer.WriteLine($"this event: played match count: { PlayedMatchCountThisEvent }");
+                }
             writer.Indent--;
             }
         }

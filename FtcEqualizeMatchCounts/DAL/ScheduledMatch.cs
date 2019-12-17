@@ -1,4 +1,6 @@
-﻿namespace FEMC.DAL
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace FEMC.DAL
     {
     class ScheduledMatch : ThisEventMatch
         {
@@ -8,6 +10,7 @@
 
         private long matchNumber;
         public string Description;
+        public string CreatedBy;
 
         public Team Red1;
         public bool Red1Surrogate;
@@ -21,6 +24,8 @@
         public override ScheduledMatch Scheduled => this;
 
         public override long MatchNumber => matchNumber;
+
+        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName);
 
 
         // Does this team play in this match?
@@ -41,7 +46,8 @@
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;
             matchNumber = row.MatchNumber.NonNullValue;
-            Description = row.Description.NonNullValue;
+            Description = row.Description.Value;
+            CreatedBy = row.CreatedBy.Value;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber];
 

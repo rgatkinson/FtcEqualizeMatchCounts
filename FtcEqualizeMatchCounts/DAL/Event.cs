@@ -36,7 +36,7 @@ namespace FEMC.DAL
             writer.WriteLine($"Event Code: {EventCode}");
             if (Start.HasValue)
                 {
-                writer.WriteLine($"Start: {Start.Value}");
+                writer.WriteLine($"Event Start: {Start.Value}");
                 }
             }
         }

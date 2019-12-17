@@ -16,19 +16,28 @@ namespace FEMC
         public SqliteConnection Connection = null;
         public Tables Tables;
 
-        public IDictionary<long, Team> TeamsByNumber = new Dictionary<long, Team>();
-        public IDictionary<FMSTeamId, Team> TeamsById = new Dictionary<FMSTeamId, Team>();
-        public List<Team> Teams = new List<Team>();
-
-        public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
+        public IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
+        public IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
+        public List<Team>                                       Teams = new List<Team>();
+        public IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
+        public IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
+        public IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
+        public IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
 
-        public IDictionary<long, List<PlayedMatch>> PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
+        public int MaxEqualizationMatchCount
+            {
+            get {
+                int result = 0;
+                foreach (Team team in Teams)
+                    {
+                    result = Math.Max(result, team.EqualizationMatchCount);
+                    }
+                return result;
+                }
+            }
 
-        public IDictionary<long, LeagueHistoryMatch> LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
-
-
-        public IDictionary<string, Event> EventsByCode = new Dictionary<string, Event>();
+        public string EqualizationMatchCreatorName => "FTC Equalize Match Counts";
 
         public string ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
         public Event ThisEvent => EventsByCode[ThisEventCode];
@@ -185,6 +194,7 @@ namespace FEMC
             writer.WriteLine("This event:");
             writer.Indent++;
             ThisEvent.Report(writer);
+            writer.WriteLine($"{Teams.Count} teams participating");
             writer.Indent--;
 
             List<Event> otherEvents = OtherEvents;
@@ -209,16 +219,21 @@ namespace FEMC
 
         public void ReportTeams(IndentedTextWriter writer, bool verbose)
             {
-            bool firstTeam = true;
+            int max = MaxEqualizationMatchCount;
+
+            writer.WriteLine($"Teams: equalizing match count={max}");
+            writer.Indent++;
+
             foreach (Team team in Teams)
                 {
-                if (!firstTeam)
-                    {
-                    writer.WriteLine("");
+                if (verbose || team.EqualizationMatchCount < max)
+                    { 
+                    writer.WriteLine();
+                    team.Report(writer, verbose, max);
                     }
-                team.Report(writer);
-                firstTeam = false;
                 }
+
+            writer.Indent--;
             }
         }
     }

@@ -78,19 +78,20 @@ namespace FEMC
 
         private void Usage(OptionException e)
             {
-            TextWriter output = Console.Error;
+            TextWriter writer = Console.Error;
 
             if (e != null)
                 {
-                output.WriteLine(e.Message);
+                writer.WriteLine(e.Message);
                 }
 
-            output.WriteLine($"Usage: { ProgramName } [OPTIONS]* scoringDatabase.db:");
-            output.WriteLine("Equalize the number of matches played by all teams in the FTC scoring database");
-            output.WriteLine("by adding zero-scoring surrogate matches as necessary.");
-            output.WriteLine();
-            output.WriteLine("Options:");
-            options.WriteOptionDescriptions(output);
+            writer.WriteLine($"Usage: { ProgramName } [OPTIONS]* scoringDatabase.db:");
+            writer.WriteLine("Equalize the number of matches played by all teams in the FTC scoring database");
+            writer.WriteLine("by adding un-played surrogate matches as necessary. These added matches should");
+            writer.WriteLine("then be manually scored as 0-0 ties in the FTC ScoreKeeper");
+            writer.WriteLine();
+            writer.WriteLine("Options:");
+            options.WriteOptionDescriptions(writer);
             Environment.Exit(e == null ? 0 : -1);
             }
 

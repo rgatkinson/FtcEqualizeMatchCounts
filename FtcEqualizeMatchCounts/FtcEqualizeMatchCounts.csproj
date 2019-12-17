@@ -97,6 +97,9 @@
   <ItemGroup>
     <Compile Include="Database.cs" />
     <Compile Include="DBObject.cs" />
+    <Compile Include="DBTables\Config.cs" />
+    <Compile Include="DBTables\LeagueInfo.cs" />
+    <Compile Include="DBTables\LeagueMeets.cs" />
     <Compile Include="ScheduledMatch.cs" />
     <Compile Include="PlayedMatch.cs" />
     <Compile Include="Program.cs" />
@@ -122,19 +125,20 @@
     <Compile Include="TableColumn\GuidColumnAsBlob.cs" />
     <Compile Include="TableColumn\GuidColumnAsString.cs" />
     <Compile Include="TableColumn\StringColumn.cs" />
-    <Compile Include="TableColumn\LongColumn.cs" />
+    <Compile Include="TableColumn\ValueColumn.cs" />
     <Compile Include="TableColumn\RowVersion.cs" />
     <Compile Include="TableColumn\ScoreDetails.cs" />
     <Compile Include="TableColumn\TableColumn.cs" />
     <Compile Include="TableRow.cs" />
     <Compile Include="Tables.cs" />
-    <Compile Include="Table\PlayedMatch.cs" />
-    <Compile Include="Table\MatchSchedule.cs" />
-    <Compile Include="Table\QualsData.cs" />
-    <Compile Include="Table\Quals.cs" />
-    <Compile Include="Table\ScheduledMatch.cs" />
-    <Compile Include="Table\ScheduledMatchStation.cs" />
-    <Compile Include="Table\Team.cs" />
+    <Compile Include="DBTables\LeagueHistory.cs" />
+    <Compile Include="DBTables\PlayedMatch.cs" />
+    <Compile Include="DBTables\MatchSchedule.cs" />
+    <Compile Include="DBTables\QualsData.cs" />
+    <Compile Include="DBTables\Quals.cs" />
+    <Compile Include="DBTables\ScheduledMatch.cs" />
+    <Compile Include="DBTables\ScheduledMatchStation.cs" />
+    <Compile Include="DBTables\Team.cs" />
     <Compile Include="Team.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>

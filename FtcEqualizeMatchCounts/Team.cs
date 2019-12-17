@@ -49,6 +49,23 @@ namespace FEMC
                 }
             }
 
+        public int PreviousPlayedMatchCount
+            {
+            get {
+                int result = 0;
+                foreach (DBTables.LeagueHistory.Row row in Database.Tables.LeagueHistory.Rows)
+                    {
+                    if (row.Team.Value.Value == TeamNumber && row.MatchIsCounted && row.EventCode.Value != Database.EventCode)
+                        {
+                        result += 1;
+                        }
+                    }
+                return result;
+                }
+            }
+
+        public int TotalMatchCountPlayed => PreviousPlayedMatchCount + PlayedMatchCount;
+
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
             TeamId = row.FMSTeamId;
@@ -59,8 +76,10 @@ namespace FEMC
         public void Report(TextWriter writer)
             {
             writer.WriteLine($"Team {TeamNumber}: {Name}:");
-            writer.WriteLine($"    scheduled match count: {ScheduledMatchCount}");
-            writer.WriteLine($"    played match count: {PlayedMatchCount}");
+            writer.WriteLine($"    total: played match count: { TotalMatchCountPlayed }");
+            writer.WriteLine($"    previous events: played match count: { PreviousPlayedMatchCount }");
+            writer.WriteLine($"    this event: scheduled match count: { ScheduledMatchCount }");
+            writer.WriteLine($"    this event: played match count: { PlayedMatchCount }");
             }
         }
     }

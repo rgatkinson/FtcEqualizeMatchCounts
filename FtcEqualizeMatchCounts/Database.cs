@@ -22,6 +22,10 @@ namespace FEMC
         public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
 
+        public string EventCode => Tables.Config.Map["code"].Value.Value;
+        public string EventName => Tables.Config.Map["name"].Value.Value;
+        public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.Value);
+
         string fileName = null;
         bool disposed = false;
 

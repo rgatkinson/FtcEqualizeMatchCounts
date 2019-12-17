@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace FEMC
     {
-    class LongColumn : TableColumn
+    class ValueColumn<T> : TableColumn where T : struct, IEquatable<T>
         {
-        public long? Value;
+        public T? Value;
 
         public override string ToString()
             {
@@ -19,8 +19,8 @@ namespace FEMC
             {
             if (GetType() == obj?.GetType())
                 {
-                LongColumn them = (LongColumn)obj;
-                return Value == them.Value;
+                ValueColumn<T> them = (ValueColumn<T>)obj;
+                return Value.HasValue && them.Value.HasValue && Value.Value.Equals(them.Value.Value) || !Value.HasValue && !them.Value.HasValue;
                 }
             return false;
             }
@@ -30,14 +30,19 @@ namespace FEMC
             return HashCode.Combine(GetType(), Value, 0x83791);
             }
 
-        public void SetValue(long? value)
+        public void SetValue(T? value)
             {
             Value = value;
             }
 
         public override void SetValue(object value)
             {
-            SetValue((long?) value);
+            SetValue((T?)value);
             }
+
+        }
+
+    class LongColumn : ValueColumn<long>
+        {
         }
     }

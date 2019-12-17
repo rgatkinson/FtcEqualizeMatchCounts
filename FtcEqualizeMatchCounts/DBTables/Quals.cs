@@ -4,21 +4,21 @@
     // Quals
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Quals : Table<Quals.Row, LongColumn>
+    class Quals : Table<Quals.Row, NullableLong>
         {
-        public class Row : TableRow<LongColumn>
+        public class Row : TableRow<NullableLong>
             {
-            public LongColumn Match;  // small integer match number: 1, 2, 3, 4, 5, ...; see ScheduleDetail.MatchNumber
-            public LongColumn Red1;
+            public NullableLong Match;  // small integer match number: 1, 2, 3, 4, 5, ...; see ScheduleDetail.MatchNumber
+            public NullableLong Red1;
             public BooleanAsInteger Red1Surrogate;
-            public LongColumn Red2;
+            public NullableLong Red2;
             public BooleanAsInteger Red2Surrogate;
-            public LongColumn Blue1;
+            public NullableLong Blue1;
             public BooleanAsInteger Blue1Surrogate;
-            public LongColumn Blue2;
+            public NullableLong Blue2;
             public BooleanAsInteger Blue2Surrogate;
 
-            public override LongColumn PrimaryKey => Match;
+            public override NullableLong PrimaryKey => Match;
             }
 
         public Quals(Database database) : base(database)

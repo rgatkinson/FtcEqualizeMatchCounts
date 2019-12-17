@@ -124,8 +124,9 @@
     <Compile Include="TableColumn\GuidColumn.cs" />
     <Compile Include="TableColumn\GuidColumnAsBlob.cs" />
     <Compile Include="TableColumn\GuidColumnAsString.cs" />
+    <Compile Include="TableColumn\NullableLong.cs" />
     <Compile Include="TableColumn\StringColumn.cs" />
-    <Compile Include="TableColumn\ValueColumn.cs" />
+    <Compile Include="TableColumn\NullableColumn.cs" />
     <Compile Include="TableColumn\RowVersion.cs" />
     <Compile Include="TableColumn\ScoreDetails.cs" />
     <Compile Include="TableColumn\TableColumn.cs" />

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FEMC
     {
-    class ValueColumn<T> : TableColumn where T : struct, IEquatable<T>
+    class NullableColumn<T> : TableColumn where T : struct, IEquatable<T>
         {
         public T? Value;
 
@@ -19,7 +19,7 @@ namespace FEMC
             {
             if (GetType() == obj?.GetType())
                 {
-                ValueColumn<T> them = (ValueColumn<T>)obj;
+                NullableColumn<T> them = (NullableColumn<T>)obj;
                 return Value.HasValue && them.Value.HasValue && Value.Value.Equals(them.Value.Value) || !Value.HasValue && !them.Value.HasValue;
                 }
             return false;
@@ -40,9 +40,5 @@ namespace FEMC
             SetValue((T?)value);
             }
 
-        }
-
-    class LongColumn : ValueColumn<long>
-        {
         }
     }

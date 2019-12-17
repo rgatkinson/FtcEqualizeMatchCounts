@@ -11,8 +11,8 @@
             public FMSTeamId FMSTeamId;     // primary
             public FMSSeasonId FMSSeasonId;
             public FMSRegionId FMSRegionId;
-            public LongColumn TeamId; // eg: 1029074, 1028838, 1029022, etc; not sure how used?
-            public LongColumn TeamNumber;
+            public NullableLong TeamId; // eg: 1029074, 1028838, 1029022, etc; not sure how used?
+            public NullableLong TeamNumber;
             public StringColumn TeamNameLong;
             public StringColumn TeamNameShort;
             public StringColumn RobotName;
@@ -20,7 +20,7 @@
             public StringColumn StateProv;
             public StringColumn Country;
             public StringColumn Website;
-            public LongColumn RookieYear;
+            public NullableLong RookieYear;
             public BooleanAsInteger WasAddedFromUI;
             public BooleanAsInteger CMPPrequalified;
             public StringColumn SchoolName;

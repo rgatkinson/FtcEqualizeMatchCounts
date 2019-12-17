@@ -13,11 +13,11 @@
             {
             public FMSMatchId FMSMatchId; // primary
             public FMSScheduleDetailId FMSScheduleDetailId;
-            public LongColumn PlayNumber;
-            public LongColumn FieldType;
+            public NullableLong PlayNumber;
+            public NullableLong FieldType;
             public DateTimeAsString InitialPrestartTime;
             public DateTimeAsString FinalPreStartTime;
-            public LongColumn PreStartCount;
+            public NullableLong PreStartCount;
             public DateTimeAsString AutoStartTime;
             public DateTimeAsString AutoEndTime;
             public DateTimeAsString TeleopStartTime;
@@ -27,14 +27,14 @@
             public DateTimeAsString PostMatchTime;
             public DateTimeAsString CancelMatchTime;
             public DateTimeAsString CycleTime;
-            public LongColumn RedScore;
-            public LongColumn BlueScore;
-            public LongColumn RedPenalty;
-            public LongColumn BluePenalty;
-            public LongColumn RedAutoScore;
-            public LongColumn BlueAutoScore;
+            public NullableLong RedScore;
+            public NullableLong BlueScore;
+            public NullableLong RedPenalty;
+            public NullableLong BluePenalty;
+            public NullableLong RedAutoScore;
+            public NullableLong BlueAutoScore;
             public ScoreDetails ScoreDetails;   
-            public LongColumn HeadRefReview;
+            public NullableLong HeadRefReview;
             public StringColumn VideoUrl;
             public DateTimeAsString CreatedOn;
             public StringColumn CreatedBy;     // e.g.: "Scorekeeper Commit"

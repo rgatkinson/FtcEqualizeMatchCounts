@@ -6,22 +6,22 @@ using System.Threading.Tasks;
 
 namespace FEMC.DBTables
     {
-    class LeagueHistory: Table<LeagueHistory.Row, Tuple<LongColumn, StringColumn, LongColumn>>
+    class LeagueHistory: Table<LeagueHistory.Row, Tuple<NullableLong, StringColumn, NullableLong>>
         {
-        public class Row : TableRow<Tuple<LongColumn, StringColumn, LongColumn>>
+        public class Row : TableRow<Tuple<NullableLong, StringColumn, NullableLong>>
             {
-            public LongColumn Team;
+            public NullableLong Team;
             public StringColumn EventCode;
-            public LongColumn Match;
-            public LongColumn RankingPoints;
-            public LongColumn TieBreakingPoints;
-            public LongColumn Score;
+            public NullableLong Match;
+            public NullableLong RankingPoints;
+            public NullableLong TieBreakingPoints;
+            public NullableLong Score;
             public BooleanAsInteger DQ;
             public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"
 
             public bool MatchIsCounted => true; // WRONG
 
-            public override Tuple<LongColumn, StringColumn, LongColumn> PrimaryKey => new Tuple<LongColumn, StringColumn, LongColumn>(Team, EventCode, Match);
+            public override Tuple<NullableLong, StringColumn, NullableLong> PrimaryKey => new Tuple<NullableLong, StringColumn, NullableLong>(Team, EventCode, Match);
             }
 
         public LeagueHistory(Database database) : base(database)

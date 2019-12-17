@@ -10,9 +10,9 @@
             {
             public FMSScheduleDetailId FMSScheduleDetailId; // primary
             public FMSEventId FMSEventId;
-            public LongColumn TournamentLevel;    // 2 for quals?
-            public LongColumn MatchNumber;        // see quals.Match
-            public LongColumn FieldType;          // 1 for everything we've seen
+            public NullableLong TournamentLevel;    // 2 for quals?
+            public NullableLong MatchNumber;        // see quals.Match
+            public NullableLong FieldType;          // 1 for everything we've seen
             public StringColumn Description;
             public DateTimeAsString StartTime;
             public FieldConfigurationDetails FieldConfigurationDetails;

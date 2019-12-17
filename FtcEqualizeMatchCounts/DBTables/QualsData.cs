@@ -4,20 +4,20 @@
     // Quals
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class QualsData : Table<QualsData.Row, LongColumn>
+    class QualsData : Table<QualsData.Row, NullableLong>
         {
-        public class Row : TableRow<LongColumn>
+        public class Row : TableRow<NullableLong>
             {
-            public LongColumn Match; // small integer match number, primary
-            public LongColumn Status;
-            public LongColumn Randomization;
+            public NullableLong Match; // small integer match number, primary
+            public NullableLong Status;
+            public NullableLong Randomization;
             public DateTimeAsInteger Start;      // format?
             public DateTimeAsInteger ScheduleStart;
             public DateTimeAsInteger PostedTime;
             public FMSMatchIdAsString FMSMatchId;
             public FMSScheduleDetailIdAsString FMSScheduleDetailId;
 
-            public override LongColumn PrimaryKey => Match;
+            public override NullableLong PrimaryKey => Match;
             }
 
         public QualsData(Database database) : base(database)

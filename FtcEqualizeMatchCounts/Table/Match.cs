@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Match (probably don't need: written when match is *scored*)
@@ -11,13 +11,13 @@
         {
         public class Row : TableRow
             {
-            public FMSMatchId FMSMatchId;
+            public FMSMatchId FMSMatchId; // primary
             public FMSScheduleDetailId FMSScheduleDetailId;
-            public long PlayNumber;
-            public long FieldType;
+            public LongColumn PlayNumber;
+            public LongColumn FieldType;
             public DateTimeAsString InitialPrestartTime;
             public DateTimeAsString FinalPreStartTime;
-            public long PreStartCount;
+            public LongColumn PreStartCount;
             public DateTimeAsString AutoStartTime;
             public DateTimeAsString AutoEndTime;
             public DateTimeAsString TeleopStartTime;
@@ -27,19 +27,19 @@
             public DateTimeAsString PostMatchTime;
             public DateTimeAsString CancelMatchTime;
             public DateTimeAsString CycleTime;
-            public long RedScore;
-            public long BlueScore;
-            public long RedPenalty;
-            public long BluePenalty;
-            public long RedAutoScore;
-            public long BlueAutoScore;
+            public LongColumn RedScore;
+            public LongColumn BlueScore;
+            public LongColumn RedPenalty;
+            public LongColumn BluePenalty;
+            public LongColumn RedAutoScore;
+            public LongColumn BlueAutoScore;
             public ScoreDetails ScoreDetails;   
-            public long HeadRefReview;
-            public string VideoUrl;
+            public LongColumn HeadRefReview;
+            public StringColumn VideoUrl;
             public DateTimeAsString CreatedOn;
-            public string CreatedBy;     // e.g.: "Scorekeeper Commit"
+            public StringColumn CreatedBy;     // e.g.: "Scorekeeper Commit"
             public DateTimeAsString ModifiedOn;
-            public string ModifiedBy;
+            public StringColumn ModifiedBy;
             public FMSEventId FMSEventId;
             public RowVersion RowVersion; 
             }

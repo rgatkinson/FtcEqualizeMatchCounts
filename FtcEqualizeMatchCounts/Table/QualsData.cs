@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Quals
@@ -8,9 +8,9 @@
         {
         public class Row : TableRow
             {
-            public long Match; // small integer match number
-            public long Status;
-            public long Randomization;
+            public LongColumn Match; // small integer match number
+            public LongColumn Status;
+            public LongColumn Randomization;
             public DateTimeAsInteger Start;      // format?
             public DateTimeAsInteger ScheduleStart;
             public DateTimeAsInteger PostedTime;

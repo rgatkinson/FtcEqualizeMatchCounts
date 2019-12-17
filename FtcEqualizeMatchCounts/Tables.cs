@@ -1,4 +1,6 @@
-﻿namespace FEMC
+﻿using FEMC.DBTables;
+
+namespace FEMC
     {
     class Tables
         {
@@ -8,7 +10,7 @@
         public QualsData QualsData;
         public ScheduleDetail ScheduleDetail;
         public ScheduleStation ScheduleStation;
-        public Team Team;
+        public DBTables.Team Team;
 
         public Tables(Database db)
             {
@@ -18,18 +20,19 @@
             QualsData = new QualsData(db);
             ScheduleDetail = new ScheduleDetail(db);
             ScheduleStation = new ScheduleStation(db);
-            Team = new Team(db);
+            Team = new DBTables.Team(db);
             }
 
         public void Load()
             {
+            Team.Load();
+
             MatchSchedule.Load();
             Match.Load();
             Quals.Load();
             QualsData.Load();
             ScheduleDetail.Load();
             ScheduleStation.Load();
-            Team.Load();
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // ScheduleDetail
@@ -8,18 +8,18 @@
         {
         public class Row : TableRow
             {
-            public FMSScheduleDetailId FMSScheduleDetailId;
+            public FMSScheduleDetailId FMSScheduleDetailId; // primary
             public FMSEventId FMSEventId;
-            public long TournamentLevel;    // 2 for quals?
-            public long MatchNumber;        // see quals.Match
-            public long FieldType;          // 1 for everything we've seen
-            public string Description;
+            public LongColumn TournamentLevel;    // 2 for quals?
+            public LongColumn MatchNumber;        // see quals.Match
+            public LongColumn FieldType;          // 1 for everything we've seen
+            public StringColumn Description;
             public DateTimeAsString StartTime;
             public FieldConfigurationDetails FieldConfigurationDetails;
             public DateTimeAsString CreatedOn;    // null is ok
-            public string CreatedBy;            // e.g.: "FTC Match Maker"
+            public StringColumn CreatedBy;              // e.g.: "FTC Match Maker"
             public DateTimeAsString ModifiedOn;   // null is ok
-            public string ModifiedBy;
+            public StringColumn ModifiedBy;
             public RowVersion RowVersion;
             }
 

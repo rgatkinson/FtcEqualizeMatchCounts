@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FEMC
     {
@@ -26,6 +27,7 @@ namespace FEMC
                     {
                     bytes = new byte[16]; // account for quirky RowVersion seen in practice (are they *really* guids?)
                     }
+                Trace.Assert(bytes.Length == 16);
                 SetValue(new Guid(bytes));
                 }
             }
@@ -33,6 +35,21 @@ namespace FEMC
         public void SetValue(string value)
             {
             SetValue(new Guid(value));
+            }
+
+        public override bool Equals(object obj)
+            {
+            if (GetType() == obj?.GetType())
+                {
+                GuidColumn them = (GuidColumn)obj;
+                return Value == them.Value;
+                }
+            return false;
+            }
+
+        public override int GetHashCode()
+            {
+            return HashCode.Combine(GetType(), Value, 0x309903);
             }
         }
     }

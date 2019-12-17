@@ -65,7 +65,7 @@ namespace FEMC
                 }
             else
                 {
-                // not yet handled
+                throw new NotImplementedException($"FileType={field.FieldType} not yet implemented");
                 }
             }
 

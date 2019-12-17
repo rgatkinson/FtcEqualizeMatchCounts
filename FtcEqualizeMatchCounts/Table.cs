@@ -27,8 +27,7 @@ namespace FEMC
         {
         public List<Row_T> Rows;
         protected Database database;
-
-
+        
         protected Table(Database database)
             {
             Rows = new List<Row_T>();
@@ -36,13 +35,6 @@ namespace FEMC
             }
 
         public abstract string TableName { get; }
-
-        public List<List<object>> SelectAll()
-            {
-            string query = $"SELECT * FROM { TableName }";
-            List<List<object>> table = database.ExecuteQuery(query);
-            return table;
-            }
 
         public void Load()
             {

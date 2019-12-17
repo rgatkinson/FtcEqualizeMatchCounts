@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Match Schedule
@@ -12,8 +10,8 @@ namespace FEMC
             {
             public DateTimeAsInteger Start;
             public DateTimeAsInteger End;
-            public long              Type;      // 0 == Qualification, 2 == 5 minute break for consecutive match 
-            public string            Label;
+            public LongColumn        Type;      // 0 == Qualification, 2 == 5 minute break for consecutive match 
+            public StringColumn      Label;
             }
 
         public MatchSchedule(Database database) : base(database)

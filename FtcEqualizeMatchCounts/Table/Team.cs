@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Team
@@ -8,29 +8,29 @@
         {
         public class Row : TableRow // Four records for each match Alliance (1,2) x Station (1,2)
             {
-            public FMSEventId FMSEventId;
-            public FMSTeamId FMSTeamId;
+            public FMSTeamId FMSTeamId;     // primary
+            public FMSSeasonId FMSSeasonId;
             public FMSRegionId FMSRegionId;
-            public long TeamId; // eg: 1029074, 1028838, 1029022, etc; not sure how used?
-            public long TeamNumber;
-            public string TeamNameLong;
-            public string TeamNameShort;
-            public string RobotName;
-            public string City;
-            public string StateProv;
-            public string Country;
-            public string Website;
-            public long RookieYear;
+            public LongColumn TeamId; // eg: 1029074, 1028838, 1029022, etc; not sure how used?
+            public LongColumn TeamNumber;
+            public StringColumn TeamNameLong;
+            public StringColumn TeamNameShort;
+            public StringColumn RobotName;
+            public StringColumn City;
+            public StringColumn StateProv;
+            public StringColumn Country;
+            public StringColumn Website;
+            public LongColumn RookieYear;
             public BooleanAsInteger WasAddedFromUI;
             public BooleanAsInteger CMPPrequalified;
-            public string SchoolName;
+            public StringColumn SchoolName;
             public BooleanAsInteger DemoTeam;
             public FMSHomeCMPId FMSHomeCMPId;
             public GameSpecifics GameSpecifics;
             public DateTimeAsString CreatedOn;
-            public string CreatedBy; // e.g. "Team Data Download"
+            public StringColumn CreatedBy; // e.g. "Team Data Download"
             public DateTimeAsString ModifedOn;
-            public string ModifiedBy; // e.g. "Team Data Download"
+            public StringColumn ModifiedBy; // e.g. "Team Data Download"
             }
 
         public Team(Database database) : base(database)

@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
     // Quals
@@ -8,14 +8,14 @@
         {
         public class Row : TableRow
             {
-            public long Match;  // small integer match number: 1, 2, 3, 4, 5, ...; see ScheduleDetail.MatchNumber
-            public long Red1;
+            public LongColumn Match;  // small integer match number: 1, 2, 3, 4, 5, ...; see ScheduleDetail.MatchNumber
+            public LongColumn Red1;
             public BooleanAsInteger Red1Surrogate;
-            public long Red2;
+            public LongColumn Red2;
             public BooleanAsInteger Red2Surrogate;
-            public long Blue1;
+            public LongColumn Blue1;
             public BooleanAsInteger Blue1Surrogate;
-            public long Blue2;
+            public LongColumn Blue2;
             public BooleanAsInteger Blue2Surrogate;
             }
 

@@ -14,8 +14,8 @@ namespace FEMC
         // State
         //----------------------------------------------------------------------------------------------------------------------
 
-        public List<Row_T> Rows;
-        public IDictionary<PrimaryKey_T, Row_T> Map;
+        public List<Row_T> Rows = new List<Row_T>();
+        public IDictionary<PrimaryKey_T, Row_T> Map = new Dictionary<PrimaryKey_T, Row_T>();
         protected Database database;
 
         public abstract string TableName { get; }
@@ -34,26 +34,32 @@ namespace FEMC
         // Loading
         //----------------------------------------------------------------------------------------------------------------------
 
+        public void Clear()
+            {
+            Rows.Clear();
+            Map.Clear();
+            }
+
         public void Load()
             {
-            Rows = new List<Row_T>();
-            Map = new Dictionary<PrimaryKey_T, Row_T>();
+            Clear();
+            using (var cmd = database.Connection.CreateCommand())
+                { 
+                cmd.CommandText = $"SELECT * FROM { TableName }";
 
-            using var cmd = database.Connection.CreateCommand();
-            cmd.CommandText = $"SELECT * FROM { TableName }";
-
-            SqliteDataReader rdr = cmd.ExecuteReader();
-            while (rdr.Read())
-                {
-                Row_T row = new Row_T();
-                for (int i = 0; i < rdr.FieldCount; i++)
+                SqliteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
                     {
-                    object value = rdr.IsDBNull(i) ? null : rdr[i];
-                    row.SetField(i, value);
-                    }
+                    Row_T row = new Row_T();
+                    for (int i = 0; i < rdr.FieldCount; i++)
+                        {
+                        object value = rdr.IsDBNull(i) ? null : rdr[i];
+                        row.SetField(i, value);
+                        }
 
-                Rows.Add(row);
-                Map[row.PrimaryKey] = row;
+                    Rows.Add(row);
+                    Map[row.PrimaryKey] = row;
+                    }
                 }
             }
         }

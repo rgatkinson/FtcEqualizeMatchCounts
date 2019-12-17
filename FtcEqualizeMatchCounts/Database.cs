@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-
+using FEMC.DAL;
 using Microsoft.Data.Sqlite;
 
 namespace FEMC
@@ -22,9 +22,12 @@ namespace FEMC
         public IDictionary<long, ScheduledMatch> ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
 
-        public string EventCode => Tables.Config.Map["code"].Value.Value;
-        public string EventName => Tables.Config.Map["name"].Value.Value;
+        public IDictionary<string, Event> EventsByCode = new Dictionary<string, Event>();
+
+        public string ThisEventCode => Tables.Config.Map["code"].Value.Value;
+        public Event ThisEvent => EventsByCode[ThisEventCode];
         public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.Value);
+
 
         string fileName = null;
         bool disposed = false;
@@ -96,13 +99,31 @@ namespace FEMC
 
         public void Load()
             {
+            Clear();
             Tables.Load();
             LoadData();
             }
 
+        void Clear()
+            {
+            Tables.Clear();
+
+            TeamsById.Clear();
+            TeamsByNumber.Clear();
+            ScheduledMatchesById.Clear();
+            ScheduledMatchesByNumber.Clear();
+            EventsByCode.Clear();
+            }
+
         public void LoadData()
             {
-            foreach (DBTables.Team.Row row in Tables.Team.Rows)
+            foreach (var row in Tables.LeagueMeets.Rows)
+                {
+                Event anEvent = new Event(this, row);
+                EventsByCode[anEvent.EventCode] = anEvent;
+                }
+
+            foreach (var row in Tables.Team.Rows)
                 {
                 Team team = new Team(this, row);
                 TeamsByNumber[team.TeamNumber] = team;
@@ -111,14 +132,14 @@ namespace FEMC
                 }
             Teams.Sort((a, b) => a.TeamNumber - b.TeamNumber);
 
-            foreach (DBTables.ScheduledMatch.Row row in Tables.ScheduledMatch.Rows)
+            foreach (var row in Tables.ScheduledMatch.Rows)
                 {
                 ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
                 ScheduledMatchesByNumber[scheduledMatch.MatchNumber] = scheduledMatch;
                 ScheduledMatchesById[scheduledMatch.FMSScheduleDetailId] = scheduledMatch;
                 }
 
-            foreach (DBTables.PlayedMatch.Row row in Tables.PlayedMatch.Rows)
+            foreach (var row in Tables.PlayedMatch.Rows)
                 {
                 PlayedMatch playedMatch = new PlayedMatch(this, row);
                 }
@@ -126,15 +147,17 @@ namespace FEMC
 
         public void Report(TextWriter writer)
             {
-            bool first = true;
+            writer.WriteLine();
+
+            bool firstTeam = true;
             foreach (Team team in Teams)
                 {
-                if (!first)
+                if (!firstTeam)
                     {
                     writer.WriteLine("");
                     }
                 team.Report(writer);
-                first = false;
+                firstTeam = false;
                 }
             }
         }

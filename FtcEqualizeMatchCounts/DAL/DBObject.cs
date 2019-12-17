@@ -1,4 +1,4 @@
-﻿namespace FEMC
+﻿namespace FEMC.DAL
     {
     abstract class DBObject
         {

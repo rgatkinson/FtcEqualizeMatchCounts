@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
-namespace FEMC
+namespace FEMC.DAL
     {
     class Team : DBObject
         {
@@ -49,13 +44,13 @@ namespace FEMC
                 }
             }
 
-        public int PreviousPlayedMatchCount
+        public int PreviousEventMatchCount
             {
             get {
                 int result = 0;
                 foreach (DBTables.LeagueHistory.Row row in Database.Tables.LeagueHistory.Rows)
                     {
-                    if (row.Team.Value.Value == TeamNumber && row.MatchIsCounted && row.EventCode.Value != Database.EventCode)
+                    if (row.Team.Value.Value == TeamNumber && row.MatchIsCounted && row.EventCode.Value != Database.ThisEventCode)
                         {
                         result += 1;
                         }
@@ -64,7 +59,7 @@ namespace FEMC
                 }
             }
 
-        public int TotalMatchCountPlayed => PreviousPlayedMatchCount + PlayedMatchCount;
+        public int TotalMatchCountPlayed => PreviousEventMatchCount + PlayedMatchCount;
 
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
@@ -77,7 +72,7 @@ namespace FEMC
             {
             writer.WriteLine($"Team {TeamNumber}: {Name}:");
             writer.WriteLine($"    total: played match count: { TotalMatchCountPlayed }");
-            writer.WriteLine($"    previous events: played match count: { PreviousPlayedMatchCount }");
+            writer.WriteLine($"    previous events: played match count: { PreviousEventMatchCount }");
             writer.WriteLine($"    this event: scheduled match count: { ScheduledMatchCount }");
             writer.WriteLine($"    this event: played match count: { PlayedMatchCount }");
             }

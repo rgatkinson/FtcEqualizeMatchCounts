@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Mono.Options;
 
 namespace FEMC
@@ -17,6 +19,9 @@ namespace FEMC
         public bool         ReportOnly = false;
 
         public string       EventCode = null;
+
+        public TextWriter   StdOut => Console.Out;
+        public TextWriter   StdErr => Console.Error;
 
         private OptionSet options;
 
@@ -105,14 +110,48 @@ namespace FEMC
         public ProgramOptions programOptions = new ProgramOptions();
         public Database Database = null;
 
+        string ProgramVersionString()
+            {
+            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            // return $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+            return version.ToString();
+            }
+        string ProgramDescription()
+            {
+            Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            return assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault().Description;
+            }
+        string ProgramVersionDate()
+            {
+            DateTime versionDate = Constants.BuildTimestamp;
+            return versionDate.ToString("dd MMM yyyy ") + versionDate.ToShortTimeString();
+            }
+        string ProgramCopyrightNotice()
+            {
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            System.Reflection.AssemblyCopyrightAttribute copyrightAttr = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false)[0] as System.Reflection.AssemblyCopyrightAttribute;
+            return copyrightAttr?.Copyright;
+            }
+
+        public void OutputBannerAndCopyright(TextWriter writer)
+            {
+            string banner = $"{ProgramDescription()} {ProgramVersionString()} of {ProgramVersionDate()}";
+            string under = new string('=', Math.Max(banner.Length, ProgramCopyrightNotice().Length));
+            //
+            writer.WriteLine(banner);
+            writer.WriteLine(ProgramCopyrightNotice());
+            writer.WriteLine(under);
+            }
+
         void DoMain(string[] args)
             {
             programOptions.Parse(args);
+            OutputBannerAndCopyright(programOptions.StdOut);
 
             Database = new Database(programOptions.Filename);
             Database.Load();
 
-            Database.Report(Console.Out);
+            Database.Report(programOptions.StdOut);
 
             Database.Close();
             }

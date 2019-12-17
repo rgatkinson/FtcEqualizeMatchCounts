@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("FtcEqualizeMatchCounts")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("FTC Equalize Match Counts")]
+[assembly: AssemblyDescription("FTC Match Count Scoring Equalization Tool")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Atkinson Labs")]
 [assembly: AssemblyProduct("FtcEqualizeMatchCounts")]
-[assembly: AssemblyCopyright("Copyright © Robert Atkinson 2019")]
+[assembly: AssemblyCopyright("Copyright (c) Robert Atkinson 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

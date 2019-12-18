@@ -149,11 +149,6 @@
     <Compile Include="DBTables\ScheduledMatchStation.cs" />
     <Compile Include="DBTables\Team.cs" />
     <Compile Include="DAL\Team.cs" />
-    <Compile Include="BuildDate.g.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>BuildDate.tt</DependentUpon>
-    </Compile>
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

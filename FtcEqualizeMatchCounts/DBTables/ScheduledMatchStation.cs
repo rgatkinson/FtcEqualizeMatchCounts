@@ -17,7 +17,7 @@ namespace FEMC.DBTables
             public NullableLong Station; // primary
             public FMSEventId FmsEventId;
             public FMSTeamId FmsTeamId;
-            public NullableLong IsSurrogate; // todo: should this be BooleanAsInteger?
+            public BooleanAsInteger IsSurrogate;
             public DateTimeAsString CreatedOn; // can be null
             public StringColumn CreatedBy; // e.g. "FTC Match Maker"
             public DateTimeAsString ModifedOn;

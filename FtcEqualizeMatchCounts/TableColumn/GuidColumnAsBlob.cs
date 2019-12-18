@@ -18,10 +18,6 @@ namespace FEMC
                 SetValue((Guid?)null);
             else
                 {
-                if (bytes.Length == 0)
-                    {
-                    bytes = new byte[16]; // account for quirky RowVersion seen in practice (are they *really* guids?)
-                    }
                 Trace.Assert(bytes.Length == 16);
                 Guid guid = new Guid(bytes);
                 if (BitConverter.IsLittleEndian)

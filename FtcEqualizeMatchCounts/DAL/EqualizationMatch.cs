@@ -56,7 +56,7 @@ namespace FEMC.DAL
             scheduledMatchRow.CreatedBy.Value = CreatedBy;
             scheduledMatchRow.ModifiedOn.Value = null;
             scheduledMatchRow.ModifiedBy.Value = null;
-            scheduledMatchRow.RowVersion.Value = Guid.Empty; // ScheduleDetail seems to use 16 byte all-zero RowVersions; 'don't know why
+            scheduledMatchRow.RowVersion.Value = Guid.Empty.ToByteArray(); // ScheduleDetail seems to use 16 byte all-zero RowVersions; 'don't know why
 
             qualRow.Match.Value = MatchNumber;
             qualRow.Red1.Value = Red1.TeamNumber;
@@ -87,7 +87,7 @@ namespace FEMC.DAL
 
                     row.FmsEventId = FMSEventId;
                     row.FmsTeamId = GetTeam(alliance, station).FMSTeamId;
-                    row.IsSurrogate.Value = GetSurrogate(alliance, station) ? 1 : 0;
+                    row.IsSurrogate.Value = GetSurrogate(alliance, station);
 
                     row.CreatedOn = scheduledMatchRow.CreatedOn;
                     row.CreatedBy = scheduledMatchRow.CreatedBy;

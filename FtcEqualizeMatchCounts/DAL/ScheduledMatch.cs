@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace FEMC.DAL
     {
@@ -8,7 +10,7 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        private long matchNumber;
+        protected long matchNumber;
         public string Description;
         public string CreatedBy;
 
@@ -42,6 +44,27 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
+        protected static FMSScheduleDetailId NewFMSScheduleDetailId()
+            {
+            FMSScheduleDetailId result = new FMSScheduleDetailId();
+            result.Value = Guid.NewGuid();
+            return result;
+            }
+
+        protected void AddToDatabase()
+            {
+            Trace.Assert(!Database.ScheduledMatchesByNumber.ContainsKey(MatchNumber));
+            Trace.Assert(!Database.ScheduledMatchesById.ContainsKey(FMSScheduleDetailId));
+
+            Database.ScheduledMatchesByNumber[MatchNumber] = this;
+            Database.ScheduledMatchesById[FMSScheduleDetailId] = this;
+            Database.ThisEvent.AddMatch(this);
+            }
+
+        protected ScheduledMatch(Database db, FMSEventId eventId, FMSScheduleDetailId detailId) : base(db, eventId, detailId)
+            {
+            }
+
         public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;
@@ -60,6 +83,8 @@ namespace FEMC.DAL
             Red2Surrogate = qual.Red2Surrogate.NonNullValue;
             Blue1Surrogate = qual.Blue1Surrogate.NonNullValue;
             Blue2Surrogate = qual.Blue2Surrogate.NonNullValue;
+
+            AddToDatabase();
             }
         }
     }

@@ -1,7 +1,11 @@
 ﻿using System;
 using System.CodeDom.Compiler;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using FEMC.DAL;
 using Microsoft.Data.Sqlite;
 
@@ -14,17 +18,21 @@ namespace FEMC
         //---------------------------------------------------------------------------------------------------
 
         public SqliteConnection Connection = null;
+        public SqliteTransaction Transaction = null;
         public Tables Tables;
-        public int? AveragingMatchCountGoal;
+        public readonly int? AveragingMatchCountGoal;
 
-        public IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
-        public IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
-        public List<Team>                                       Teams = new List<Team>();
-        public IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
-        public IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
-        public IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
-        public IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
-        public IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
+        public readonly IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
+        public readonly IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
+        public readonly List<Team>                                       Teams = new List<Team>();
+        public readonly IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
+        public readonly IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
+        public readonly IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
+        public readonly IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
+        public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
+
+        private ISet<Team> completedTeams = new HashSet<Team>();
+        private IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
 
         public int MaxAveragingMatchCount
             {
@@ -73,8 +81,6 @@ namespace FEMC
             fileName = Path.GetFullPath(programOptions.Filename);
             Tables = new Tables(this);
             AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountGoal;
-            
-            Open();
             }
 
         ~Database()
@@ -117,10 +123,35 @@ namespace FEMC
             Connection.Open();
             }
 
+        public bool IsTransactionInProgress => Transaction != null;
+
+        public void BeginTransaction()
+            {
+            Trace.Assert(!IsTransactionInProgress);
+            Transaction = Connection.BeginTransaction(IsolationLevel.Serializable);
+            }
+
+        public void CommitTransaction()
+            {
+            Trace.Assert(IsTransactionInProgress);
+            Transaction.Commit();
+            Transaction = null;
+            }
+
+        public void AbortTransaction()
+            {
+            if (IsTransactionInProgress)
+                {
+                Transaction.Rollback();
+                Transaction = null;
+                }
+            }
+
         public void Close()
             {
             if (Connection != null)
                 {
+                AbortTransaction();
                 Connection.Close();
                 Connection = null;
                 }
@@ -132,22 +163,26 @@ namespace FEMC
 
         public void Load()
             {
-            Clear();
+            Tables.Clear();
             Tables.Load();
+
+            ClearDataAccessLayer();
             LoadDataAccessLayer();
             }
 
-        void Clear()
+        void ClearDataAccessLayer()
             {
-            Tables.Clear();
-
             TeamsById.Clear();
             TeamsByNumber.Clear();
-            ScheduledMatchesById.Clear();
+            Teams.Clear();
             ScheduledMatchesByNumber.Clear();
-            EventsByCode.Clear();
+            ScheduledMatchesById.Clear();
             PlayedMatchesByNumber.Clear();
             LeagueHistoryMatchesByNumber.Clear();
+            EventsByCode.Clear();
+
+            completedTeams.Clear();
+            matchesNeededByTeam.Clear();
             }
 
         public void LoadDataAccessLayer()
@@ -170,8 +205,6 @@ namespace FEMC
             foreach (var row in Tables.ScheduledMatch.Rows)
                 {
                 ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
-                ScheduledMatchesByNumber[scheduledMatch.MatchNumber] = scheduledMatch;
-                ScheduledMatchesById[scheduledMatch.FMSScheduleDetailId] = scheduledMatch;
                 }
 
             foreach (var row in Tables.PlayedMatch.Rows)
@@ -219,26 +252,94 @@ namespace FEMC
                 }
             }
 
-        public void ReportTeams(IndentedTextWriter writer, bool verbose)
+        public int ReportTeams(IndentedTextWriter writer, bool verbose)
             {
+            int equalizationMatchesNeeded = 0;
             int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
-            writer.WriteLine($"Teams: averaging match count goal={matchCountGoal}");
+            writer.WriteLine($"Teams: averaging match count goal: {matchCountGoal}");
             writer.Indent++;
 
+            completedTeams.Clear();
+            matchesNeededByTeam.Clear();
+
+            int teamsReported = 0;
             foreach (Team team in Teams)
                 {
-                if (verbose || team.AveragingMatchCount < matchCountGoal)
+                int teamEqualizationMatchesNeeded = matchCountGoal - team.AveragingMatchCount;
+
+                // Report
+                if (verbose || teamEqualizationMatchesNeeded > 0)
                     { 
                     if (verbose)
                         {
                         writer.WriteLine();
                         }
                     team.Report(writer, verbose, matchCountGoal);
+                    teamsReported += 1;
+                    }
+
+                // Accumulate info to make equalization plan
+                if (teamEqualizationMatchesNeeded == 0)
+                    {
+                    completedTeams.Add(team);
+                    }
+                else
+                    {
+                    matchesNeededByTeam[team] = teamEqualizationMatchesNeeded;
                     }
                 }
 
+            if (teamsReported == 0)
+                {
+                writer.WriteLine();
+                writer.WriteLine("All teams up to date");
+                }
+
+            List<Team> rotating = new List<Team>(completedTeams);
+            List<EqualizationMatch> equalizationMatches = new List<EqualizationMatch>();
+            while (matchesNeededByTeam.Count > 0)
+                {
+                // Get a complement of teams that all need equalization matches
+                var teams = new List<Team>(matchesNeededByTeam.Keys.Take(4));
+                
+                // Round out to 4 with teams that will be surrogates. Rotate thorugh who we decide to use
+                var surrogates = new List<Team>(rotating.Take(4 - teams.Count));
+                rotating.RemoveRange(0, surrogates.Count);
+                rotating.AddRange(surrogates);
+
+                teams.AddRange(surrogates);
+                var isSurrogates = new List<bool>(teams.Select(team => surrogates.Contains(team)));
+
+                EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates);
+                equalizationMatches.Add(equalizationMatch);
+
+                foreach (Team team in teams)
+                    {
+                    if (!surrogates.Contains(team))
+                        {
+                        matchesNeededByTeam[team] = matchesNeededByTeam[team]-1;
+                        if (matchesNeededByTeam[team] == 0)
+                            {
+                            matchesNeededByTeam.Remove(team);
+                            completedTeams.Add(team);
+                            rotating.Add(team);
+                            }
+                        }
+                    }
+                }
+            equalizationMatchesNeeded = equalizationMatches.Count;
+
             writer.Indent--;
+            return equalizationMatchesNeeded;
+            }
+
+        public int CreateEqualizationMatches(IndentedTextWriter writer, bool verbose)
+            {
+            int equalizationMatchesCreated = 0;
+            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+
+            return equalizationMatchesCreated;
             }
         }
     }

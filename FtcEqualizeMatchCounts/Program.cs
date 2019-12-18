@@ -123,12 +123,12 @@ namespace FEMC
 
     class Program
         {
-        public ProgramOptions programOptions;
+        public ProgramOptions ProgramOptions;
         public Database Database;
 
         public Program()
             {
-            programOptions = new ProgramOptions(this);
+            ProgramOptions = new ProgramOptions(this);
             Database = null;
             }
 
@@ -168,17 +168,52 @@ namespace FEMC
 
         void DoMain(string[] args)
             {
-            programOptions.Parse(args);
-            OutputBannerAndCopyright(programOptions.StdOut);
+            ProgramOptions.Parse(args);
 
-            Database = new Database(programOptions);
+            OutputBannerAndCopyright(ProgramOptions.StdOut);
+
+            Database = new Database(ProgramOptions);
+            Database.Open();
+            Database.BeginTransaction();
             Database.Load();
 
-            Database.ReportEvents(programOptions.StdOut);
+            Database.ReportEvents(ProgramOptions.StdOut);
 
-            programOptions.StdOut.WriteLine();
-            Database.ReportTeams(programOptions.StdOut, programOptions.Verbose);
+            ProgramOptions.StdOut.WriteLine();
+            int equalizationMatchesNeeded = Database.ReportTeams(ProgramOptions.StdOut, ProgramOptions.Verbose);
+            if (equalizationMatchesNeeded > 0)
+                { 
+                ProgramOptions.StdOut.WriteLine();
+                ConsoleKey response;
+                do  { 
+                    ProgramOptions.StdOut.Write($"Update database with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
+                    response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
+                    if (response != ConsoleKey.Enter)
+                        {
+                        Console.WriteLine();
+                        }
+                    }
+                while (response != ConsoleKey.Y && response != ConsoleKey.N);
 
+                if (response == ConsoleKey.Y)
+                    {
+                    int equalizationMatchesCreated = Database.CreateEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                    Database.CommitTransaction();
+
+                    ProgramOptions.StdOut.WriteLine();
+                    ProgramOptions.StdOut.WriteLine($"Database updated with {equalizationMatchesCreated} new equalization matches.");
+                    ProgramOptions.StdOut.WriteLine();
+
+                    Database.Load();
+                    Database.ReportTeams(ProgramOptions.StdOut, false);
+                    }
+                else
+                    {
+                    ProgramOptions.StdOut.WriteLine($"No changes made to database");
+                    }
+                }
+
+            Database.AbortTransaction();
             Database.Close();
             }
 

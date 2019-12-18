@@ -27,16 +27,21 @@ namespace FEMC.DAL
 
         public static void Process(Database db, DBTables.LeagueHistory.Row row)
             {
-            if (!db.LeagueHistoryMatchesByNumber.TryGetValue(row.Match.NonNullValue, out LeagueHistoryMatch previousEventMatch))
+            if (!db.LeagueHistoryMatchesByNumber.TryGetValue(row.Match.NonNullValue, out LeagueHistoryMatch historicalMatch))
                 {
-                previousEventMatch = new LeagueHistoryMatch(db);
-                previousEventMatch.eventCode = row.EventCode.NonNullValue;
-                previousEventMatch.matchNumber = row.Match.NonNullValue;
-                db.LeagueHistoryMatchesByNumber[previousEventMatch.matchNumber] = previousEventMatch;
+                historicalMatch = new LeagueHistoryMatch(db);
+                historicalMatch.eventCode = row.EventCode.NonNullValue;
+                historicalMatch.matchNumber = row.Match.NonNullValue;
+                db.LeagueHistoryMatchesByNumber[historicalMatch.matchNumber] = historicalMatch;
+
+                if (historicalMatch.Event != db.ThisEvent)
+                    {
+                    historicalMatch.Event.AddMatch(historicalMatch);
+                    }
                 }
 
             Team team = db.TeamsByNumber[row.Team.NonNullValue];
-            previousEventMatch.Teams.Add(team);
+            historicalMatch.Teams.Add(team);
             }
         }
     }

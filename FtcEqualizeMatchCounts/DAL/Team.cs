@@ -117,12 +117,13 @@ namespace FEMC.DAL
 
         public void Report(IndentedTextWriter writer, bool verbose, int matchCountGoal)
             {
+            int equalizationMatchesNeeded = matchCountGoal - AveragingMatchCount;
             if (verbose)
                 { 
                 writer.WriteLine($"Team {TeamNumber}: {Name}:");
                 writer.Indent++;
                 writer.WriteLine($"existing averaging matches: { AveragingMatchCount }");
-                writer.WriteLine($"equalization matches needed: { matchCountGoal - AveragingMatchCount }");
+                writer.WriteLine($"equalization matches needed: { equalizationMatchesNeeded }");
                 writer.WriteLine($"previous events: matches played: { LeagueHistoryMatchCount }");
                 // writer.WriteLine($"this event: equalization match already scheduled: { EqualizationMatchCount }");
                 // writer.WriteLine($"this event: matched schedule: { ScheduledMatchCountThisEvent }");
@@ -131,7 +132,7 @@ namespace FEMC.DAL
                 }
             else
                 {
-                writer.WriteLine($"Team {TeamNumber}: {Name}: equalization matches needed: { matchCountGoal - AveragingMatchCount }");
+                writer.WriteLine($"Team {TeamNumber}: {Name}: equalization matches needed: { equalizationMatchesNeeded }");
                 }
             }
         }

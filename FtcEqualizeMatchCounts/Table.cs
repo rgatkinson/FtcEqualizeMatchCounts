@@ -78,5 +78,17 @@ namespace FEMC
                     }
                 }
             }
+
+        public TRow FindFirstRow(Predicate<TRow> predicate)
+            {
+            foreach (TRow row in Rows)
+                {
+                if (predicate(row))
+                    {
+                    return row;
+                    }
+                }
+            return null;
+            }
         }
     }

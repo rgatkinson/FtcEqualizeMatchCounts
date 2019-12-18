@@ -36,6 +36,23 @@ namespace FEMC.DAL
             Usual = 1,      // don't actually know what this means
             }
 
+        public enum TStatus
+            {
+            DefaultValue = 0,   // semantic being 'unplayed' is just a guess
+            }
+
+        public enum TRandomization
+            {
+            DefaultValue = -1,
+            }
+
+        public enum TMatchScheduleType
+            {
+            Match = 0,              // MAY be only qual match; not sure
+            AdminBreak = 1,         // admin-created break, such as lunch
+            InterMatchBreak = 2,    // scoring-system-created break, such as 5 minute break between matches
+            }
+
         //----------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------

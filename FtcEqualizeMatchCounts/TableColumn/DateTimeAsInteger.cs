@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System;
+using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
@@ -13,5 +14,7 @@ namespace FEMC
             {
             SetParameterValue(parameter, MsSince1970UnixEpoch);
             }
+
+        public static DateTimeOffset QualsDataDefault = DateTimeOffset.FromUnixTimeMilliseconds(-1);
         }
     }

@@ -12,7 +12,7 @@ namespace FEMC.DBTables
             public NullableLong Match; // small integer match number, primary
             public NullableLong Status;
             public NullableLong Randomization;
-            public DateTimeAsInteger Start;      // format?
+            public DateTimeAsInteger Start;
             public DateTimeAsInteger ScheduleStart;
             public DateTimeAsInteger PostedTime;
             public FMSMatchIdAsString FMSMatchId;

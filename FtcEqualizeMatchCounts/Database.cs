@@ -320,6 +320,9 @@ namespace FEMC
 
             List<Team> rotating = new List<Team>(completedTeams);
             equalizationMatches = new List<EqualizationMatch>();
+            DateTime startTime = DateTime.UtcNow;
+            TimeSpan duration = TimeSpan.FromSeconds(5);
+            TimeSpan interval = TimeSpan.FromSeconds(7); // arbitrary, but close enough that re-runs of this tool will still likely be later
             while (matchesNeededByTeam.Count > 0)
                 {
                 // Take at most two teams for the red side
@@ -341,8 +344,9 @@ namespace FEMC
                 teams.AddRange(surrogates);
                 var isSurrogates = new List<bool>(teams.Select(team => surrogates.Contains(team)));
 
-                EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates);
+                EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates, startTime, duration);
                 equalizationMatches.Add(equalizationMatch);
+                startTime = startTime + interval;
 
                 foreach (Team team in teams)
                     {
@@ -362,9 +366,13 @@ namespace FEMC
 
         public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)
             {
-            foreach (var equalizationMatch in equalizationMatches)
-                {
-                equalizationMatch.SaveToDatabase();
+            if (equalizationMatches.Count > 0)
+                { 
+                foreach (var equalizationMatch in equalizationMatches)
+                    {
+                    equalizationMatch.SaveToDatabase();
+                    }
+                EqualizationMatch.SaveNewBlock(this, equalizationMatches.First().ScheduleStart, equalizationMatches.Count);
                 }
 
             int result = equalizationMatches.Count;

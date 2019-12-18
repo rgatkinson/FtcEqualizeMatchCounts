@@ -4,9 +4,10 @@ namespace FEMC
     {
     class Tables
         {
+        public DBTables.Blocks Blocks;
         public DBTables.Config Config;
-        public DBTables.LeagueHistory LeagueHistory;
         public DBTables.LeagueConfig LeagueConfig;
+        public DBTables.LeagueHistory LeagueHistory;
         public DBTables.LeagueInfo LeagueInfo;
         public DBTables.LeagueMeets LeagueMeets;
         public DBTables.MatchSchedule MatchSchedule;
@@ -19,6 +20,7 @@ namespace FEMC
 
         public Tables(Database db)
             {
+            Blocks = new DBTables.Blocks(db);
             Config = new DBTables.Config(db);
             LeagueConfig = new DBTables.LeagueConfig(db);
             LeagueHistory = new DBTables.LeagueHistory(db);
@@ -35,6 +37,7 @@ namespace FEMC
 
         public void Clear()
             {
+            Blocks.Clear();
             Config.Clear();
             LeagueConfig.Clear();
             LeagueHistory.Clear();
@@ -51,6 +54,7 @@ namespace FEMC
 
         public void Load()
             {
+            Blocks.Load();
             Config.Load();
             LeagueConfig.Load();
             LeagueHistory.Load();

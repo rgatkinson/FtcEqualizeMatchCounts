@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
 
 namespace FEMC.DAL
     {
@@ -15,8 +14,27 @@ namespace FEMC.DAL
         public string CreatedBy;
         protected int tournamentLevel;
         protected int fieldType;
+        public DateTime ScheduleStart;
+        protected Guid? fmsMatchId;
+        protected TimeSpan duration;
         public TTournamentLevel TournamentLevel => Enum.IsDefined(typeof(TTournamentLevel), tournamentLevel) ? (TTournamentLevel)tournamentLevel : TTournamentLevel.Unknown;
         public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
+        public Guid FMSMatchId 
+            {
+            get
+                {
+                if (fmsMatchId != null)
+                    return fmsMatchId.Value;
+                else
+                    {
+                    var row = Database.Tables.QualsData.FindFirstRow(r => Equals(r.FMSScheduleDetailId.NonNullValue, FMSScheduleDetailId.NonNullValue));
+                    Trace.Assert(row != null);
+                    return row.FMSMatchId.NonNullValue;
+                    }
+                }
+            }
+
+        public TimeSpan Duration => duration != null ? duration : throw new NotImplementedException("ScheduledMatch.Duration");
 
         public Team Red1;
         public bool Red1Surrogate;
@@ -101,6 +119,7 @@ namespace FEMC.DAL
             CreatedBy = row.CreatedBy.Value;
             tournamentLevel = (int)row.TournamentLevel.NonNullValue;
             fieldType = (int)row.FieldType.NonNullValue;
+            ScheduleStart = row.StartTime.DateTimeNonNull;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber];
 

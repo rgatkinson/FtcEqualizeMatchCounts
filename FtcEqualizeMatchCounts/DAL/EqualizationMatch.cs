@@ -13,13 +13,16 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public EqualizationMatch(Database db, List<Team> teams, List<bool> isSurrogates) : base(db, db.FMSEventId, NewFMSScheduleDetailId())
+        public EqualizationMatch(Database db, List<Team> teams, List<bool> isSurrogates, DateTime startTime, TimeSpan duration) : base(db, db.FMSEventId, NewFMSScheduleDetailId())
             {
             CreatedBy = db.EqualizationMatchCreatorName;
             matchNumber = Event.LastMatchNumber + 1;
             Description = $"Equalization {matchNumber}";
             tournamentLevel = (int)TTournamentLevel.Qualification;
             fieldType = (int)TFieldType.Usual;
+            ScheduleStart = startTime;
+            this.duration = duration;
+            fmsMatchId = Guid.NewGuid();        // we are the source of the id (apparently?)
 
             Red1 = teams[0];
             Red2 = teams[1];
@@ -38,13 +41,34 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
+        public static void SaveNewBlock(Database db, DateTime start, int count)
+            {
+            var blocksRow = new DBTables.Blocks.Row();
+
+            blocksRow.InitializeFields();
+
+            blocksRow.Start.Value = start;
+            blocksRow.Type.Value = (int)TMatchScheduleType.Match;
+            blocksRow.Duration.Value = 0;
+            blocksRow.Count.Value = count;
+            blocksRow.Label.Value = null;
+
+            db.Tables.Blocks.Rows.Add(blocksRow);
+
+            blocksRow.SaveToDatabase();
+            }
+
         public void SaveToDatabase()
             {
-            DBTables.ScheduledMatch.Row scheduledMatchRow = new DBTables.ScheduledMatch.Row();
-            DBTables.Quals.Row qualRow = new Quals.Row();
+            var scheduledMatchRow = new DBTables.ScheduledMatch.Row();
+            var qualsRow = new Quals.Row();
+            var qualsDataRow = new QualsData.Row();
+            var matchScheduleRow = new MatchSchedule.Row();
 
             scheduledMatchRow.InitializeFields();
-            qualRow.InitializeFields();
+            qualsRow.InitializeFields();
+            qualsDataRow.InitializeFields();
+            matchScheduleRow.InitializeFields();
 
             scheduledMatchRow.FMSScheduleDetailId = FMSScheduleDetailId;
             scheduledMatchRow.FMSEventId = FMSEventId;
@@ -52,7 +76,7 @@ namespace FEMC.DAL
             scheduledMatchRow.MatchNumber.Value = MatchNumber;
             scheduledMatchRow.FieldType.Value = fieldType;
             scheduledMatchRow.Description.Value = Description;
-            scheduledMatchRow.StartTime.Value = DateTimeOffset.Now;
+            scheduledMatchRow.StartTime.Value = ScheduleStart;
             scheduledMatchRow.FieldConfigurationDetails.Value = null;
             scheduledMatchRow.CreatedOn.Value = null;
             scheduledMatchRow.CreatedBy.Value = CreatedBy;
@@ -60,21 +84,39 @@ namespace FEMC.DAL
             scheduledMatchRow.ModifiedBy.Value = null;
             scheduledMatchRow.RowVersion.Value = Guid.Empty.ToByteArray(); // ScheduleDetail seems to use 16 byte all-zero RowVersions; 'don't know why
 
-            qualRow.Match.Value = MatchNumber;
-            qualRow.Red1.Value = Red1.TeamNumber;
-            qualRow.Red2.Value = Red2.TeamNumber;
-            qualRow.Blue1.Value = Blue1.TeamNumber;
-            qualRow.Blue2.Value = Blue2.TeamNumber;
-            qualRow.Red1Surrogate.Value = Red1Surrogate;
-            qualRow.Red2Surrogate.Value = Red2Surrogate;
-            qualRow.Blue1Surrogate.Value = Blue1Surrogate;
-            qualRow.Blue2Surrogate.Value = Blue2Surrogate;
+            qualsRow.Match.Value = MatchNumber;
+            qualsRow.Red1.Value = Red1.TeamNumber;
+            qualsRow.Red2.Value = Red2.TeamNumber;
+            qualsRow.Blue1.Value = Blue1.TeamNumber;
+            qualsRow.Blue2.Value = Blue2.TeamNumber;
+            qualsRow.Red1Surrogate.Value = Red1Surrogate;
+            qualsRow.Red2Surrogate.Value = Red2Surrogate;
+            qualsRow.Blue1Surrogate.Value = Blue1Surrogate;
+            qualsRow.Blue2Surrogate.Value = Blue2Surrogate;
+
+            qualsDataRow.Match.Value = MatchNumber;
+            qualsDataRow.Status.Value = (int)TStatus.DefaultValue;
+            qualsDataRow.Randomization.Value = (int)TRandomization.DefaultValue;
+            qualsDataRow.Start.Value = DateTimeAsInteger.QualsDataDefault;
+            qualsDataRow.ScheduleStart.Value = ScheduleStart;
+            qualsDataRow.PostedTime.Value = DateTimeAsInteger.QualsDataDefault;
+            qualsDataRow.FMSMatchId.Value = FMSMatchId;
+            qualsDataRow.FMSScheduleDetailId = FMSScheduleDetailIdAsString.CreateFrom(FMSScheduleDetailId);
+
+            matchScheduleRow.Start.Value = ScheduleStart;
+            matchScheduleRow.End.Value = ScheduleStart + Duration;
+            matchScheduleRow.Type.Value = (int)TMatchScheduleType.Match;
+            matchScheduleRow.Label.Value = Description;
 
             Database.Tables.ScheduledMatch.AddRow(scheduledMatchRow);
-            Database.Tables.Quals.AddRow(qualRow);
+            Database.Tables.Quals.AddRow(qualsRow);
+            Database.Tables.QualsData.AddRow(qualsDataRow);
+            Database.Tables.MatchSchedule.AddRow(matchScheduleRow);
 
             scheduledMatchRow.SaveToDatabase();
-            qualRow.SaveToDatabase();
+            qualsRow.SaveToDatabase();
+            qualsDataRow.SaveToDatabase();
+            matchScheduleRow.SaveToDatabase();
 
             foreach (var alliance in EnumUtil.GetValues<TAlliance>())
                 {

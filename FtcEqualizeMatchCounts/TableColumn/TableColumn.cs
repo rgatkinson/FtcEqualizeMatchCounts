@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Text;
 using Microsoft.Data.Sqlite;
 
@@ -11,14 +12,12 @@ namespace FEMC
 
         protected void SetParameterValue(SqliteParameter parameter, object value)
             {
-            if (value==null)
-                {
-                parameter.Value = DBNull.Value;
-                }
-            else
-                {
-                parameter.Value = value;
-                }
+            parameter.Value = value ?? DBNull.Value;
+            }
+
+        protected static Exception MustBeNonNull(string message)
+            {
+            return new NoNullAllowedException(message);
             }
         }
     }

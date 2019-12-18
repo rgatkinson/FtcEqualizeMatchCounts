@@ -5,14 +5,24 @@ namespace FEMC
     {
     abstract class GuidColumn : TableColumn
         {
-        public System.Guid? Value = null;
+        public Guid? Value = null;
+
+        public Guid NonNullValue => Value ?? throw MustBeNonNull(GetType().Name);
+
+        // Conversion from sting to blob or visa versa is main use
+        public static S CreateFrom<S>(GuidColumn t) where S : GuidColumn, new()
+            {
+            S result = new S();
+            result.Value = t.Value;
+            return result;
+            }
 
         public override string ToString()
             {
             return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
             }
 
-        public void SetValue(System.Guid? guid)
+        public void SetValue(Guid? guid)
             {
             Value = guid;
             }

@@ -10,6 +10,9 @@ namespace FEMC
         public System.DateTime? DateTime => Value?.UtcDateTime.ToUniversalTime();
         public System.DateTime? LocalDateTime => DateTime?.ToLocalTime();
 
+        public System.DateTime DateTimeNonNull => DateTime ?? throw MustBeNonNull(GetType().Name);
+        public System.DateTime LocalDateTimeNonNullDateTime => LocalDateTime ?? throw MustBeNonNull(GetType().Name);
+
         public override string ToString()
             {
             return Iso8601String ?? "null";

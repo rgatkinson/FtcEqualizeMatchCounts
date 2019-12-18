@@ -30,8 +30,7 @@ namespace FEMC
         public readonly IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
         public readonly IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
-
-        private List<EqualizationMatch> equalizationMatches = new List<EqualizationMatch>();
+        public readonly List<EqualizationMatch>                          EqualizationMatches = new List<EqualizationMatch>();
 
         public int MaxAveragingMatchCount
             {
@@ -183,7 +182,7 @@ namespace FEMC
             LeagueHistoryMatchesByNumber.Clear();
             EventsByCode.Clear();
 
-            equalizationMatches.Clear();
+            EqualizationMatches.Clear();
             }
 
         public void LoadDataAccessLayer()
@@ -289,11 +288,11 @@ namespace FEMC
             else
                 {
                 writer.WriteLine("----------------");
-                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {equalizationMatches.Count} equalization matches");
+                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {EqualizationMatches.Count} equalization matches");
                 }
 
             writer.Indent--;
-            return equalizationMatches.Count;
+            return EqualizationMatches.Count;
             }
 
         // Equalization matches cannot be ties, or that biases the scoring results. Hence,
@@ -319,7 +318,7 @@ namespace FEMC
                 }
 
             List<Team> rotating = new List<Team>(completedTeams);
-            equalizationMatches = new List<EqualizationMatch>();
+            EqualizationMatches.Clear();
             DateTime startTime = DateTime.UtcNow;
             TimeSpan duration = TimeSpan.FromSeconds(5);
             TimeSpan interval = TimeSpan.FromSeconds(7); // arbitrary, but close enough that re-runs of this tool will still likely be later
@@ -345,7 +344,7 @@ namespace FEMC
                 var isSurrogates = new List<bool>(teams.Select(team => surrogates.Contains(team)));
 
                 EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates, startTime, duration);
-                equalizationMatches.Add(equalizationMatch);
+                EqualizationMatches.Add(equalizationMatch);
                 startTime = startTime + interval;
 
                 foreach (Team team in teams)
@@ -366,17 +365,17 @@ namespace FEMC
 
         public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)
             {
-            if (equalizationMatches.Count > 0)
+            if (EqualizationMatches.Count > 0)
                 { 
-                foreach (var equalizationMatch in equalizationMatches)
+                foreach (var equalizationMatch in EqualizationMatches)
                     {
                     equalizationMatch.SaveToDatabase();
                     }
-                EqualizationMatch.SaveNewBlock(this, equalizationMatches.First().ScheduleStart, equalizationMatches.Count);
+                EqualizationMatch.SaveNewBlock(this, EqualizationMatches.First().ScheduleStart, EqualizationMatches.Count);
                 }
 
-            int result = equalizationMatches.Count;
-            equalizationMatches.Clear();
+            int result = EqualizationMatches.Count;
+            EqualizationMatches.Clear();
             return result;
             }
 

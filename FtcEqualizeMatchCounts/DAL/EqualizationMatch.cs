@@ -13,10 +13,12 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
+        private const long FirstEqualizationMatchNumber = 1000; // assume will be bigger than any real match number
+        
         public EqualizationMatch(Database db, List<Team> teams, List<bool> isSurrogates, DateTime startTime, TimeSpan duration) : base(db, db.FMSEventId, NewFMSScheduleDetailId())
             {
             CreatedBy = db.EqualizationMatchCreatorName;
-            matchNumber = Event.LastMatchNumber + 1;
+            matchNumber = db.EqualizationMatches.Count==0 ? Math.Max(FirstEqualizationMatchNumber, Event.LastMatchNumber + 1) : Event.LastMatchNumber + 1;
             Description = $"Equalization {matchNumber}";
             tournamentLevel = (int)TTournamentLevel.Qualification;
             fieldType = (int)TFieldType.Usual;

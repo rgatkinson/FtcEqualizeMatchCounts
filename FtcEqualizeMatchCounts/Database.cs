@@ -253,7 +253,7 @@ namespace FEMC
                 }
             }
 
-        public int ReportTeams(IndentedTextWriter writer, bool verbose)
+        public int ReportTeamsAndPlanMatches(IndentedTextWriter writer, bool verbose)
             {
             int averagingMatchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 

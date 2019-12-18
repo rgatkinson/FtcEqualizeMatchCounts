@@ -190,7 +190,7 @@ namespace FEMC
                 Database.ReportEvents(ProgramOptions.StdOut);
 
                 ProgramOptions.StdOut.WriteLine();
-                int equalizationMatchesNeeded = Database.ReportTeams(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                int equalizationMatchesNeeded = Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
                 if (equalizationMatchesNeeded > 0)
                     { 
                     ProgramOptions.StdOut.WriteLine();
@@ -220,7 +220,7 @@ namespace FEMC
                             ProgramOptions.StdOut.WriteLine();
 
                             Database.Load();
-                            Database.ReportTeams(ProgramOptions.StdOut, false);
+                            Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, false);
                             }
                         }
                     else

@@ -35,7 +35,7 @@ namespace FEMC
                 Guid guid = Value.Value;
                 if (BitConverter.IsLittleEndian)
                     {
-                    MiscUtil.ByteSwap(guid);
+                    guid = MiscUtil.ByteSwap(guid);
                     }
                 SetParameterValue(parameter, guid.ToByteArray());
                 }

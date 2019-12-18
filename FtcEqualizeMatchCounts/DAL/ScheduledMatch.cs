@@ -40,6 +40,30 @@ namespace FEMC.DAL
             return false;
             }
 
+        public Team GetTeam(Alliance alliance, Station station)
+            {
+            if (alliance == Alliance.Red)
+                {
+                return station==Station.Station1 ? Red1 : Red2;
+                }
+            else
+                {
+                return station == Station.Station1 ? Blue1 : Blue2;
+                }
+            }
+
+        public bool GetSurrogate(Alliance alliance, Station station)
+            {
+            if (alliance == Alliance.Red)
+                {
+                return station == Station.Station1 ? Red1Surrogate : Red2Surrogate;
+                }
+            else
+                {
+                return station == Station.Station1 ? Blue1Surrogate : Blue2Surrogate;
+                }
+            }
+
         //----------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------

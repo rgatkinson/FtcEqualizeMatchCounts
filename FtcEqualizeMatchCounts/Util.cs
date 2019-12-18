@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FEMC
     {
@@ -38,6 +40,14 @@ namespace FEMC
                 result[i] = bytes[bytes.Length-1-i];
                 }
             return result;
+            }
+        }
+
+    public static class EnumUtil
+        {
+        public static IEnumerable<T> GetValues<T>()
+            {
+            return Enum.GetValues(typeof(T)).Cast<T>();
             }
         }
     }

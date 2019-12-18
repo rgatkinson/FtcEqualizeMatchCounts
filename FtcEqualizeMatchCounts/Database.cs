@@ -198,7 +198,7 @@ namespace FEMC
                 {
                 Team team = new Team(this, row);
                 TeamsByNumber[team.TeamNumber] = team;
-                TeamsById[team.TeamId] = team;
+                TeamsById[team.FMSTeamId] = team;
                 Teams.Add(team);
                 }
             Teams.Sort((a, b) => a.TeamNumber - b.TeamNumber);

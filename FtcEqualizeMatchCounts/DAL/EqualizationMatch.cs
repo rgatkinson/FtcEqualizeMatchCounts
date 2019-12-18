@@ -38,25 +38,25 @@ namespace FEMC.DAL
 
         public void SaveToDatabase()
             {
-            DBTables.ScheduledMatch.Row detailRow = new DBTables.ScheduledMatch.Row();
+            DBTables.ScheduledMatch.Row scheduledMatchRow = new DBTables.ScheduledMatch.Row();
             DBTables.Quals.Row qualRow = new Quals.Row();
 
-            detailRow.InitializeFields();
+            scheduledMatchRow.InitializeFields();
             qualRow.InitializeFields();
 
-            detailRow.FMSScheduleDetailId = FMSScheduleDetailId;
-            detailRow.FMSEventId = Database.FMSEventId;
-            detailRow.TournamentLevel.Value = 2; // 'qualification match'
-            detailRow.MatchNumber.Value = MatchNumber;
-            detailRow.FieldType.Value = 1; // todo: is this right? haven't ever seen any other values
-            detailRow.Description.Value = Description;
-            detailRow.StartTime.Value = DateTimeOffset.Now;
-            detailRow.FieldConfigurationDetails.Value = null;
-            detailRow.CreatedOn.Value = null;
-            detailRow.CreatedBy.Value = CreatedBy;
-            detailRow.ModifiedOn.Value = null;
-            detailRow.ModifiedBy.Value = null;
-            detailRow.RowVersion.Value = Guid.NewGuid();
+            scheduledMatchRow.FMSScheduleDetailId = FMSScheduleDetailId;
+            scheduledMatchRow.FMSEventId = FMSEventId;
+            scheduledMatchRow.TournamentLevel.Value = 2; // 'qualification match'
+            scheduledMatchRow.MatchNumber.Value = MatchNumber;
+            scheduledMatchRow.FieldType.Value = 1; // todo: is this right? haven't ever seen any other values
+            scheduledMatchRow.Description.Value = Description;
+            scheduledMatchRow.StartTime.Value = DateTimeOffset.Now;
+            scheduledMatchRow.FieldConfigurationDetails.Value = null;
+            scheduledMatchRow.CreatedOn.Value = null;
+            scheduledMatchRow.CreatedBy.Value = CreatedBy;
+            scheduledMatchRow.ModifiedOn.Value = null;
+            scheduledMatchRow.ModifiedBy.Value = null;
+            scheduledMatchRow.RowVersion.Value = Guid.Empty; // ScheduleDetail seems to use 16 byte all-zero RowVersions; 'don't know why
 
             qualRow.Match.Value = MatchNumber;
             qualRow.Red1.Value = Red1.TeamNumber;
@@ -68,11 +68,36 @@ namespace FEMC.DAL
             qualRow.Blue1Surrogate.Value = Blue1Surrogate;
             qualRow.Blue2Surrogate.Value = Blue2Surrogate;
 
-            Database.Tables.ScheduledMatch.AddRow(detailRow);
+            Database.Tables.ScheduledMatch.AddRow(scheduledMatchRow);
             Database.Tables.Quals.AddRow(qualRow);
 
-            detailRow.SaveToDatabase();
+            scheduledMatchRow.SaveToDatabase();
             qualRow.SaveToDatabase();
+
+            foreach (var alliance in EnumUtil.GetValues<Alliance>())
+                {
+                foreach (var station in EnumUtil.GetValues<Station>())
+                    {
+                    DBTables.ScheduledMatchStation.Row row = new DBTables.ScheduledMatchStation.Row();
+                    row.InitializeFields();
+
+                    row.FMSScheduleDetailId = FMSScheduleDetailId;
+                    row.Alliance.Value = (int)alliance;
+                    row.Station.Value = (int)station;
+
+                    row.FmsEventId = FMSEventId;
+                    row.FmsTeamId = GetTeam(alliance, station).FMSTeamId;
+                    row.IsSurrogate.Value = GetSurrogate(alliance, station) ? 1 : 0;
+
+                    row.CreatedOn = scheduledMatchRow.CreatedOn;
+                    row.CreatedBy = scheduledMatchRow.CreatedBy;
+                    row.ModifedOn = scheduledMatchRow.ModifiedOn;
+                    row.ModifiedBy = scheduledMatchRow.ModifiedBy;
+
+                    Database.Tables.ScheduledMatchStation.AddRow(row);
+                    row.SaveToDatabase();
+                    }
+                }
             }
         }
     }

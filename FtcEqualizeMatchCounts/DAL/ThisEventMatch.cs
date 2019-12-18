@@ -13,7 +13,7 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        private FMSEventId fmsEventId;
+        protected FMSEventId fmsEventId;
         public FMSScheduleDetailId FMSScheduleDetailId;
 
         public FMSEventId FMSEventId => fmsEventId.Value==null ? Scheduled.FMSEventId : fmsEventId;

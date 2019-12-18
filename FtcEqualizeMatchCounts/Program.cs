@@ -41,6 +41,10 @@ namespace FEMC
                     { "q|quiet",  $"accept all prompts silently", (string q) => Quiet = q != null },
                 #endif
                 };
+
+            // In case we don't validate
+            StdOut = MakeIndentedTextWriter(Console.Out);
+            StdErr = MakeIndentedTextWriter(Console.Error);
             }
 
         private IndentedTextWriter MakeIndentedTextWriter(TextWriter writer)

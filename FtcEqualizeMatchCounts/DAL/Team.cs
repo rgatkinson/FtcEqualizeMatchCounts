@@ -10,7 +10,7 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public FMSTeamId TeamId;
+        public FMSTeamId FMSTeamId;
         public int TeamNumber;
         public string Name;
 
@@ -106,7 +106,7 @@ namespace FEMC.DAL
 
         public Team(Database database, DBTables.Team.Row row) : base(database)
             {
-            TeamId = row.FMSTeamId;
+            FMSTeamId = row.FMSTeamId;
             TeamNumber = (int)row.TeamNumber.NonNullValue;
             Name = row.TeamNameShort.NonNullValue;
             }

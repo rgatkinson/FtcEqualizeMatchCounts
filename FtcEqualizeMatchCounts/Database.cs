@@ -260,9 +260,6 @@ namespace FEMC
             writer.WriteLine($"Teams: averaging match count goal: {matchCountGoal}");
             writer.Indent++;
 
-            ISet<Team> completedTeams = new HashSet<Team>();
-            IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
-
             int teamsReported = 0;
             int totalTeamEqualizationMatchesNeeded = 0;
             foreach (Team team in Teams)
@@ -280,8 +277,37 @@ namespace FEMC
                     team.Report(writer, verbose, matchCountGoal);
                     teamsReported += 1;
                     }
+                }
 
-                // Accumulate info to make equalization plan
+            PlanMatches();
+
+            if (teamsReported == 0)
+                {
+                writer.WriteLine();
+                writer.WriteLine("All teams up to date");
+                }
+            else
+                {
+                writer.WriteLine("----------------");
+                writer.WriteLine($"Total: needed {totalTeamEqualizationMatchesNeeded} matches can be accomplished in {equalizationMatches.Count} equalization matches");
+                }
+
+            writer.Indent--;
+            return equalizationMatches.Count;
+            }
+
+        // Equalization matches cannot be ties, or that biases the scoring results. Hence,
+        // we decree that matches shall be scored (manually, using ScoreKeeper) as a win
+        // for Blue. Thus all blue participants in equalization matches need to be surrogates.
+        protected void PlanMatches()
+            {
+            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+
+            ISet<Team> completedTeams = new HashSet<Team>();
+            IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
+            foreach (Team team in Teams)
+                {
+                int teamEqualizationMatchesNeeded = matchCountGoal - team.AveragingMatchCount;
                 if (teamEqualizationMatchesNeeded == 0)
                     {
                     completedTeams.Add(team);
@@ -296,13 +322,21 @@ namespace FEMC
             equalizationMatches = new List<EqualizationMatch>();
             while (matchesNeededByTeam.Count > 0)
                 {
-                // Get a complement of teams that all need equalization matches
-                var teams = new List<Team>(matchesNeededByTeam.Keys.Take(4));
+                // Take at most two teams for the red side
+                var teams = new List<Team>(matchesNeededByTeam.Keys.Take(2));
+                var remainingIncomplete = new List<Team>(matchesNeededByTeam.Keys.Skip(2));
+
+                // Round out to 4 with teams that will be surrogates. We can choose arbitrary teams,
+                // but we need to be careful in events that have a very small team count. So, we start
+                // with the remaining incomplete teams then move on to those who have completed. The 
+                // later we rotate, mostly just for fun.
+                int numSurrogatesNeeded = 4 - teams.Count;
+                var surrogates = new List<Team>(remainingIncomplete.Take(numSurrogatesNeeded));
+                var rotatingSurrogates = new List<Team>(rotating.Take(numSurrogatesNeeded - surrogates.Count));
                 
-                // Round out to 4 with teams that will be surrogates. Rotate through who we decide to use (just for fun)
-                var surrogates = new List<Team>(rotating.Take(4 - teams.Count));
-                rotating.RemoveRange(0, surrogates.Count);
-                rotating.AddRange(surrogates);
+                surrogates.AddRange(rotatingSurrogates);
+                rotating.RemoveRange(0, rotatingSurrogates.Count);
+                rotating.AddRange(rotatingSurrogates);
 
                 teams.AddRange(surrogates);
                 var isSurrogates = new List<bool>(teams.Select(team => surrogates.Contains(team)));
@@ -314,7 +348,7 @@ namespace FEMC
                     {
                     if (!surrogates.Contains(team))
                         {
-                        matchesNeededByTeam[team] = matchesNeededByTeam[team]-1;
+                        matchesNeededByTeam[team] = matchesNeededByTeam[team] - 1;
                         if (matchesNeededByTeam[team] == 0)
                             {
                             matchesNeededByTeam.Remove(team);
@@ -324,19 +358,6 @@ namespace FEMC
                         }
                     }
                 }
-            if (teamsReported == 0)
-                {
-                writer.WriteLine();
-                writer.WriteLine("All teams up to date");
-                }
-            else
-                {
-                writer.WriteLine("----------------");
-                writer.WriteLine($"Total: needed {totalTeamEqualizationMatchesNeeded} matches can be accomplished in {equalizationMatches.Count} equalization matches");
-                }
-
-            writer.Indent--;
-            return equalizationMatches.Count;
             }
 
         public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)

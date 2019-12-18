@@ -12,16 +12,28 @@ namespace FEMC.DAL
         // Types
         //----------------------------------------------------------------------------------------
 
-        public enum Alliance
+        public enum TAlliance
             {
             Red = 1,
             Blue = 2,
             }
 
-        public enum Station
+        public enum TStation
             {
             Station1 = 1,
             Station2 = 2,
+            }
+
+        public enum TTournamentLevel
+            {
+            Unknown = -1,
+            Qualification = 2,
+            }
+
+        public enum TFieldType
+            {
+            Unknown = -1,
+            Usual = 1,      // don't actually know what this means
             }
 
         //----------------------------------------------------------------------------------------

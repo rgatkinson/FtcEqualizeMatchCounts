@@ -18,6 +18,8 @@ namespace FEMC.DAL
             CreatedBy = db.EqualizationMatchCreatorName;
             matchNumber = Event.LastMatchNumber + 1;
             Description = $"Equalization {matchNumber}";
+            tournamentLevel = (int)TTournamentLevel.Qualification;
+            fieldType = (int)TFieldType.Usual;
 
             Red1 = teams[0];
             Red2 = teams[1];
@@ -46,9 +48,9 @@ namespace FEMC.DAL
 
             scheduledMatchRow.FMSScheduleDetailId = FMSScheduleDetailId;
             scheduledMatchRow.FMSEventId = FMSEventId;
-            scheduledMatchRow.TournamentLevel.Value = 2; // 'qualification match'
+            scheduledMatchRow.TournamentLevel.Value = tournamentLevel;
             scheduledMatchRow.MatchNumber.Value = MatchNumber;
-            scheduledMatchRow.FieldType.Value = 1; // todo: is this right? haven't ever seen any other values
+            scheduledMatchRow.FieldType.Value = fieldType;
             scheduledMatchRow.Description.Value = Description;
             scheduledMatchRow.StartTime.Value = DateTimeOffset.Now;
             scheduledMatchRow.FieldConfigurationDetails.Value = null;
@@ -74,9 +76,9 @@ namespace FEMC.DAL
             scheduledMatchRow.SaveToDatabase();
             qualRow.SaveToDatabase();
 
-            foreach (var alliance in EnumUtil.GetValues<Alliance>())
+            foreach (var alliance in EnumUtil.GetValues<TAlliance>())
                 {
-                foreach (var station in EnumUtil.GetValues<Station>())
+                foreach (var station in EnumUtil.GetValues<TStation>())
                     {
                     DBTables.ScheduledMatchStation.Row row = new DBTables.ScheduledMatchStation.Row();
                     row.InitializeFields();

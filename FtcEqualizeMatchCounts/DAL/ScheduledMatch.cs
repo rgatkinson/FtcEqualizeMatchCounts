@@ -13,6 +13,10 @@ namespace FEMC.DAL
         protected long matchNumber;
         public string Description;
         public string CreatedBy;
+        protected int tournamentLevel;
+        protected int fieldType;
+        public TTournamentLevel TournamentLevel => Enum.IsDefined(typeof(TTournamentLevel), tournamentLevel) ? (TTournamentLevel)tournamentLevel : TTournamentLevel.Unknown;
+        public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
 
         public Team Red1;
         public bool Red1Surrogate;
@@ -27,7 +31,7 @@ namespace FEMC.DAL
 
         public override long MatchNumber => matchNumber;
 
-        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName);
+        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && TournamentLevel == TTournamentLevel.Qualification;
 
 
         // Does this team play in this match?
@@ -40,27 +44,27 @@ namespace FEMC.DAL
             return false;
             }
 
-        public Team GetTeam(Alliance alliance, Station station)
+        public Team GetTeam(TAlliance alliance, TStation station)
             {
-            if (alliance == Alliance.Red)
+            if (alliance == TAlliance.Red)
                 {
-                return station==Station.Station1 ? Red1 : Red2;
+                return station==TStation.Station1 ? Red1 : Red2;
                 }
             else
                 {
-                return station == Station.Station1 ? Blue1 : Blue2;
+                return station == TStation.Station1 ? Blue1 : Blue2;
                 }
             }
 
-        public bool GetSurrogate(Alliance alliance, Station station)
+        public bool GetSurrogate(TAlliance alliance, TStation station)
             {
-            if (alliance == Alliance.Red)
+            if (alliance == TAlliance.Red)
                 {
-                return station == Station.Station1 ? Red1Surrogate : Red2Surrogate;
+                return station == TStation.Station1 ? Red1Surrogate : Red2Surrogate;
                 }
             else
                 {
-                return station == Station.Station1 ? Blue1Surrogate : Blue2Surrogate;
+                return station == TStation.Station1 ? Blue1Surrogate : Blue2Surrogate;
                 }
             }
 
@@ -95,6 +99,8 @@ namespace FEMC.DAL
             matchNumber = row.MatchNumber.NonNullValue;
             Description = row.Description.Value;
             CreatedBy = row.CreatedBy.Value;
+            tournamentLevel = (int)row.TournamentLevel.NonNullValue;
+            fieldType = (int)row.FieldType.NonNullValue;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber];
 

@@ -53,7 +53,7 @@ namespace FEMC.DAL
             blocksRow.Count.Value = count;
             blocksRow.Label.Value = null;
 
-            db.Tables.Blocks.Rows.Add(blocksRow);
+            db.Tables.Blocks.AddRow(blocksRow);
 
             blocksRow.SaveToDatabase();
             }

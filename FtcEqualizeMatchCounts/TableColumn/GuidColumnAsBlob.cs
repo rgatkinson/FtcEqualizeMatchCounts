@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 
@@ -40,11 +41,11 @@ namespace FEMC
                     {
                     MiscUtil.ByteSwap(guid);
                     }
-                parameter.Value = guid.ToByteArray();
+                SetParameterValue(parameter, guid.ToByteArray());
                 }
             else
                 {
-                parameter.Value = null;
+                SetParameterValue(parameter, null);
                 }
             }
         }

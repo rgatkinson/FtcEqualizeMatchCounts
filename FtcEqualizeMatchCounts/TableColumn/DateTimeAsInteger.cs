@@ -11,7 +11,7 @@ namespace FEMC
 
         public override void SaveDatabaseValue(SqliteParameter parameter)
             {
-            parameter.Value = MsSince1970UnixEpoch;
+            SetParameterValue(parameter, MsSince1970UnixEpoch);
             }
         }
     }

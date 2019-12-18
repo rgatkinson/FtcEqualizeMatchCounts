@@ -14,6 +14,8 @@ namespace FEMC
         public abstract string TableName { get; }
         public abstract void AddRow(TRow row);
         public abstract Database Database { get; }
+
+        public ProgramOptions ProgramOptions => Database.ProgramOptions;
         }
 
     abstract class Table<TRow, TPrimaryKey> : AbstractTable<TableRow<TPrimaryKey>> where TRow : TableRow<TPrimaryKey>, new()

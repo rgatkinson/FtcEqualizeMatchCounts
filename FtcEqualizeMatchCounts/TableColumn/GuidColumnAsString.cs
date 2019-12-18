@@ -11,7 +11,7 @@ namespace FEMC
 
         public override void SaveDatabaseValue(SqliteParameter parameter)
             {
-            parameter.Value = Value?.ToString("D");
+            SetParameterValue(parameter, Value?.ToString("D"));
             }
         }
     }

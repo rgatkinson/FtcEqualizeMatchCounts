@@ -34,6 +34,6 @@ namespace FEMC
 
         // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string
         // ISO8601 with 3 decimal places
-        public string Iso861String => DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? "null";
+        public string Iso861String => DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? null;
         }
     }

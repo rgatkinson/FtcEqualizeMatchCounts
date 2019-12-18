@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -36,6 +37,22 @@ namespace FEMC
 
         public virtual TPrimaryKey PrimaryKey => throw new NotImplementedException();
 
+        protected List<FieldInfo> LocalStoredFields
+            {
+            get {
+                Type type = GetType();
+                List<FieldInfo> result = new List<FieldInfo>();
+                foreach (FieldInfo field in type.GetFields())
+                    {
+                    if (field.DeclaringType == type)
+                        {
+                        result.Add(field);
+                        }
+                    }
+                return result;
+                }
+            }
+
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
         //  https://stackoverflow.com/questions/51933421/system-data-sqlite-vs-microsoft-data-sqlite
@@ -45,9 +62,7 @@ namespace FEMC
         // 
         public void SetField(int index, object value)
             {
-            Type type = GetType();
-
-            FieldInfo field = type.GetFields()[index];
+            FieldInfo field = LocalStoredFields[index];
             Trace.Assert(field.IsPublic);   // TableRow are of limited structure
 
             if (field.FieldType == typeof(string))
@@ -76,8 +91,7 @@ namespace FEMC
 
         public void InitializeFields()
             {
-            Type type = GetType();
-            foreach (FieldInfo field in type.GetFields())
+            foreach (FieldInfo field in LocalStoredFields)
                 {
                 if (field.FieldType == typeof(string))
                     {
@@ -104,14 +118,14 @@ namespace FEMC
             using var cmd = Table.Database.Connection.CreateCommand();
 
             StringBuilder builder = new StringBuilder();
-            builder.Append($"INSERT * INTO { Table.TableName } VALUES (");
+            builder.Append($"INSERT INTO { Table.TableName } VALUES (");
 
-            Type type = GetType();
             int iField = 0;
-            foreach (FieldInfo field in type.GetFields())
+            foreach (FieldInfo field in LocalStoredFields)
                 {
                 SqliteParameter parameter = cmd.CreateParameter();
                 parameter.ParameterName = $"$param{iField}";
+                parameter.IsNullable = true; // everything is nullable in our schema
                 cmd.Parameters.Add(parameter);
 
                 if (iField > 0)
@@ -144,7 +158,11 @@ namespace FEMC
             builder.Append(");");
 
             cmd.CommandText = builder.ToString();
-            // var cRows = cmd.ExecuteNonQuery();
+            var cRows = cmd.ExecuteNonQuery();
+            if (cRows != 1)
+                {
+                Table.ProgramOptions.StdErr.WriteLine($"INSERT expected to affect 1 row; affected {cRows} rows");
+                }
             }
         }
     }

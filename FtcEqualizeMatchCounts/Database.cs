@@ -67,9 +67,11 @@ namespace FEMC
                 }
             }
 
+        public ProgramOptions ProgramOptions => programOptions;
 
-        string fileName = null;
-        bool disposed = false;
+        private ProgramOptions programOptions;
+        private string fileName;
+        private bool disposed = false;
 
         //---------------------------------------------------------------------------------------------------
         // Construction
@@ -77,6 +79,7 @@ namespace FEMC
 
         public Database(ProgramOptions programOptions)
             {
+            this.programOptions = programOptions;
             fileName = Path.GetFullPath(programOptions.Filename);
             Tables = new Tables(this);
             AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountGoal;
@@ -345,6 +348,40 @@ namespace FEMC
 
             int result = equalizationMatches.Count;
             equalizationMatches.Clear();
+            return result;
+            }
+
+        public bool BackupFile()
+            {
+            bool result = true;
+            string directoryName = Path.GetDirectoryName(fileName);
+            string root = Path.GetFileNameWithoutExtension(fileName);
+            string ext = Path.GetExtension(fileName);
+            string path;
+            int iteration = 1;
+            for (;;)
+                {
+                string file = root + " - Backup";
+                if (iteration > 1)
+                    {
+                    file += $" ({iteration})";
+                    }
+                path = Path.Combine(directoryName, file + ext);
+                if (!File.Exists(path))
+                    break;
+                iteration ++;
+                }
+
+            try {
+                using FileStream output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                using FileStream input = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                input.CopyTo(output);
+                }
+            catch (Exception e)
+                {
+                programOptions.StdErr.WriteLine($"Exception creating backup: {e.Message}");
+                result = false;
+                }
             return result;
             }
         }

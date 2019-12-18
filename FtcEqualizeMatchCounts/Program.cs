@@ -17,6 +17,7 @@ namespace FEMC
         public bool         Verbose = false;
         public List<String> ExtraOptions = new List<string>();
         public string       IndentString = "   ";
+        public bool         Quiet = false;
 
         public string       EventCode = null;
 
@@ -36,6 +37,9 @@ namespace FEMC
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
+                #if DEBUG
+                    { "q|quiet",  $"accept all prompts silently", (string q) => Quiet = q != null },
+                #endif
                 };
             }
 
@@ -172,49 +176,71 @@ namespace FEMC
 
             OutputBannerAndCopyright(ProgramOptions.StdOut);
 
-            Database = new Database(ProgramOptions);
-            Database.Open();
-            Database.BeginTransaction();
-            Database.Load();
+            try { 
 
-            Database.ReportEvents(ProgramOptions.StdOut);
+                Database = new Database(ProgramOptions);
+                Database.Open();
+                Database.BeginTransaction();
+                Database.Load();
 
-            ProgramOptions.StdOut.WriteLine();
-            int equalizationMatchesNeeded = Database.ReportTeams(ProgramOptions.StdOut, ProgramOptions.Verbose);
-            if (equalizationMatchesNeeded > 0)
-                { 
+                Database.ReportEvents(ProgramOptions.StdOut);
+
                 ProgramOptions.StdOut.WriteLine();
-                ConsoleKey response;
-                do  { 
-                    ProgramOptions.StdOut.Write($"Update database with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
-                    response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
-                    if (response != ConsoleKey.Enter)
+                int equalizationMatchesNeeded = Database.ReportTeams(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                if (equalizationMatchesNeeded > 0)
+                    { 
+                    ProgramOptions.StdOut.WriteLine();
+                    ConsoleKey response = ConsoleKey.Y;
+
+                    if (!ProgramOptions.Quiet)
+                        { 
+                        do  { 
+                            ProgramOptions.StdOut.Write($"Update database with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
+                            response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
+                            if (response != ConsoleKey.Enter)
+                                {
+                                Console.WriteLine();
+                                }
+                            }
+                        while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                        }
+
+                    if (response == ConsoleKey.Y)
                         {
-                        Console.WriteLine();
+                        if (Database.BackupFile())
+                            { 
+                            int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                            Database.CommitTransaction();
+                            ProgramOptions.StdOut.WriteLine();
+                            ProgramOptions.StdOut.WriteLine($"Database updated with {equalizationMatchesCreated} new equalization matches.");
+                            ProgramOptions.StdOut.WriteLine();
+
+                            Database.Load();
+                            Database.ReportTeams(ProgramOptions.StdOut, false);
+                            }
+                        }
+                    else
+                        {
+                        ProgramOptions.StdOut.WriteLine($"No changes made to database");
                         }
                     }
-                while (response != ConsoleKey.Y && response != ConsoleKey.N);
 
-                if (response == ConsoleKey.Y)
-                    {
-                    int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
-                    Database.CommitTransaction();
-
-                    ProgramOptions.StdOut.WriteLine();
-                    ProgramOptions.StdOut.WriteLine($"Database updated with {equalizationMatchesCreated} new equalization matches.");
-                    ProgramOptions.StdOut.WriteLine();
-
-                    Database.Load();
-                    Database.ReportTeams(ProgramOptions.StdOut, false);
-                    }
-                else
-                    {
-                    ProgramOptions.StdOut.WriteLine($"No changes made to database");
-                    }
+                Database.AbortTransaction();
+                Database.Close();
                 }
+            catch (Exception e)
+                {
+                IndentedTextWriter err = ProgramOptions.StdErr;
 
-            Database.AbortTransaction();
-            Database.Close();
+                err.WriteLine($"Exception thrown: {e.Message}");
+                err.WriteLine($"Stack Trace:");
+                err.Indent++;
+                foreach (var frame in e.StackTrace.Split('\n'))
+                    {
+                    err.WriteLine(frame.Trim());
+                    }
+                err.Indent--;
+                }
             }
 
         static void Main(string[] args)

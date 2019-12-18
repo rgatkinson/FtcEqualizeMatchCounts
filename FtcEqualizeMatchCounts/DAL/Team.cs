@@ -115,15 +115,15 @@ namespace FEMC.DAL
         // Reporting
         //----------------------------------------------------------------------------------------
 
-        public void Report(IndentedTextWriter writer, bool verbose, int matchCountGoal)
+        public void Report(IndentedTextWriter writer, bool verbose, int averagingMatchCountGoal)
             {
-            int equalizationMatchesNeeded = matchCountGoal - AveragingMatchCount;
+            int averagingMatchesNeeded = averagingMatchCountGoal - AveragingMatchCount;
             if (verbose)
                 { 
                 writer.WriteLine($"Team {TeamNumber}: {Name}:");
                 writer.Indent++;
                 writer.WriteLine($"existing averaging matches: { AveragingMatchCount }");
-                writer.WriteLine($"equalization matches needed: { equalizationMatchesNeeded }");
+                writer.WriteLine($"averaging matches needed: { averagingMatchesNeeded }");
                 writer.WriteLine($"previous events: matches played: { LeagueHistoryMatchCount }");
                 // writer.WriteLine($"this event: equalization match already scheduled: { EqualizationMatchCount }");
                 // writer.WriteLine($"this event: matched schedule: { ScheduledMatchCountThisEvent }");
@@ -132,7 +132,7 @@ namespace FEMC.DAL
                 }
             else
                 {
-                writer.WriteLine($"Team {TeamNumber}: {Name}: equalization matches needed: { equalizationMatchesNeeded }");
+                writer.WriteLine($"Team {TeamNumber}: {Name}: averaging matches needed: { averagingMatchesNeeded }");
                 }
             }
         }

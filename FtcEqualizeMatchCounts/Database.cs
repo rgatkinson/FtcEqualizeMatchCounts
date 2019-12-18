@@ -255,26 +255,26 @@ namespace FEMC
 
         public int ReportTeams(IndentedTextWriter writer, bool verbose)
             {
-            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+            int averagingMatchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
-            writer.WriteLine($"Teams: averaging match count goal: {matchCountGoal}");
+            writer.WriteLine($"Teams: averaging match count goal: {averagingMatchCountGoal}");
             writer.Indent++;
 
             int teamsReported = 0;
-            int totalTeamEqualizationMatchesNeeded = 0;
+            int totalAveragingMatchesNeeded = 0;
             foreach (Team team in Teams)
                 {
-                int teamEqualizationMatchesNeeded = matchCountGoal - team.AveragingMatchCount;
-                totalTeamEqualizationMatchesNeeded += teamEqualizationMatchesNeeded;
+                int teamAveragingMatchesNeeded = averagingMatchCountGoal - team.AveragingMatchCount;
+                totalAveragingMatchesNeeded += teamAveragingMatchesNeeded;
 
                 // Report
-                if (verbose || teamEqualizationMatchesNeeded > 0)
+                if (verbose || teamAveragingMatchesNeeded > 0)
                     { 
                     if (verbose)
                         {
                         writer.WriteLine();
                         }
-                    team.Report(writer, verbose, matchCountGoal);
+                    team.Report(writer, verbose, averagingMatchCountGoal);
                     teamsReported += 1;
                     }
                 }
@@ -289,7 +289,7 @@ namespace FEMC
             else
                 {
                 writer.WriteLine("----------------");
-                writer.WriteLine($"Total: needed {totalTeamEqualizationMatchesNeeded} matches can be accomplished in {equalizationMatches.Count} equalization matches");
+                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {equalizationMatches.Count} equalization matches");
                 }
 
             writer.Indent--;
@@ -301,20 +301,20 @@ namespace FEMC
         // for Blue. Thus all blue participants in equalization matches need to be surrogates.
         protected void PlanMatches()
             {
-            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+            int averagingMatchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
             ISet<Team> completedTeams = new HashSet<Team>();
             IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
             foreach (Team team in Teams)
                 {
-                int teamEqualizationMatchesNeeded = matchCountGoal - team.AveragingMatchCount;
-                if (teamEqualizationMatchesNeeded == 0)
+                int teamAveragingMatchesNeeded = averagingMatchCountGoal - team.AveragingMatchCount;
+                if (teamAveragingMatchesNeeded == 0)
                     {
                     completedTeams.Add(team);
                     }
                 else
                     {
-                    matchesNeededByTeam[team] = teamEqualizationMatchesNeeded;
+                    matchesNeededByTeam[team] = teamAveragingMatchesNeeded;
                     }
                 }
 

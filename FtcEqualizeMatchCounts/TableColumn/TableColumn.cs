@@ -4,9 +4,9 @@ namespace FEMC
     {
     abstract class TableColumn
         {
-        public virtual void SetValue(object value)
+        public virtual void LoadDatabaseValue(object value)
             {
-            throw new NotImplementedException($"{GetType()}.SetValue()");
+            throw new NotImplementedException($"{GetType()}.LoadDatabaseValue()");
             }
         }
     }

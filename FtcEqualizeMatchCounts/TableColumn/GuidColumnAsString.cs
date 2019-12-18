@@ -2,9 +2,9 @@
     {
     class GuidColumnAsString : GuidColumn
         {
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
-            this.SetValue((string)value);
+            this.LoadDatabaseValue((string)value);
             }
         }
     }

@@ -22,12 +22,12 @@ namespace FEMC
             Value = dateTimeOffset;
             }
 
-        public void SetValue(string value)
+        public void LoadDatabaseValue(string value)
             {
             SetValue(value == null ? (DateTimeOffset?)null : DateTimeOffset.Parse(value));
             }
 
-        public void SetValue(long msSince1970UnixEpoch)
+        public void LoadDatabaseValue(long msSince1970UnixEpoch)
             {
             SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
             }

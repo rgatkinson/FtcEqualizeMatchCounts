@@ -2,9 +2,9 @@
     {
     class DateTimeAsInteger : DateTimeColumn
         {
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
-            SetValue((long)value);
+            LoadDatabaseValue((long)value);
             }
         }
     }

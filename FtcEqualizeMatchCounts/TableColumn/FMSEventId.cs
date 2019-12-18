@@ -8,7 +8,7 @@
 
         public FMSEventId(string value)
             {
-            SetValue(value);
+            LoadDatabaseValue(value);
             }
         }
 

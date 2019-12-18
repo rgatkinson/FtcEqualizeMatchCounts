@@ -16,11 +16,11 @@ namespace FEMC.DBTables
             public NullableLong FieldType;          // 1 for everything we've seen
             public StringColumn Description;
             public DateTimeAsString StartTime;
-            public FieldConfigurationDetails FieldConfigurationDetails;
+            public FieldConfigurationDetails FieldConfigurationDetails; // null is ok
             public DateTimeAsString CreatedOn;    // null is ok
             public StringColumn CreatedBy;        // e.g.: "FTC Match Maker"
             public DateTimeAsString ModifiedOn;   // null is ok
-            public StringColumn ModifiedBy;
+            public StringColumn ModifiedBy;       // null is ok
             public RowVersion RowVersion;
 
             public override FMSScheduleDetailId PrimaryKey => FMSScheduleDetailId;

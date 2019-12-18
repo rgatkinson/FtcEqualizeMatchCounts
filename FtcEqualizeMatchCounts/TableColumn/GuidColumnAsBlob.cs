@@ -2,9 +2,9 @@
     {
     class GuidColumnAsBlob : GuidColumn
         {
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
-            this.SetValue((byte[])value);
+            this.LoadDatabaseValue((byte[])value);
             }
         }
     }

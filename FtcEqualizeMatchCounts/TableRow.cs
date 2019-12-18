@@ -11,6 +11,7 @@ namespace FEMC
         // Accessing
         //----------------------------------------------------------------------------------------------------------------------
 
+
         public override string ToString()
             {
             Type type = GetType();
@@ -62,7 +63,7 @@ namespace FEMC
             else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
                 {
                 TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
-                column.SetValue(value);
+                column.LoadDatabaseValue(value);
                 field.SetValue(this, column);
                 }
             else
@@ -71,5 +72,29 @@ namespace FEMC
                 }
             }
 
+        public void InitializeFields()
+            {
+            Type type = GetType();
+            foreach (FieldInfo field in type.GetFields())
+                {
+                if (field.FieldType == typeof(string))
+                    {
+                    field.SetValue(this, null);
+                    }
+                else if (field.FieldType == typeof(long))
+                    {
+                    field.SetValue(this, 0);
+                    }
+                else if (field.FieldType == typeof(double))
+                    {
+                    field.SetValue(this, 0.0);
+                    }
+                else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                    {
+                    TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
+                    field.SetValue(this, column);
+                    }
+                }
+            }
         }
     }

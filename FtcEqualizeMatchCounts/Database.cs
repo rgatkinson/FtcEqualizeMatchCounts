@@ -31,8 +31,7 @@ namespace FEMC
         public readonly IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
 
-        private ISet<Team> completedTeams = new HashSet<Team>();
-        private IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
+        private List<EqualizationMatch> equalizationMatches = new List<EqualizationMatch>();
 
         public int MaxAveragingMatchCount
             {
@@ -181,8 +180,7 @@ namespace FEMC
             LeagueHistoryMatchesByNumber.Clear();
             EventsByCode.Clear();
 
-            completedTeams.Clear();
-            matchesNeededByTeam.Clear();
+            equalizationMatches.Clear();
             }
 
         public void LoadDataAccessLayer()
@@ -254,19 +252,20 @@ namespace FEMC
 
         public int ReportTeams(IndentedTextWriter writer, bool verbose)
             {
-            int equalizationMatchesNeeded = 0;
             int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
             writer.WriteLine($"Teams: averaging match count goal: {matchCountGoal}");
             writer.Indent++;
 
-            completedTeams.Clear();
-            matchesNeededByTeam.Clear();
+            ISet<Team> completedTeams = new HashSet<Team>();
+            IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();
 
             int teamsReported = 0;
+            int totalTeamEqualizationMatchesNeeded = 0;
             foreach (Team team in Teams)
                 {
                 int teamEqualizationMatchesNeeded = matchCountGoal - team.AveragingMatchCount;
+                totalTeamEqualizationMatchesNeeded += teamEqualizationMatchesNeeded;
 
                 // Report
                 if (verbose || teamEqualizationMatchesNeeded > 0)
@@ -290,12 +289,6 @@ namespace FEMC
                     }
                 }
 
-            if (teamsReported == 0)
-                {
-                writer.WriteLine();
-                writer.WriteLine("All teams up to date");
-                }
-
             List<Team> rotating = new List<Team>(completedTeams);
             List<EqualizationMatch> equalizationMatches = new List<EqualizationMatch>();
             while (matchesNeededByTeam.Count > 0)
@@ -303,7 +296,7 @@ namespace FEMC
                 // Get a complement of teams that all need equalization matches
                 var teams = new List<Team>(matchesNeededByTeam.Keys.Take(4));
                 
-                // Round out to 4 with teams that will be surrogates. Rotate thorugh who we decide to use
+                // Round out to 4 with teams that will be surrogates. Rotate through who we decide to use (just for fun)
                 var surrogates = new List<Team>(rotating.Take(4 - teams.Count));
                 rotating.RemoveRange(0, surrogates.Count);
                 rotating.AddRange(surrogates);
@@ -328,18 +321,31 @@ namespace FEMC
                         }
                     }
                 }
-            equalizationMatchesNeeded = equalizationMatches.Count;
+            if (teamsReported == 0)
+                {
+                writer.WriteLine();
+                writer.WriteLine("All teams up to date");
+                }
+            else
+                {
+                writer.WriteLine("----------------");
+                writer.WriteLine($"Total: needed {totalTeamEqualizationMatchesNeeded} matches can be accomplished in {equalizationMatches.Count} equalization matches");
+                }
 
             writer.Indent--;
-            return equalizationMatchesNeeded;
+            return equalizationMatches.Count;
             }
 
         public int CreateEqualizationMatches(IndentedTextWriter writer, bool verbose)
             {
-            int equalizationMatchesCreated = 0;
-            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+            foreach (var equalizationMatch in equalizationMatches)
+                {
+                equalizationMatch.SaveToDatabase();
+                }
 
-            return equalizationMatchesCreated;
+            int result = equalizationMatches.Count;
+            equalizationMatches.Clear();
+            return result;
             }
         }
     }

@@ -16,14 +16,14 @@
             Value = value;
             }
 
-        public void SetValue(long? value)
+        public void LoadDatabaseValue(long? value)
             {
             SetValue(value==null ? (bool?)null : value.Value != 0);
             }
 
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
-            SetValue((long?)value);
+            LoadDatabaseValue((long?)value);
             }
         }
     }

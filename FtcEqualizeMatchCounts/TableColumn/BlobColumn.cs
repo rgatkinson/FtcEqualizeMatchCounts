@@ -14,7 +14,7 @@
             Value = value;
             }
 
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
             SetValue((byte[])value);
             }

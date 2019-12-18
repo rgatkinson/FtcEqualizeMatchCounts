@@ -18,7 +18,7 @@ namespace FEMC
             }
 
         // It seems that the ScoreKeeper database uses big-endian Guids, whereas .Net uses little-endian
-        public void SetValue(byte[] bytes)
+        public void LoadDatabaseValue(byte[] bytes)
             {
             if (bytes == null)
                 SetValue((Guid?)null);
@@ -38,7 +38,7 @@ namespace FEMC
                 }
             }
 
-        public void SetValue(string value)
+        public void LoadDatabaseValue(string value)
             {
             SetValue(new Guid(value));
             }

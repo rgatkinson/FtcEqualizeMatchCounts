@@ -32,14 +32,14 @@ namespace FEMC
             return HashCode.Combine(GetType(), Value, 0x83791);
             }
 
-        public void SetValue(T? value)
+        public void LoadDatabaseValue(T? value)
             {
             Value = value;
             }
 
-        public override void SetValue(object value)
+        public override void LoadDatabaseValue(object value)
             {
-            SetValue((T?)value);
+            LoadDatabaseValue((T?)value);
             }
 
         }

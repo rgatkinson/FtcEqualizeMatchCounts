@@ -23,12 +23,23 @@ namespace FEMC.DAL
         public int LeagueHistoryMatchCount => LeagueHistoryMatches.Count;
         public int PlayedMatchCountThisEvent => PlayedMatchesThisEvent.Count;
         public int EqualizationMatchCount => EqualizationMatches.Count;
+        public int AveragingMatchCount => AveragingMatches.Count;
 
-        public List<Match> EqualizationMatches
+        public List<Match> AveragingMatches
             {
             get {
                 var result = new List<Match>();
                 result.AddRange(LeagueHistoryMatches);
+                result.AddRange(EqualizationMatches);
+                return result;
+                }
+            }
+
+        public List<Match> EqualizationMatches
+            {
+            get
+                {
+                var result = new List<Match>();
                 foreach (var match in ScheduledMatchesThisEvent)
                     {
                     if (match.IsEqualizationMatch)
@@ -89,8 +100,6 @@ namespace FEMC.DAL
                 }
             }
 
-        public int TotalMatchCountPlayed => LeagueHistoryMatchCount + PlayedMatchCountThisEvent;
-
         //----------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------
@@ -106,19 +115,24 @@ namespace FEMC.DAL
         // Reporting
         //----------------------------------------------------------------------------------------
 
-        public void Report(IndentedTextWriter writer, bool verbose, int max)
+        public void Report(IndentedTextWriter writer, bool verbose, int matchCountGoal)
             {
-            writer.WriteLine($"Team {TeamNumber}: {Name}:");
-            writer.Indent++;
-            writer.WriteLine($"equalization match count: { EqualizationMatchCount }");
-            writer.WriteLine($"equalization match count deficit: { max - EqualizationMatchCount }");
             if (verbose)
-                {
-                writer.WriteLine($"previous events: played match count: { LeagueHistoryMatchCount }");
-                writer.WriteLine($"this event: scheduled match count: { ScheduledMatchCountThisEvent }");
-                writer.WriteLine($"this event: played match count: { PlayedMatchCountThisEvent }");
+                { 
+                writer.WriteLine($"Team {TeamNumber}: {Name}:");
+                writer.Indent++;
+                writer.WriteLine($"existing averaging matches: { AveragingMatchCount }");
+                writer.WriteLine($"equalization matches needed: { matchCountGoal - AveragingMatchCount }");
+                writer.WriteLine($"previous events: matches played: { LeagueHistoryMatchCount }");
+                // writer.WriteLine($"this event: equalization match already scheduled: { EqualizationMatchCount }");
+                // writer.WriteLine($"this event: matched schedule: { ScheduledMatchCountThisEvent }");
+                // writer.WriteLine($"this event: played match count: { PlayedMatchCountThisEvent }");
+                writer.Indent--;
                 }
-            writer.Indent--;
+            else
+                {
+                writer.WriteLine($"Team {TeamNumber}: {Name}: equalization matches needed: { matchCountGoal - AveragingMatchCount }");
+                }
             }
         }
     }

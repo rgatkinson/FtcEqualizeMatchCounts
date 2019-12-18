@@ -15,6 +15,7 @@ namespace FEMC
 
         public SqliteConnection Connection = null;
         public Tables Tables;
+        public int? AveragingMatchCountGoal;
 
         public IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
         public IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
@@ -25,13 +26,13 @@ namespace FEMC
         public IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
         public IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
 
-        public int MaxEqualizationMatchCount
+        public int MaxAveragingMatchCount
             {
             get {
                 int result = 0;
                 foreach (Team team in Teams)
                     {
-                    result = Math.Max(result, team.EqualizationMatchCount);
+                    result = Math.Max(result, team.AveragingMatchCount);
                     }
                 return result;
                 }
@@ -67,10 +68,11 @@ namespace FEMC
         // Construction
         //---------------------------------------------------------------------------------------------------
 
-        public Database(string fileName)
+        public Database(ProgramOptions programOptions)
             {
-            this.fileName = Path.GetFullPath(fileName);
-            this.Tables = new Tables(this);
+            fileName = Path.GetFullPath(programOptions.Filename);
+            Tables = new Tables(this);
+            AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountGoal;
             
             Open();
             }
@@ -219,17 +221,20 @@ namespace FEMC
 
         public void ReportTeams(IndentedTextWriter writer, bool verbose)
             {
-            int max = MaxEqualizationMatchCount;
+            int matchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
-            writer.WriteLine($"Teams: equalizing match count={max}");
+            writer.WriteLine($"Teams: averaging match count goal={matchCountGoal}");
             writer.Indent++;
 
             foreach (Team team in Teams)
                 {
-                if (verbose || team.EqualizationMatchCount < max)
+                if (verbose || team.AveragingMatchCount < matchCountGoal)
                     { 
-                    writer.WriteLine();
-                    team.Report(writer, verbose, max);
+                    if (verbose)
+                        {
+                        writer.WriteLine();
+                        }
+                    team.Report(writer, verbose, matchCountGoal);
                     }
                 }
 

@@ -1,4 +1,6 @@
-﻿namespace FEMC
+﻿using Microsoft.Data.Sqlite;
+
+namespace FEMC
     {
     abstract class BlobColumn : TableColumn
         {
@@ -17,6 +19,11 @@
         public override void LoadDatabaseValue(object value)
             {
             SetValue((byte[])value);
+            }
+
+        public override void SaveDatabaseValue(SqliteParameter parameter)
+            {
+            parameter.Value = Value;
             }
         }
     }

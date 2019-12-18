@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 
 
@@ -8,17 +9,24 @@ namespace FEMC
     // Table
     //--------------------------------------------------------------------------------------------------------------------------
 
-    abstract class Table<Row_T, PrimaryKey_T> where Row_T : TableRow<PrimaryKey_T>, new()
+    abstract class AbstractTable<TRow>
+        {
+        public abstract string TableName { get; }
+        public abstract void AddRow(TRow row);
+        public abstract Database Database { get; }
+        }
+
+    abstract class Table<TRow, TPrimaryKey> : AbstractTable<TableRow<TPrimaryKey>> where TRow : TableRow<TPrimaryKey>, new()
         {
         //----------------------------------------------------------------------------------------------------------------------
         // State
         //----------------------------------------------------------------------------------------------------------------------
 
-        public List<Row_T> Rows = new List<Row_T>();
-        public IDictionary<PrimaryKey_T, Row_T> Map = new Dictionary<PrimaryKey_T, Row_T>();
+        public List<TRow> Rows = new List<TRow>();
+        public IDictionary<TPrimaryKey, TRow> Map = new Dictionary<TPrimaryKey, TRow>();
         protected Database database;
 
-        public abstract string TableName { get; }
+        public override Database Database => database;
 
         //----------------------------------------------------------------------------------------------------------------------
         // Construction
@@ -26,13 +34,19 @@ namespace FEMC
 
         protected Table(Database database)
             {
-            Rows = new List<Row_T>();
+            Rows = new List<TRow>();
             this.database = database;
             }
 
         //----------------------------------------------------------------------------------------------------------------------
         // Loading
         //----------------------------------------------------------------------------------------------------------------------
+
+        public override void AddRow(TableRow<TPrimaryKey> row)
+            {
+            row.Table = this;
+            Rows.Add((TRow) row);
+            }
 
         public void Clear()
             {
@@ -50,14 +64,14 @@ namespace FEMC
                 SqliteDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                     {
-                    Row_T row = new Row_T();
+                    TRow row = new TRow();
                     for (int i = 0; i < rdr.FieldCount; i++)
                         {
                         object value = rdr.IsDBNull(i) ? null : rdr[i];
                         row.SetField(i, value);
                         }
 
-                    Rows.Add(row);
+                    AddRow(row);
                     Map[row.PrimaryKey] = row;
                     }
                 }

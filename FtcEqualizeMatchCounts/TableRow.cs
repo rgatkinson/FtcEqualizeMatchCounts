@@ -2,15 +2,17 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
-    abstract class TableRow<PrimaryKey_T>
+    class TableRow<TPrimaryKey>
         {
         //----------------------------------------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------------------------------------
 
+        public AbstractTable<TableRow<TPrimaryKey>> Table = null;
 
         public override string ToString()
             {
@@ -32,7 +34,7 @@ namespace FEMC
             return result.ToString();
             }
 
-        public abstract PrimaryKey_T PrimaryKey { get; }
+        public virtual TPrimaryKey PrimaryKey => throw new NotImplementedException();
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
@@ -95,6 +97,54 @@ namespace FEMC
                     field.SetValue(this, column);
                     }
                 }
+            }
+
+        public void SaveToDatabase()
+            {
+            using var cmd = Table.Database.Connection.CreateCommand();
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append($"INSERT * INTO { Table.TableName } VALUES (");
+
+            Type type = GetType();
+            int iField = 0;
+            foreach (FieldInfo field in type.GetFields())
+                {
+                SqliteParameter parameter = cmd.CreateParameter();
+                parameter.ParameterName = $"$param{iField}";
+                cmd.Parameters.Add(parameter);
+
+                if (iField > 0)
+                    {
+                    builder.Append(", ");
+                    }
+                builder.Append(parameter.ParameterName);
+
+                if (field.FieldType == typeof(string))
+                    {
+                    parameter.Value = field.GetValue(this);
+                    }
+                else if (field.FieldType == typeof(long))
+                    {
+                    parameter.Value = field.GetValue(this);
+                    }
+                else if (field.FieldType == typeof(double))
+                    {
+                    parameter.Value = field.GetValue(this);
+                    }
+                else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                    {
+                    TableColumn column = (TableColumn)field.GetValue(this);
+                    column.SaveDatabaseValue(parameter);
+                    }
+
+                iField++;
+                }
+
+            builder.Append(");");
+
+            cmd.CommandText = builder.ToString();
+            // var cRows = cmd.ExecuteNonQuery();
             }
         }
     }

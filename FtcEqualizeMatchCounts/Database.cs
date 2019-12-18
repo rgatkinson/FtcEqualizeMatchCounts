@@ -290,7 +290,7 @@ namespace FEMC
                 }
 
             List<Team> rotating = new List<Team>(completedTeams);
-            List<EqualizationMatch> equalizationMatches = new List<EqualizationMatch>();
+            equalizationMatches = new List<EqualizationMatch>();
             while (matchesNeededByTeam.Count > 0)
                 {
                 // Get a complement of teams that all need equalization matches
@@ -336,7 +336,7 @@ namespace FEMC
             return equalizationMatches.Count;
             }
 
-        public int CreateEqualizationMatches(IndentedTextWriter writer, bool verbose)
+        public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)
             {
             foreach (var equalizationMatch in equalizationMatches)
                 {

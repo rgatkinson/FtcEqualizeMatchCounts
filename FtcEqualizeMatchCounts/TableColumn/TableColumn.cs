@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Text;
+using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
     abstract class TableColumn
         {
-        public virtual void LoadDatabaseValue(object value)
-            {
-            throw new NotImplementedException($"{GetType()}.LoadDatabaseValue()");
-            }
+        public abstract void LoadDatabaseValue(object value);
+
+        public abstract void SaveDatabaseValue(SqliteParameter parameter);
         }
     }

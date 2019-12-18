@@ -67,6 +67,12 @@ namespace FEMC.DAL
             qualRow.Red2Surrogate.Value = Red2Surrogate;
             qualRow.Blue1Surrogate.Value = Blue1Surrogate;
             qualRow.Blue2Surrogate.Value = Blue2Surrogate;
+
+            Database.Tables.ScheduledMatch.AddRow(detailRow);
+            Database.Tables.Quals.AddRow(qualRow);
+
+            detailRow.SaveToDatabase();
+            qualRow.SaveToDatabase();
             }
         }
     }

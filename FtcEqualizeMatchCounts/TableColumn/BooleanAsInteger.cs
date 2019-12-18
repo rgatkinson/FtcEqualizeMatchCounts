@@ -1,4 +1,6 @@
-﻿namespace FEMC
+﻿using Microsoft.Data.Sqlite;
+
+namespace FEMC
     {
     class BooleanAsInteger : TableColumn // boolean stored as 'integer' in schema instead of 'boolean'
         {
@@ -24,6 +26,11 @@
         public override void LoadDatabaseValue(object value)
             {
             LoadDatabaseValue((long?)value);
+            }
+
+        public override void SaveDatabaseValue(SqliteParameter parameter)
+            {
+            parameter.Value = Value;
             }
         }
     }

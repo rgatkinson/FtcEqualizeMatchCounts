@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace FEMC
     {
-    class DateTimeColumn : TableColumn
+    abstract class DateTimeColumn : TableColumn
         {
         public System.DateTimeOffset? Value;
 
@@ -12,9 +12,7 @@ namespace FEMC
 
         public override string ToString()
             {
-            // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string
-            // ISO8601 with 3 decimal places
-            return DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? "null";
+            return Iso861String;
             }
 
         public void SetValue(System.DateTimeOffset? dateTimeOffset)
@@ -31,5 +29,11 @@ namespace FEMC
             {
             SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
             }
+
+        public long? MsSince1970UnixEpoch => Value?.ToUnixTimeMilliseconds();
+
+        // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string
+        // ISO8601 with 3 decimal places
+        public string Iso861String => DateTime?.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture) ?? "null";
         }
     }

@@ -197,7 +197,7 @@ namespace FEMC
 
                 if (response == ConsoleKey.Y)
                     {
-                    int equalizationMatchesCreated = Database.CreateEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                    int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
                     Database.CommitTransaction();
 
                     ProgramOptions.StdOut.WriteLine();

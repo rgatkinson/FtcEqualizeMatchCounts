@@ -1,4 +1,6 @@
-﻿namespace FEMC
+﻿using Microsoft.Data.Sqlite;
+
+namespace FEMC
     {
     class DateTimeAsString : DateTimeColumn // Nullable always?
         {
@@ -8,6 +10,11 @@
         public override void LoadDatabaseValue(object value)
             {
             LoadDatabaseValue((string)value);
+            }
+
+        public override void SaveDatabaseValue(SqliteParameter parameter)
+            {
+            parameter.Value = Value==null ? null : Iso861String;
             }
         }
     }

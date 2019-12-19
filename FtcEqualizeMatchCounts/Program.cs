@@ -143,8 +143,7 @@ namespace FEMC
         string ProgramVersionString()
             {
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            // return $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
-            return version.ToString();
+            return version.ToString(3);
             }
         string ProgramDescription()
             {

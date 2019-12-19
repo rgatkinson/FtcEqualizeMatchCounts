@@ -33,6 +33,14 @@ namespace FEMC
             SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
             }
 
+        public override void LoadDatabaseValue(object value)
+            {
+            if (value == null || value is string)
+                LoadDatabaseValue((string)value);
+            else 
+                LoadDatabaseValue((long)value);
+            }
+
         public long? MsSince1970UnixEpoch => Value?.ToUnixTimeMilliseconds();
 
         // https://stackoverflow.com/questions/44788305/c-sharp-convert-datetime-object-to-iso-8601-string

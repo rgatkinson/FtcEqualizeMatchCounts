@@ -7,6 +7,13 @@ namespace FEMC
     {
     abstract class TableColumn
         {
+        public static T Create<T>(object value) where T: TableColumn, new()
+            {
+            T t = new T();
+            t.LoadDatabaseValue(value);
+            return t;
+            }
+
         public abstract void LoadDatabaseValue(object value);
         public abstract void SaveDatabaseValue(SqliteParameter parameter);
 

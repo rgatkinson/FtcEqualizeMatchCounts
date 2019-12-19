@@ -17,6 +17,39 @@ namespace FEMC
             return result;
             }
 
+        public override void LoadDatabaseValue(object value)
+            {
+            if (value==null || value is byte[])
+                LoadDatabaseValue((byte[])value);
+            else
+                LoadDatabaseValue((string)value);
+            }
+
+        public void LoadDatabaseValue(byte[] bytes)
+            {
+            if (bytes == null)
+                {
+                SetValue((Guid?)null); 
+                }
+
+            else
+                {
+                Trace.Assert(bytes.Length == 16);
+                Guid guid = new Guid(bytes);
+                // It seems that the ScoreKeeper database uses big-endian Guids, whereas .Net uses little-endian
+                if (BitConverter.IsLittleEndian)
+                    {
+                    guid = MiscUtil.ByteSwap(guid);
+                    }
+                SetValue(guid);
+                }
+            }
+
+        public void LoadDatabaseValue(string value)
+            {
+            SetValue(new Guid(value));
+            }
+
         public override string ToString()
             {
             return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
@@ -25,12 +58,6 @@ namespace FEMC
         public void SetValue(Guid? guid)
             {
             Value = guid;
-            }
-
-        // It seems that the ScoreKeeper database uses big-endian Guids, whereas .Net uses little-endian
-        public void LoadDatabaseValue(string value)
-            {
-            SetValue(new Guid(value));
             }
 
         public override bool Equals(object obj)

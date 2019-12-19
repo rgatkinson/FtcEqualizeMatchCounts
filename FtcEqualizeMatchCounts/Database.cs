@@ -17,10 +17,10 @@ namespace FEMC
         // State
         //---------------------------------------------------------------------------------------------------
 
-        public SqliteConnection Connection = null;
-        public SqliteTransaction Transaction = null;
-        public Tables Tables;
-        public readonly int? AveragingMatchCountGoal;
+        public SqliteConnection     Connection = null;
+        public SqliteTransaction    Transaction = null;
+        public Tables               Tables;
+        public readonly int?        AveragingMatchCountGoal;
 
         public readonly IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
         public readonly IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
@@ -44,11 +44,15 @@ namespace FEMC
                 }
             }
 
-        public string EqualizationMatchCreatorName => "FTC Equalize Match Counts";
-
-        public string ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
-        public Event ThisEvent => EventsByCode[ThisEventCode];
-        public FMSEventId FMSEventId => new FMSEventId(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
+        public ProgramOptions ProgramOptions => programOptions;
+        public string         EqualizationMatchCreatorName => "FTC Equalize Match Counts";
+        private DateTime      endOfTournament;
+        private TimeSpan      endOfTournamentDuration;
+        public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
+        public Event          ThisEvent => EventsByCode[ThisEventCode];
+        public FMSEventId     FMSEventId => TableColumn.Create<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
+        public DateTime       Start => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeNonNull;
+        public DateTime       End => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeNonNull;
 
         public List<Event> OtherEvents
             {
@@ -66,7 +70,6 @@ namespace FEMC
                 }
             }
 
-        public ProgramOptions ProgramOptions => programOptions;
 
         private ProgramOptions programOptions;
         private string fileName;
@@ -319,7 +322,10 @@ namespace FEMC
 
             List<Team> rotating = new List<Team>(completedTeams);
             EqualizationMatches.Clear();
-            DateTime startTime = DateTime.UtcNow;
+            endOfTournament = End + TimeSpan.FromDays(2); // 1. haven't run eliminations yet 2. End is only day-granular
+            endOfTournamentDuration = TimeSpan.FromMinutes(10);
+
+            DateTime startTime = endOfTournament + endOfTournamentDuration + TimeSpan.FromMinutes(10);
             TimeSpan duration = TimeSpan.FromSeconds(5);
             TimeSpan interval = TimeSpan.FromSeconds(7); // arbitrary, but close enough that re-runs of this tool will still likely be later
             while (matchesNeededByTeam.Count > 0)
@@ -366,12 +372,14 @@ namespace FEMC
         public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)
             {
             if (EqualizationMatches.Count > 0)
-                { 
+                {
+                EqualizationMatch.SaveEndOfTournamentBlock(this, endOfTournament, endOfTournamentDuration);
+
                 foreach (var equalizationMatch in EqualizationMatches)
                     {
                     equalizationMatch.SaveToDatabase();
                     }
-                EqualizationMatch.SaveNewBlock(this, EqualizationMatches.First().ScheduleStart, EqualizationMatches.Count);
+                EqualizationMatch.SaveEqualizationMatchesBlock(this, EqualizationMatches.First().ScheduleStart, EqualizationMatches.Count);
                 }
 
             int result = EqualizationMatches.Count;

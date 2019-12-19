@@ -40,7 +40,33 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        public static void SaveNewBlock(Database db, DateTime start, int count)
+        public static void SaveEndOfTournamentBlock(Database db, DateTime start, TimeSpan duration)
+            {
+            var blocksRow = new DBTables.Blocks.Row();
+            var matchScheduleRow = new MatchSchedule.Row();
+
+            blocksRow.InitializeFields();
+            matchScheduleRow.InitializeFields();
+
+            blocksRow.Start.Value = start;
+            blocksRow.Type.Value = (int)TMatchScheduleType.AdminBreak;
+            blocksRow.Duration.Value = (long)Math.Round(duration.TotalMinutes);
+            blocksRow.Count.Value = 0;
+            blocksRow.Label.Value = "End of Tournament - Administrative Pseudo-matches Follow";
+
+            matchScheduleRow.Start.Value = blocksRow.Start.Value;
+            matchScheduleRow.End.Value = matchScheduleRow.Start.Value + TimeSpan.FromMinutes(blocksRow.Duration.Value.Value);
+            matchScheduleRow.Type.Value = blocksRow.Type.Value;
+            matchScheduleRow.Label.Value = blocksRow.Label.Value;
+
+            db.Tables.Blocks.AddRow(blocksRow);
+            db.Tables.MatchSchedule.AddRow(matchScheduleRow);
+
+            blocksRow.SaveToDatabase();
+            matchScheduleRow.SaveToDatabase();
+            }
+
+        public static void SaveEqualizationMatchesBlock(Database db, DateTime start, int count)
             {
             var blocksRow = new DBTables.Blocks.Row();
 

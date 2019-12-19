@@ -349,4 +349,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-FtcEqualizeMatchCounts\BuildDate.g.cs
+/FtcEqualizeMatchCounts/BuildDate.g.cs

@@ -96,7 +96,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildDate.g.cs" />
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
     <Compile Include="DAL\ThisEventMatch.cs" />

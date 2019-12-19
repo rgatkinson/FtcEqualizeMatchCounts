@@ -167,8 +167,16 @@ namespace FEMC
 
         public void Load()
             {
-            Tables.Clear();
-            Tables.Load();
+            try { 
+                Tables.Clear();
+                Tables.Load();
+                }
+            catch (Exception e)
+                {
+                programOptions.StdErr.WriteLine($"Error loading database '{programOptions.Filename}': is this an FTC ScoreKeeper database?");
+                MiscUtil.DumpStackTrance(programOptions.StdErr, e);
+                Program.FailFast();
+                }
 
             ClearDataAccessLayer();
             LoadDataAccessLayer();
@@ -298,7 +306,7 @@ namespace FEMC
             return EqualizationMatches.Count;
             }
 
-        // Equalization matches cannot be ties, or that biases the scoring results. Hence,
+        // Equalization matches cannot be ties, lest that biases the scoring results. Hence,
         // we decree that matches shall be scored (manually, using ScoreKeeper) as a win
         // for Blue. Thus all blue participants in equalization matches need to be surrogates.
         protected void PlanMatches()

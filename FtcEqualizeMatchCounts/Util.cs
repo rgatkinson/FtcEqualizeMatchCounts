@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,6 +41,18 @@ namespace FEMC
                 result[i] = bytes[bytes.Length-1-i];
                 }
             return result;
+            }
+
+        public static void DumpStackTrance(IndentedTextWriter writer, Exception e)
+            {
+            writer.WriteLine($"Exception thrown: {e.Message}");
+            writer.WriteLine($"Stack Trace:");
+            writer.Indent++;
+            foreach (var frame in e.StackTrace.Split('\n'))
+                {
+                writer.WriteLine(frame.Trim());
+                }
+            writer.Indent--;
             }
         }
 

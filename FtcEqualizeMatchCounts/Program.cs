@@ -32,7 +32,7 @@ namespace FEMC
             this.program = program;
             options = new OptionSet
                 {
-                    { "m|max",     $"equalize to the maximum number of matches already played by any team (default)", (string m) => AverageToExistingMax = m != null },
+                    { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => AverageToExistingMax = m != null },
                     { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountGoal = count; AverageToExistingMax = false; } },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
@@ -93,6 +93,10 @@ namespace FEMC
                 {
                 Throw($"name of database not given", "-f");
                 }
+            if (!File.Exists(Filename))
+                {
+                Throw($"database '{Filename}' does not exist");
+                }
             }
 
         private void Throw(string message, string optionName = null)
@@ -114,20 +118,22 @@ namespace FEMC
 
             writer.WriteLine($"Usage: { ProgramName } [OPTIONS]* scoringDatabase.db:");
             writer.Indent++;
-            writer.WriteLine("Equalize the number of matches played by all teams in the FTC scoring database");
-            writer.WriteLine("by adding un-played Equalization Matches as necessary. These added matches need");
-            writer.WriteLine("to then be manually scored as 0-0 ties using the FTC ScoreKeeper.");
+            writer.WriteLine("Equalize the number of Averaging Matches of all teams in the FTC scoring database");
+            writer.WriteLine("by adding never-played Equalization Matches as necessary. After importing into ");
+            writer.WriteLine("the FTC Score Keeper, these added matches need to be manually scored as Wins for Blue.");
             writer.WriteLine();
             writer.Indent--;
             writer.WriteLine("Options:");
             options.WriteOptionDescriptions(writer);
-            Environment.Exit(e == null ? 0 : -1);
+            if (e==null)
+                Program.ExitApp();
+            else
+                Program.FailFast();
             }
 
         private String ProgramName => Path.GetFileNameWithoutExtension(System.AppDomain.CurrentDomain.FriendlyName);
         }
-
-
+    
 
     class Program
         {
@@ -233,16 +239,7 @@ namespace FEMC
                 }
             catch (Exception e)
                 {
-                IndentedTextWriter err = ProgramOptions.StdErr;
-
-                err.WriteLine($"Exception thrown: {e.Message}");
-                err.WriteLine($"Stack Trace:");
-                err.Indent++;
-                foreach (var frame in e.StackTrace.Split('\n'))
-                    {
-                    err.WriteLine(frame.Trim());
-                    }
-                err.Indent--;
+                MiscUtil.DumpStackTrance(ProgramOptions.StdErr, e);
                 }
             }
 
@@ -250,6 +247,16 @@ namespace FEMC
             {
             var program = new Program();
             program.DoMain(args);
+            }
+
+        public static void FailFast()
+            {
+            Environment.Exit(-1);
+            }
+
+        public static void ExitApp()
+            {
+            Environment.Exit(0);
             }
         }
     }

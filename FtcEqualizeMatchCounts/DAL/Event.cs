@@ -1,12 +1,25 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FEMC.DAL
     {
     class Event : DBObject
         {
+        //----------------------------------------------------------------------------------------
+        // Types
+        //----------------------------------------------------------------------------------------
+
+        public enum TEvent // org.usfirst.ftc.event.EventData
+            {
+            Scrimmage = 0,
+            League_Meet = 1,
+            Qualifier = 2,
+            League_Tournament = 3,
+            Championship = 4,
+            Other = 5
+            }
+
         //----------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------

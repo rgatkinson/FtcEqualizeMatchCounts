@@ -14,10 +14,10 @@ namespace FEMC.DBTables
             public NullableLong RankingPoints;
             public NullableLong TieBreakingPoints;
             public NullableLong Score;
-            public BooleanAsInteger DQ;
-            public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"
+            public BooleanAsInteger DQorNoShow;
+            public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"; see TMatchOutcome
 
-            public bool MatchIsCounted => true; // WRONG
+            public bool MatchIsCounted => true; // WRONG TODO: fix; is this where the '10' best limit comes in?
 
             public override Tuple<NullableLong, StringColumn, NullableLong> PrimaryKey => new Tuple<NullableLong, StringColumn, NullableLong>(Team, EventCode, Match);
             }

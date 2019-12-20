@@ -24,10 +24,20 @@ namespace FEMC.DAL
             Station2 = 2,
             }
 
-        public enum TTournamentLevel
+        public enum TTournamentLevel // org.usfirst.ftc.event.management.SQLiteManagementDAO.saveFMSSchedule
             {
             Unknown = -1,
+            Other = 0,
             Qualification = 2,
+            Eliminations = 3,
+            }
+
+        public enum TMatchType // org.usfirst.ftc.event.MatchType
+            {
+            PRACTICE,
+            QUALS,
+            ELIMS,
+            TEST,
             }
 
         public enum TFieldType
@@ -52,6 +62,15 @@ namespace FEMC.DAL
             AdminBreak = 1,         // admin-created break, such as lunch
             InterMatchBreak = 2,    // scoring-system-created break, such as 5 minute break between matches
             }
+
+        public enum TMatchOutcome // org.usfirst.ftc.event.MatchOutcome, names must be in upper case as the string values are in DB (!)
+            {
+            WIN,
+            LOSS,
+            TIE,
+            UNKNOWN
+            }
+
 
         //----------------------------------------------------------------------------------------
         // Accessing

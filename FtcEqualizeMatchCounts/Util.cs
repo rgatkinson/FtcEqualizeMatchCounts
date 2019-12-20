@@ -2,6 +2,7 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
@@ -63,4 +64,34 @@ namespace FEMC
             return Enum.GetValues(typeof(T)).Cast<T>();
             }
         }
+
+    public static class SqlUtil
+        {
+        public static int ExecuteNonQuery(this SqliteConnection connection, string commandText, params SqliteParameter[] parameters)
+            {
+            using (SqliteCommand command = connection.CreateCommand())
+                {
+                command.CommandText = commandText;
+                command.Parameters.AddRange((IEnumerable<SqliteParameter>)parameters);
+                return command.ExecuteNonQuery();
+                }
+            }
+
+        public static T ExecuteScalar<T>(this SqliteConnection connection, string commandText, params SqliteParameter[] parameters)
+            {
+            return (T)connection.ExecuteScalar(commandText, parameters);
+            }
+
+        private static object ExecuteScalar(this SqliteConnection connection, string commandText, params SqliteParameter[] parameters)
+            {
+            using (SqliteCommand command = connection.CreateCommand())
+                {
+                command.CommandText = commandText;
+                command.Parameters.AddRange((IEnumerable<SqliteParameter>)parameters);
+                return command.ExecuteScalar();
+                }
+            }
+        }
+
     }
+

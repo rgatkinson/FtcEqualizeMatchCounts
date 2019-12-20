@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FEMC.DAL;
+using Microsoft.Data.Sqlite;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,8 +8,6 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using FEMC.DAL;
-using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
@@ -137,9 +137,41 @@ namespace FEMC
 
         public void CommitTransaction()
             {
+            // References, for fun and profit:
+            //  https://www.sqlite.org/atomiccommit.html
+            //  https://www.sqlite.org/lang_transaction.html
+            // 
             Trace.Assert(IsTransactionInProgress);
-            Transaction.Commit();
+            //
+            // We *could* just call Transaction.Commit(), but, bizarrely, that provide no notification as to the transaction success.
+            // So, we roll our own
+            //
+            bool aborted = false;
+            bool committed = false;
+            SQLitePCL.raw.sqlite3_rollback_hook(Connection.Handle, delegate(object data)
+                {
+                aborted = true;
+                }, null);
+            SQLitePCL.raw.sqlite3_commit_hook(Connection.Handle, (object data) => 
+                {
+                committed = true;
+                return 0;
+                }, null);
+            Connection.ExecuteNonQuery("COMMIT;");
+            Trace.Assert(committed || aborted);
+
+            // Clean up at end. Surprisingly difficult, as we need a new transaction to replace the one
+            // that we completed w/o the Transaction object knowing about it
+            SQLitePCL.raw.sqlite3_commit_hook(Connection.Handle, null, null); // paranoia
+            SQLitePCL.raw.sqlite3_rollback_hook(Connection.Handle, null, null); // paranoia
+            Connection.ExecuteNonQuery("BEGIN;");
+            Transaction.Rollback();
             Transaction = null;
+
+            if (aborted)
+                {
+                SqliteException.ThrowExceptionForRC(SQLitePCL.raw.SQLITE_ABORT, Connection.Handle);
+                }
             }
 
         public void AbortTransaction()

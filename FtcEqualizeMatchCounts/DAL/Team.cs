@@ -89,7 +89,7 @@ namespace FEMC.DAL
             {
             get {
                 var result = new List<LeagueHistoryMatch>();
-                foreach (var match in Database.LeagueHistoryMatchesByNumber.Values)
+                foreach (var match in Database.LeagueHistoryMatchesByEventAndMatchNumber.Values)
                     {
                     if (match.EventCode != Database.ThisEventCode && match.Plays(this))
                         {

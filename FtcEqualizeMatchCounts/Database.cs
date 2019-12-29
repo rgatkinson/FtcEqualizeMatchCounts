@@ -28,7 +28,7 @@ namespace FEMC
         public readonly IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public readonly IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
         public readonly IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
-        public readonly IDictionary<long, LeagueHistoryMatch>            LeagueHistoryMatchesByNumber = new Dictionary<long, LeagueHistoryMatch>();
+        public readonly IDictionary<Tuple<string,long>, LeagueHistoryMatch> LeagueHistoryMatchesByEventAndMatchNumber = new Dictionary<Tuple<string,long>, LeagueHistoryMatch>(); // key: event code, match number
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
         public readonly List<EqualizationMatch>                          EqualizationMatches = new List<EqualizationMatch>();
 
@@ -222,7 +222,7 @@ namespace FEMC
             ScheduledMatchesByNumber.Clear();
             ScheduledMatchesById.Clear();
             PlayedMatchesByNumber.Clear();
-            LeagueHistoryMatchesByNumber.Clear();
+            LeagueHistoryMatchesByEventAndMatchNumber.Clear();
             EventsByCode.Clear();
 
             EqualizationMatches.Clear();

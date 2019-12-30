@@ -82,6 +82,8 @@ namespace FEMC.DAL
             {
             writer.WriteLine($"Name: {Name}");
             writer.WriteLine($"Event Code: {EventCode}");
+            writer.WriteLine($"Event Type: {Type.GetStringValue()}");
+            writer.WriteLine($"Event Status: {Status.GetStringValue()}");
             if (Start.HasValue)
                 {
                 writer.WriteLine($"Event Start: {Start.Value}");

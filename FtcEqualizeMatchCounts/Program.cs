@@ -18,6 +18,7 @@ namespace FEMC
         public List<String> ExtraOptions = new List<string>();
         public string       IndentString = "   ";
         public bool         Quiet = false;
+        public int          LeagueMatchesToConsider = 10; // per LeagueSubystem.LEAGUE_MATCHES_TO_CONSIDER
 
         public string       EventCode = null;
 

@@ -232,7 +232,12 @@ namespace FEMC
             {
             foreach (var row in Tables.LeagueMeets.Rows)
                 {
-                Event anEvent = new Event(this, row);
+                Event anEvent = new Event(this, row, Event.TEvent.LEAGUE_MEET, Event.TStatus.ARCHIVED);
+                if (row.EventCode.NonNullValue == ThisEventCode)
+                    {
+                    anEvent.Type = EnumUtil.From<Event.TEvent>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue));
+                    anEvent.Status = EnumUtil.From<Event.TStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)));
+                    }
                 EventsByCode[anEvent.EventCode] = anEvent;
                 }
 
@@ -261,10 +266,7 @@ namespace FEMC
                 playedMatches.Add(playedMatch);
                 }
 
-            foreach (var row in Tables.LeagueHistory.Rows)
-                {
-                LeagueHistoryMatch.Process(this, row);
-                }
+            LeagueHistoryMatch.DetermineLeagueMatchesThatCount(this, programOptions.LeagueMatchesToConsider);
             }
 
         public void ReportEvents(IndentedTextWriter writer)

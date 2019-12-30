@@ -2,6 +2,7 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Data.Sqlite;
 
 namespace FEMC
@@ -57,11 +58,55 @@ namespace FEMC
             }
         }
 
+    public class StringValue : Attribute
+        {
+        public string Value { get; private set; }
+
+        public StringValue(string value)
+            {
+            Value = value;
+            }
+        }
+
     public static class EnumUtil
         {
         public static IEnumerable<T> GetValues<T>()
             {
             return Enum.GetValues(typeof(T)).Cast<T>();
+            }
+
+        public static T From<T>(string value) where T: Enum
+            {
+            foreach (T t in GetValues<T>())
+                {
+                if (t.ToString() == value)
+                    {
+                    return t;
+                    }
+                }
+            return default(T);
+            }
+
+        public static T From<T>(int value) where T : Enum
+            {
+            if (Enum.IsDefined(typeof(T), value))
+                {
+                return (T)Enum.ToObject(typeof(T), value);
+                }
+            return default(T);
+            }
+
+        public static string GetStringValue(this Enum value)
+            {
+            string stringValue = value.ToString();
+            Type type = value.GetType();
+            FieldInfo fieldInfo = type.GetField(value.ToString());
+            StringValue[] attrs = fieldInfo.GetCustomAttributes(typeof(StringValue), false) as StringValue[];
+            if (attrs.Length > 0)
+                {
+                stringValue = attrs[0].Value;
+                }
+            return stringValue;
             }
         }
 

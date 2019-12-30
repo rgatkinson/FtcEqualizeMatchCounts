@@ -12,14 +12,16 @@ namespace FEMC
         {
         public string       Filename = null;
         public int          AveragingMatchCountCap = 10;
-        public bool         AverageToExistingMax = true;
+        public bool         OptionMGiven = false;
+        public bool         OptionCGiven = false;
         public bool         ShowUsage = false;
         public bool         Verbose = false;
         public List<String> ExtraOptions = new List<string>();
         public string       IndentString = "   ";
         public bool         Quiet = false;
-        public int          LeagueMatchesToConsider = 10; // per LeagueSubystem.LEAGUE_MATCHES_TO_CONSIDER
 
+        public int          LeagueMatchesToConsider = 10; // per LeagueSubystem.LEAGUE_MATCHES_TO_CONSIDER
+        public int?         AveragingMatchCountGoal = null; // null means use max
         public string       EventCode = null;
 
         public IndentedTextWriter StdOut;
@@ -33,8 +35,8 @@ namespace FEMC
             this.program = program;
             options = new OptionSet
                 {
-                    { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => AverageToExistingMax = m != null },
-                    { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountCap = count; AverageToExistingMax = false; } },
+                    { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => OptionMGiven = m != null },
+                    { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountCap = count; OptionCGiven = true; } },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
@@ -73,6 +75,22 @@ namespace FEMC
                 
                 StdOut = MakeIndentedTextWriter(Console.Out);
                 StdErr = MakeIndentedTextWriter(Console.Error);
+
+                if (OptionMGiven)
+                    {
+                    // Explicit request for 'max', either w/ or w/o custom cap value
+                    AveragingMatchCountGoal = null;
+                    }
+                else if (OptionCGiven)
+                    {
+                    // Explicit count given, no 'max': use that value
+                    AveragingMatchCountGoal = AveragingMatchCountCap;
+                    }
+                else
+                    {
+                    // Default options 
+                    AveragingMatchCountGoal = null;
+                    }
                 }
             catch (OptionException e)
                 {

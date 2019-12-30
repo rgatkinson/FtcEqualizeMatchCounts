@@ -20,7 +20,6 @@ namespace FEMC
         public SqliteConnection     Connection = null;
         public SqliteTransaction    Transaction = null;
         public Tables               Tables;
-        public readonly int?        AveragingMatchCountGoal;
 
         public readonly IDictionary<long, Team>                          TeamsByNumber = new Dictionary<long, Team>();
         public readonly IDictionary<FMSTeamId, Team>                     TeamsById = new Dictionary<FMSTeamId, Team>();
@@ -84,7 +83,6 @@ namespace FEMC
             this.programOptions = programOptions;
             fileName = Path.GetFullPath(programOptions.Filename);
             Tables = new Tables(this);
-            AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountCap;
             }
 
         ~Database()
@@ -299,7 +297,7 @@ namespace FEMC
 
         public int ReportTeamsAndPlanMatches(IndentedTextWriter writer, bool verbose)
             {
-            int averagingMatchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+            int averagingMatchCountGoal = ProgramOptions.AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
             writer.WriteLine($"Teams: averaging match count goal: {averagingMatchCountGoal}");
             writer.Indent++;
@@ -345,7 +343,7 @@ namespace FEMC
         // for Blue. Thus all blue participants in equalization matches need to be surrogates.
         protected void PlanMatches()
             {
-            int averagingMatchCountGoal = AveragingMatchCountGoal ?? MaxAveragingMatchCount;
+            int averagingMatchCountGoal = ProgramOptions.AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
             ISet<Team> completedTeams = new HashSet<Team>();
             IDictionary<Team, int> matchesNeededByTeam = new ConcurrentDictionary<Team, int>();

@@ -40,7 +40,7 @@ namespace FEMC
                     {
                     result = Math.Max(result, team.AveragingMatchCount);
                     }
-                return result;
+                return Math.Min(result, programOptions.AveragingMatchCountCap);
                 }
             }
 
@@ -84,7 +84,7 @@ namespace FEMC
             this.programOptions = programOptions;
             fileName = Path.GetFullPath(programOptions.Filename);
             Tables = new Tables(this);
-            AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountGoal;
+            AveragingMatchCountGoal = programOptions.AverageToExistingMax ? (int?)null : programOptions.AveragingMatchCountCap;
             }
 
         ~Database()

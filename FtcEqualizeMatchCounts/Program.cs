@@ -11,7 +11,7 @@ namespace FEMC
     class ProgramOptions
         {
         public string       Filename = null;
-        public int          AveragingMatchCountGoal = 10;
+        public int          AveragingMatchCountCap = 10;
         public bool         AverageToExistingMax = true;
         public bool         ShowUsage = false;
         public bool         Verbose = false;
@@ -34,7 +34,7 @@ namespace FEMC
             options = new OptionSet
                 {
                     { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => AverageToExistingMax = m != null },
-                    { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountGoal = count; AverageToExistingMax = false; } },
+                    { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountCap = count; AverageToExistingMax = false; } },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
@@ -86,9 +86,9 @@ namespace FEMC
                 {
                 Throw($"{ ExtraOptions.Count } extra options given");
                 }
-            if (AveragingMatchCountGoal < 0)
+            if (AveragingMatchCountCap <= 0)
                 {
-                Throw($"invalid match count: { AveragingMatchCountGoal }", "-c");
+                Throw($"invalid match count: { AveragingMatchCountCap }", "-c");
                 }
             if (Filename == null)
                 {

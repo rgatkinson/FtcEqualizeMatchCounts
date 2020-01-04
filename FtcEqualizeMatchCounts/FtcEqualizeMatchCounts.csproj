@@ -132,6 +132,7 @@
     <Compile Include="DAL\ScheduledMatch.cs" />
     <Compile Include="DAL\PlayedMatch.cs" />
     <Compile Include="DBTables\Blocks.cs" />
+    <Compile Include="Exceptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />

@@ -27,6 +27,28 @@ namespace FEMC
         public IndentedTextWriter StdOut;
         public IndentedTextWriter StdErr;
 
+        public string ProgramVersionString()
+            {
+            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return version.ToString(3);
+            }
+        public string ProgramDescription()
+            {
+            Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            return assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault().Description;
+            }
+        public string ProgramVersionDate()
+            {
+            DateTime versionDate = Constants.BuildTimestamp;
+            return versionDate.ToString("dd MMM yyyy ") + versionDate.ToShortTimeString();
+            }
+        public string ProgramCopyrightNotice()
+            {
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            System.Reflection.AssemblyCopyrightAttribute copyrightAttr = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false)[0] as System.Reflection.AssemblyCopyrightAttribute;
+            return copyrightAttr?.Copyright;
+            }
+
         private OptionSet options;
         private Program program;
 
@@ -165,35 +187,14 @@ namespace FEMC
             Database = null;
             }
 
-        string ProgramVersionString()
-            {
-            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version.ToString(3);
-            }
-        string ProgramDescription()
-            {
-            Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            return assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false).OfType<AssemblyDescriptionAttribute>().FirstOrDefault().Description;
-            }
-        string ProgramVersionDate()
-            {
-            DateTime versionDate = Constants.BuildTimestamp;
-            return versionDate.ToString("dd MMM yyyy ") + versionDate.ToShortTimeString();
-            }
-        string ProgramCopyrightNotice()
-            {
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            System.Reflection.AssemblyCopyrightAttribute copyrightAttr = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false)[0] as System.Reflection.AssemblyCopyrightAttribute;
-            return copyrightAttr?.Copyright;
-            }
 
         public void OutputBannerAndCopyright(TextWriter writer)
             {
-            string banner = $"{ProgramDescription()} {ProgramVersionString()} of {ProgramVersionDate()}";
-            string under = new string('=', Math.Max(banner.Length, ProgramCopyrightNotice().Length));
+            string banner = $"{ProgramOptions.ProgramDescription()} {ProgramOptions.ProgramVersionString()} of {ProgramOptions.ProgramVersionDate()}";
+            string under = new string('=', Math.Max(banner.Length, ProgramOptions.ProgramCopyrightNotice().Length));
             //
             writer.WriteLine(banner);
-            writer.WriteLine(ProgramCopyrightNotice());
+            writer.WriteLine(ProgramOptions.ProgramCopyrightNotice());
             writer.WriteLine(under);
             writer.WriteLine();
             }
@@ -205,15 +206,14 @@ namespace FEMC
             OutputBannerAndCopyright(ProgramOptions.StdOut);
 
             try { 
-
                 Database = new Database(ProgramOptions);
                 Database.Open();
                 Database.BeginTransaction();
                 Database.Load();
 
                 Database.ReportEvents(ProgramOptions.StdOut);
+                Database.ValidateReadyForEqualization();
 
-                ProgramOptions.StdOut.WriteLine();
                 int equalizationMatchesNeeded = Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
                 if (equalizationMatchesNeeded > 0)
                     { 
@@ -256,9 +256,18 @@ namespace FEMC
                 Database.AbortTransaction();
                 Database.Close();
                 }
+            catch (DatabaseNotReadyException e)
+                {
+                ProgramOptions.StdErr.WriteLine($"This event database not ready: {e.Message}");
+                }
             catch (Exception e)
                 {
-                MiscUtil.DumpStackTrance(ProgramOptions.StdErr, e);
+                MiscUtil.DumpStackTrance(ProgramOptions.ProgramDescription(), ProgramOptions.StdErr, e);
+                }
+            finally
+                {
+                Database.AbortTransaction();
+                Database.Close();
                 }
             }
 

@@ -45,9 +45,10 @@ namespace FEMC
             return result;
             }
 
-        public static void DumpStackTrance(IndentedTextWriter writer, Exception e)
+        public static void DumpStackTrance(String name, IndentedTextWriter writer, Exception e)
             {
-            writer.WriteLine($"Exception thrown: {e.Message}");
+            writer.WriteLine($"{name}");
+            writer.WriteLine($"Exception Thrown: {e.Message}");
             writer.WriteLine($"Stack Trace:");
             writer.Indent++;
             foreach (var frame in e.StackTrace.Split('\n'))

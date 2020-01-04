@@ -5494,15 +5494,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FTC Averaging Match Count Equalization Tool"
-        "ProductCode" = "8:{B71CAC24-178A-45C2-859E-603FC60DD430}"
-        "PackageCode" = "8:{1FDBA14D-F1C2-4635-A230-85BB8AD21396}"
+        "ProductCode" = "8:{1B180715-78B8-4D06-84A5-B728675241D3}"
+        "PackageCode" = "8:{8A0BC866-9B50-4011-8730-D2EF242357F0}"
         "UpgradeCode" = "8:{9C022F72-0039-4DC7-B39E-F258762181A5}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.4"
+        "ProductVersion" = "8:1.0.5"
         "Manufacturer" = "8:Atkinson Labs"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://github.com/rgatkinson/FtcEqualizeMatchCounts"
@@ -6058,7 +6058,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_CDC22C56E8F64420B13586209FD164B7"
             {
-            "SourcePath" = "8:..\\FtcEqualizeMatchCounts\\obj\\Release\\FtcEqualizeMatchCounts.exe"
+            "SourcePath" = "8:..\\FtcEqualizeMatchCounts\\obj\\Debug\\FtcEqualizeMatchCounts.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_E40D1B25239E49BF97F8C82C619D139D"

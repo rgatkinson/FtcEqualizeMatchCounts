@@ -145,18 +145,20 @@ namespace FEMC
             // So, we roll our own
             //
             bool aborted = false;
-            bool committed = false;
+            bool commitAttempted = false;
+            // https://www.sqlite.org/c3ref/commit_hook.html
+            SQLitePCL.raw.sqlite3_commit_hook(Connection.Handle, (object data) =>
+            {
+                commitAttempted = true;
+                return 0;
+            }, null);
             SQLitePCL.raw.sqlite3_rollback_hook(Connection.Handle, delegate(object data)
                 {
                 aborted = true;
                 }, null);
-            SQLitePCL.raw.sqlite3_commit_hook(Connection.Handle, (object data) => 
-                {
-                committed = true;
-                return 0;
-                }, null);
             Connection.ExecuteNonQuery("COMMIT;");
-            Trace.Assert(committed || aborted);
+            int rc = SQLitePCL.raw.sqlite3_errcode(Connection.Handle); // retrieve error code, if any: https://www.sqlite.org/c3ref/errcode.html
+            Trace.Assert(commitAttempted);
 
             // Clean up at end. Surprisingly difficult, as we need a new transaction to replace the one
             // that we completed w/o the Transaction object knowing about it
@@ -165,10 +167,12 @@ namespace FEMC
             Connection.ExecuteNonQuery("BEGIN;");
             Transaction.Rollback();
             Transaction = null;
+            Trace.Assert(!IsTransactionInProgress);
 
             if (aborted)
                 {
-                SqliteException.ThrowExceptionForRC(SQLitePCL.raw.SQLITE_ABORT, Connection.Handle);
+                // https://www.sqlite.org/lang_transaction.html
+                throw new CommitFailedException(this, rc);
                 }
             }
 
@@ -178,6 +182,7 @@ namespace FEMC
                 {
                 Transaction.Rollback();
                 Transaction = null;
+                Trace.Assert(!IsTransactionInProgress);
                 }
             }
 
@@ -186,8 +191,28 @@ namespace FEMC
             if (Connection != null)
                 {
                 AbortTransaction();
+                var handle = Connection.Handle;
                 Connection.Close();
                 Connection = null;
+
+                /* Suppress finalization to avoid spurious second exception
+                    Unhandled Exception: System.ObjectDisposedException: Safe handle has been closed
+                       at System.Runtime.InteropServices.SafeHandle.DangerousAddRef(Boolean& success)
+                       at System.StubHelpers.StubHelpers.SafeHandleAddRef(SafeHandle pHandle, Boolean& success)
+                       at SQLitePCL.SQLite3Provider_dynamic_cdecl.SQLitePCL.ISQLite3Provider.sqlite3_rollback_hook(sqlite3 db, delegate_rollback func, Object v)
+                       at Microsoft.Data.Sqlite.SqliteTransaction.RollbackExternal(Object userData)
+                       at SQLitePCL.rollback_hook_info.call()
+                       at SQLitePCL.SQLite3Provider_dynamic_cdecl.rollback_hook_bridge_impl(IntPtr p)
+                       at SQLitePCL.SQLite3Provider_dynamic_cdecl.SQLitePCL.ISQLite3Provider.sqlite3_close_v2(IntPtr db)
+                       at SQLitePCL.sqlite3.ReleaseHandle()
+                       at System.Runtime.InteropServices.SafeHandle.InternalFinalize()
+                       at System.Runtime.InteropServices.SafeHandle.Dispose(Boolean disposing)
+                       at System.Runtime.InteropServices.SafeHandle.Finalize()
+                 */
+                if (handle != null)
+                    {
+                    GC.SuppressFinalize(handle);
+                    }
                 }
             }
 
@@ -203,13 +228,19 @@ namespace FEMC
                 }
             catch (Exception e)
                 {
-                programOptions.StdErr.WriteLine($"Error loading database '{programOptions.Filename}': is this an FTC ScoreKeeper database?");
-                MiscUtil.DumpStackTrance(programOptions.StdErr, e);
-                Program.FailFast();
+                throw new CantLoadDatabaseException(programOptions, e);
                 }
 
             ClearDataAccessLayer();
             LoadDataAccessLayer();
+            }
+
+        public void ValidateReadyForEqualization()
+            {
+            if (Tables.Quals.Rows.Count == 0)
+                {
+                throw new MatchScheduleNotCreatedException();
+                }
             }
 
         void ClearDataAccessLayer()
@@ -293,6 +324,8 @@ namespace FEMC
                     }
                 writer.Indent--;
                 }
+
+            writer.WriteLine();
             }
 
         public int ReportTeamsAndPlanMatches(IndentedTextWriter writer, bool verbose)

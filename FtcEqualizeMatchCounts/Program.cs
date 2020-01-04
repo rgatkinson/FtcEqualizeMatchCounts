@@ -223,7 +223,7 @@ namespace FEMC
                     if (!ProgramOptions.Quiet)
                         { 
                         do  { 
-                            ProgramOptions.StdOut.Write($"Update database with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
+                            ProgramOptions.StdOut.Write($"Update this event with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
                             response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
                             if (response != ConsoleKey.Enter)
                                 {

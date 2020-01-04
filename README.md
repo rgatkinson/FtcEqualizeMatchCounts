@@ -6,7 +6,7 @@
 ## Installation
 ``FtcEqualizeMatchCounts`` is a Windows-only command line tool. To install, run the ``Setup`` program found in the release. Once installed, run the 'FTC Equalize Match Counts Command Prompt' item from the Start Menu to open a command prompt window with the tool in scope. Running ``FtcEqualizeMatchCounts.exe -?`` will then print a brief usage message.
 
-## Work FLow
+## Work Flow
 To use the tool proceed as follows.
 * Set up an event in ScoreKeeper as usual to (at least) the point of Creating the Match Schedule.
 *	Export the event database using ‘Download Archive File’ on the Event Dashboard

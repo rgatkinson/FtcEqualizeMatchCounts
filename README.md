@@ -4,7 +4,7 @@
 ``FtcEqualizeMatchCounts`` is a tool for editing the database used by the [First Tech Challenge ScoreKeeper software](https://github.com/FIRST-Tech-Challenge/scorekeeper) so as that at the start of a League Tournament all teams have the same number of Averaging Matches accrued from prior League Meets. The tool does this by adding never-played Equalization Matches to the event schedule as necessary. After importign the edited database back into ScoreKeeper, these Equalization Matches need to be manually scored as Wins for Blue.
 
 ## Installation
-``FtcEqualizeMatchCounts`` is a Windows-only command line tool. To install, run the ``Setup`` program found in the release. Once installed, run the 'FTC Equalize Match Counts Command Prompt' item from the Start Menu to open a command prompt window with the tool in scope. Running ``FtcEqualizeMatchCounts.exe -?`` will then print a brief usage message.
+``FtcEqualizeMatchCounts`` is a Windows-only command line tool. To install, run the ``Setup`` program found in the release. Once installed, run the 'FTC Equalize Match Counts Command Prompt' item from the Start Menu to open a command prompt window with the tool in scope. Running ``FtcEqualizeMatchCounts -?`` will then print a brief usage message.
 
 ## Work Flow
 To use the tool proceed as follows.

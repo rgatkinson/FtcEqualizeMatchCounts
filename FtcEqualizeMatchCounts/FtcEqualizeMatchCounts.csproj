@@ -132,6 +132,13 @@
     <Compile Include="DAL\ScheduledMatch.cs" />
     <Compile Include="DAL\PlayedMatch.cs" />
     <Compile Include="DBTables\Blocks.cs" />
+    <Compile Include="DBTables\PhaseGameSpecific.cs" />
+    <Compile Include="DBTables\PhaseData.cs" />
+    <Compile Include="DBTables\ElimsData.cs" />
+    <Compile Include="DBTables\ElimsScores.cs" />
+    <Compile Include="DBTables\ElimsGameSpecific.cs" />
+    <Compile Include="DBTables\QualsGameSpecific.cs" />
+    <Compile Include="DBTables\QualsScores.cs" />
     <Compile Include="Enums\TAlliance.cs" />
     <Compile Include="Enums\TFieldType.cs" />
     <Compile Include="Enums\TMatchOutcome.cs" />
@@ -145,6 +152,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="TableColumn\AutoStones.cs" />
     <Compile Include="TableColumn\BlobColumn.cs" />
     <Compile Include="TableColumn\BooleanAsInteger.cs" />
     <Compile Include="TableColumn\DateTimeAsInteger.cs" />

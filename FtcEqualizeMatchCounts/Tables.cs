@@ -11,11 +11,11 @@ namespace FEMC
         public DBTables.LeagueInfo LeagueInfo;
         public DBTables.LeagueMeets LeagueMeets;
         public DBTables.MatchSchedule MatchSchedule;
-        public DBTables.PlayedMatch PlayedMatch;
+        public DBTables.Match PlayedMatch;
         public DBTables.Quals Quals;
         public DBTables.QualsData QualsData;
-        public DBTables.ScheduledMatch ScheduledMatch;
-        public DBTables.ScheduledMatchStation ScheduledMatchStation;
+        public DBTables.ScheduleDetail ScheduledMatch;
+        public DBTables.ScheduleStation ScheduledMatchStation;
         public DBTables.Team Team;
 
         public Tables(Database db)
@@ -27,11 +27,11 @@ namespace FEMC
             LeagueInfo = new LeagueInfo(db);
             LeagueMeets = new LeagueMeets(db);
             MatchSchedule = new DBTables.MatchSchedule(db);
-            PlayedMatch = new DBTables.PlayedMatch(db);
+            PlayedMatch = new DBTables.Match(db);
             Quals = new DBTables.Quals(db);
             QualsData = new DBTables.QualsData(db);
-            ScheduledMatch = new DBTables.ScheduledMatch(db);
-            ScheduledMatchStation = new DBTables.ScheduledMatchStation(db);
+            ScheduledMatch = new DBTables.ScheduleDetail(db);
+            ScheduledMatchStation = new DBTables.ScheduleStation(db);
             Team = new DBTables.Team(db);
             }
 

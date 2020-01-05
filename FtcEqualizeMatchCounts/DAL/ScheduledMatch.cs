@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -111,7 +112,7 @@ namespace FEMC.DAL
             {
             }
 
-        public ScheduledMatch(Database db, DBTables.ScheduledMatch.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
+        public ScheduledMatch(Database db, DBTables.ScheduleDetail.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             FMSScheduleDetailId = row.FMSScheduleDetailId;
             matchNumber = row.MatchNumber.NonNullValue;

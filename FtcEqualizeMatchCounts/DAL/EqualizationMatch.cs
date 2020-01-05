@@ -1,6 +1,7 @@
 ﻿using FEMC.DBTables;
 using System;
 using System.Collections.Generic;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -85,7 +86,7 @@ namespace FEMC.DAL
 
         public void SaveToDatabase()
             {
-            var scheduledMatchRow = new DBTables.ScheduledMatch.Row();
+            var scheduledMatchRow = new DBTables.ScheduleDetail.Row();
             var qualsRow = new Quals.Row();
             var qualsDataRow = new QualsData.Row();
             var matchScheduleRow = new MatchSchedule.Row();
@@ -147,7 +148,7 @@ namespace FEMC.DAL
                 {
                 foreach (var station in EnumUtil.GetValues<TStation>())
                     {
-                    DBTables.ScheduledMatchStation.Row row = new DBTables.ScheduledMatchStation.Row();
+                    DBTables.ScheduleStation.Row row = new DBTables.ScheduleStation.Row();
                     row.InitializeFields();
 
                     row.FMSScheduleDetailId = FMSScheduleDetailId;

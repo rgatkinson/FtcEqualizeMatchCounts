@@ -5,7 +5,7 @@ namespace FEMC.DBTables
     // ScheduleDetail
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduledMatch : Table<ScheduledMatch.Row, FMSScheduleDetailId>
+    class ScheduleDetail : Table<ScheduleDetail.Row, FMSScheduleDetailId>
         {
         public class Row : TableRow<FMSScheduleDetailId>
             {
@@ -13,7 +13,7 @@ namespace FEMC.DBTables
             public FMSEventId FMSEventId;
             public NullableLong TournamentLevel;    // 2 for quals?
             public NullableLong MatchNumber;        // see quals.Match
-            public NullableLong FieldType;          // 1 for everything we've seen
+            public NullableLong FieldType;          // always 1: see SQLiteManagementDAO.saveFMSSchedule()
             public StringColumn Description;
             public DateTimeAsString StartTime;
             public FieldConfigurationDetails FieldConfigurationDetails; // null is ok
@@ -26,7 +26,7 @@ namespace FEMC.DBTables
             public override FMSScheduleDetailId PrimaryKey => FMSScheduleDetailId;
             }
 
-        public ScheduledMatch(Database database) : base(database)
+        public ScheduleDetail(Database database) : base(database)
             {
             }
 

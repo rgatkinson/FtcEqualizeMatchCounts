@@ -38,7 +38,17 @@ namespace FEMC.DAL
             }
 
         //----------------------------------------------------------------------------------------
-        // Accessing
+        // Playing
+        //----------------------------------------------------------------------------------------
+
+        // Play this match with the required Win for Blue
+        public void PlayMatch()
+            {
+            // Not yet implemented
+            }
+
+        //----------------------------------------------------------------------------------------
+        // Saving
         //----------------------------------------------------------------------------------------
 
         public static void SaveEndOfTournamentBlock(Database db, DateTime start, TimeSpan duration)

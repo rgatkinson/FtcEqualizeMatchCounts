@@ -63,7 +63,7 @@ namespace FEMC.DAL
         public abstract long MatchNumber { get; }
         public virtual bool IsEqualizationMatch => false;
         
-        public abstract bool Plays(Team team);
+        public abstract bool Plays(Team team); // Does this match play this team?
 
         public Event Event => Database.EventsByCode[EventCode];
 

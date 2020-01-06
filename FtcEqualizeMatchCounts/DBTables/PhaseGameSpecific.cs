@@ -11,14 +11,14 @@ namespace FEMC.DBTables
             public NullableLong Alliance;      // 0==Red or 1==Blue
 
             // Autonomous
-            public BooleanAsInteger FirstReturnedSkyStone;
+            public NullableLong FirstReturnedSkyStone;
             public NullableLong SecondBrick;   // ?? historical artifact, always zero ??; see SkystoneScores.java
             public AutoStones   AutoDelivered; // always 6 bytes long, by 'Type': 0==None 1==Stone 2==Skystone. Note: sometimes erroneously stored as 'Text' instead of 'Blob'
             public NullableLong AutoReturned;
             public NullableLong AutoPlaced;
-            public BooleanAsInteger Repositioned;
-            public BooleanAsInteger Navigated1;
-            public BooleanAsInteger Navigated2;
+            public NullableLong Repositioned;
+            public NullableLong Navigated1;
+            public NullableLong Navigated2;
 
             // Bricks (Driver-Controlled)
             public NullableLong TeleopDelivered;
@@ -27,11 +27,11 @@ namespace FEMC.DBTables
             public NullableLong TallestTower;
 
             // End-Game
-            public NullableLong Capstone1;      // -1 if no capstone; >=0 is yes capstone, and value gives 'Level'
+            public NullableLong Capstone1;      // -1 if no capstone; >=0 is yes capstone, and value gives 'Level'; -2 is 'reqRefInteraction'
             public NullableLong Capstone2;      // ditto
-            public BooleanAsInteger FoundationMoved;
-            public BooleanAsInteger Parked1;
-            public BooleanAsInteger Parked2;
+            public NullableLong FoundationMoved;
+            public NullableLong Parked1;
+            public NullableLong Parked2;
 
             public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(Match, Alliance);
             }

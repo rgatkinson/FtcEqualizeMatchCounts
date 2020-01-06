@@ -284,7 +284,7 @@ namespace FEMC
                 ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
                 }
 
-            foreach (var row in Tables.PlayedMatch.Rows)
+            foreach (var row in Tables.Match.Rows)
                 {
                 PlayedMatch playedMatch = new PlayedMatch(this, row);
                 if (!PlayedMatchesByNumber.TryGetValue(playedMatch.MatchNumber, out List<PlayedMatch> playedMatches))

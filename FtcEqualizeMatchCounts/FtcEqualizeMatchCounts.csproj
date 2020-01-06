@@ -120,6 +120,8 @@
   <ItemGroup>
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
+    <Compile Include="DAL\Scores.cs" />
+    <Compile Include="DAL\SkystoneScores.cs" />
     <Compile Include="DAL\ThisEventMatch.cs" />
     <Compile Include="DAL\Match.cs" />
     <Compile Include="Database.cs" />
@@ -132,11 +134,14 @@
     <Compile Include="DAL\ScheduledMatch.cs" />
     <Compile Include="DAL\PlayedMatch.cs" />
     <Compile Include="DBTables\Blocks.cs" />
+    <Compile Include="DBTables\PhaseResults.cs" />
     <Compile Include="DBTables\PhaseGameSpecific.cs" />
     <Compile Include="DBTables\PhaseData.cs" />
     <Compile Include="DBTables\ElimsData.cs" />
     <Compile Include="DBTables\ElimsScores.cs" />
     <Compile Include="DBTables\ElimsGameSpecific.cs" />
+    <Compile Include="DBTables\ElimsResults.cs" />
+    <Compile Include="DBTables\QualsResults.cs" />
     <Compile Include="DBTables\QualsGameSpecific.cs" />
     <Compile Include="DBTables\QualsScores.cs" />
     <Compile Include="Enums\TAlliance.cs" />

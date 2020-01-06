@@ -122,8 +122,13 @@
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
     <Compile Include="DAL\Scores.cs" />
     <Compile Include="DAL\SkystoneScores.cs" />
+    <Compile Include="DBTables\ElimsCommitHistory.cs" />
+    <Compile Include="DBTables\QualsCommitHistory.cs" />
+    <Compile Include="Enums\TCommitType.cs" />
+    <Compile Include="Enums\TEventType.cs" />
     <Compile Include="DAL\ThisEventMatch.cs" />
     <Compile Include="DAL\Match.cs" />
+    <Compile Include="Enums\TEventStatus.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="DAL\DBObject.cs" />
     <Compile Include="DBTables\Config.cs" />
@@ -134,6 +139,7 @@
     <Compile Include="DAL\ScheduledMatch.cs" />
     <Compile Include="DAL\PlayedMatch.cs" />
     <Compile Include="DBTables\Blocks.cs" />
+    <Compile Include="DBTables\PhaseCommitHistory.cs" />
     <Compile Include="DBTables\PhaseResults.cs" />
     <Compile Include="DBTables\PhaseGameSpecific.cs" />
     <Compile Include="DBTables\PhaseData.cs" />
@@ -151,7 +157,7 @@
     <Compile Include="Enums\TMatchType.cs" />
     <Compile Include="Enums\TRandomization.cs" />
     <Compile Include="Enums\TStation.cs" />
-    <Compile Include="Enums\TStatus.cs" />
+    <Compile Include="Enums\TMatchStatus.cs" />
     <Compile Include="Enums\TTournamentLevel.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Program.cs" />

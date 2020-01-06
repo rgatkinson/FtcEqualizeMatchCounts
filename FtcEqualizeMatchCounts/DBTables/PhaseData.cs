@@ -17,7 +17,7 @@ namespace FEMC.DBTables
             public override NullableLong PrimaryKey => Match;
             }
 
-        public PhaseData(Database database) : base(database)
+        protected PhaseData(Database database) : base(database)
             {
             }
         }

@@ -6,6 +6,7 @@ namespace FEMC
         {
         public Blocks Blocks;
         public Config Config;
+        public ElimsCommitHistory ElimsCommitHistory;
         public ElimsData ElimsData;
         public ElimsGameSpecific ElimsGameSpecific;
         public ElimsResults ElimsResults;
@@ -17,6 +18,7 @@ namespace FEMC
         public Match Match;
         public MatchSchedule MatchSchedule;
         public Quals Quals;
+        public QualsCommitHistory QualsCommitHistory;
         public QualsData QualsData;
         public QualsGameSpecific QualsGameSpecific;
         public QualsResults QualsResults;
@@ -29,6 +31,7 @@ namespace FEMC
             {
             Blocks = new Blocks(db);
             Config = new Config(db);
+            ElimsCommitHistory = new ElimsCommitHistory(db);
             ElimsData = new ElimsData(db);
             ElimsGameSpecific = new ElimsGameSpecific(db);
             ElimsResults = new ElimsResults(db);
@@ -40,6 +43,7 @@ namespace FEMC
             Match = new Match(db);
             MatchSchedule = new MatchSchedule(db);
             Quals = new Quals(db);
+            QualsCommitHistory = new QualsCommitHistory(db);
             QualsData = new QualsData(db);
             QualsGameSpecific = new QualsGameSpecific(db);
             QualsResults = new QualsResults(db);
@@ -53,6 +57,7 @@ namespace FEMC
             {
             Blocks.Clear();
             Config.Clear();
+            ElimsCommitHistory.Clear();
             ElimsData.Clear();
             ElimsGameSpecific.Clear();
             ElimsResults.Clear();
@@ -64,6 +69,7 @@ namespace FEMC
             Match.Clear();
             MatchSchedule.Clear();
             Quals.Clear();
+            QualsCommitHistory.Clear();
             QualsData.Clear();
             QualsGameSpecific.Clear();
             QualsResults.Clear();
@@ -77,6 +83,7 @@ namespace FEMC
             {
             Blocks.Load();
             Config.Load();
+            ElimsCommitHistory.Load();
             ElimsData.Load();
             ElimsGameSpecific.Load();
             ElimsResults.Load();
@@ -88,6 +95,7 @@ namespace FEMC
             Match.Load();
             MatchSchedule.Load();
             Quals.Load();
+            QualsCommitHistory.Load();
             QualsData.Load();
             QualsGameSpecific.Load();
             QualsResults.Load();

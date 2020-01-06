@@ -131,7 +131,7 @@ namespace FEMC.DAL
             qualsRow.Blue2Surrogate.Value = Blue2Surrogate;
 
             qualsDataRow.Match.Value = MatchNumber;
-            qualsDataRow.Status.Value = (int)TStatus.DefaultValue;
+            qualsDataRow.Status.Value = (int)Enums.TMatchStatus.DefaultValue;
             qualsDataRow.Randomization.Value = (int)TRandomization.DefaultValue;
             qualsDataRow.Start.Value = DateTimeAsInteger.QualsDataDefault;
             qualsDataRow.ScheduleStart.Value = ScheduleStart;

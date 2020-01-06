@@ -8,6 +8,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using FEMC.Enums;
 
 namespace FEMC
     {
@@ -261,11 +262,11 @@ namespace FEMC
             {
             foreach (var row in Tables.LeagueMeets.Rows)
                 {
-                Event anEvent = new Event(this, row, Event.TEvent.LEAGUE_MEET, Event.TStatus.ARCHIVED);
+                Event anEvent = new Event(this, row, TEventType.LEAGUE_MEET, TEventStatus.ARCHIVED);
                 if (row.EventCode.NonNullValue == ThisEventCode)
                     {
-                    anEvent.Type = EnumUtil.From<Event.TEvent>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue));
-                    anEvent.Status = EnumUtil.From<Event.TStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)));
+                    anEvent.Type = EnumUtil.From<TEventType>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue));
+                    anEvent.Status = EnumUtil.From<TEventStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)));
                     }
                 EventsByCode[anEvent.EventCode] = anEvent;
                 }

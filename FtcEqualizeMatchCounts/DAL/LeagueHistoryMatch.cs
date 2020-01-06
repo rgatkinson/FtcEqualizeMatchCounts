@@ -42,7 +42,7 @@ namespace FEMC.DAL
                 List<MatchResult> historyFromLeagueTournament = new List<MatchResult>();
 
                 // Remove matches for *this* event: we want history only
-                if (db.ThisEvent.Type == Event.TEvent.LEAGUE_TOURNAMENT || true) // w/o the "|| true", this tool could only be run pre-match: this event's matches are in other tables
+                if (db.ThisEvent.Type == TEventType.LEAGUE_TOURNAMENT || true) // w/o the "|| true", this tool could only be run pre-match: this event's matches are in other tables
                     {
                     for (int i = 0; i < teamHistory.Count; ++i)
                         {

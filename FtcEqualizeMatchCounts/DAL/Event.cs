@@ -1,36 +1,12 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
     class Event : DBObject
         {
-        //----------------------------------------------------------------------------------------
-        // Types
-        //----------------------------------------------------------------------------------------
-
-        public enum TStatus
-            {
-            [StringValue("Future")] FUTURE = 0,
-            [StringValue("Setup")] SETUP = 1,
-            [StringValue("Inspection")] INSPECTION = 2,
-            [StringValue("Qualifications")] QUALS = 3,
-            [StringValue("Alliance Selection")] SELECTION = 4,
-            [StringValue("Eliminations")] ELIMS = 5,
-            [StringValue("Archived")] ARCHIVED = 6,
-            }
-    
-        public enum TEvent // org.usfirst.ftc.event.EventData
-            {
-            [StringValue("Scrimmage")] SCRIMMAGE = 0,
-            [StringValue("League Meet")] LEAGUE_MEET = 1,
-            [StringValue("Qualifier")] QUALIFIER = 2,
-            [StringValue("League Tournament")] LEAGUE_TOURNAMENT = 3,
-            [StringValue("Championship")] CHAMPIONSHIP = 4,
-            [StringValue("Other")] OTHER = 5
-            }
-
         //----------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------
@@ -38,8 +14,8 @@ namespace FEMC.DAL
         public string EventCode;
         public string Name;
         public DateTime? Start;
-        public TEvent Type;
-        public TStatus Status;
+        public TEventType Type;
+        public TEventStatus Status;
         public List<Match> Matches = new List<Match>();
         public long LastMatchNumber { get
             {
@@ -60,7 +36,7 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public Event(Database db, DBTables.LeagueMeets.Row row, TEvent type, TStatus status) : base(db)
+        public Event(Database db, DBTables.LeagueMeets.Row row, TEventType type, TEventStatus status) : base(db)
             {
             EventCode = row.EventCode.Value;
             Name = row.Name.Value;

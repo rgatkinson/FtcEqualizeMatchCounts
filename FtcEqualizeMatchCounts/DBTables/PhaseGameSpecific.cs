@@ -36,7 +36,7 @@ namespace FEMC.DBTables
             public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(Match, Alliance);
             }
 
-        public PhaseGameSpecific(Database database) : base(database)
+        protected PhaseGameSpecific(Database database) : base(database)
             {
             }
         }

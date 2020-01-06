@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable 649
+using System;
 
 namespace FEMC.DBTables
     {

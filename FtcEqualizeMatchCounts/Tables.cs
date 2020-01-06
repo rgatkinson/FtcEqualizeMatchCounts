@@ -9,8 +9,10 @@ namespace FEMC
         public ElimsCommitHistory ElimsCommitHistory;
         public ElimsData ElimsData;
         public ElimsGameSpecific ElimsGameSpecific;
+        public ElimsGameSpecificHistory ElimsGameSpecificHistory;
         public ElimsResults ElimsResults;
         public ElimsScores ElimsScores;
+        public ElimsScoresHistory ElimsScoresHistory;
         public LeagueConfig LeagueConfig;
         public LeagueHistory LeagueHistory;
         public LeagueInfo LeagueInfo;
@@ -21,8 +23,10 @@ namespace FEMC
         public QualsCommitHistory QualsCommitHistory;
         public QualsData QualsData;
         public QualsGameSpecific QualsGameSpecific;
+        public QualsGameSpecificHistory QualsGameSpecificHistory;
         public QualsResults QualsResults;
         public QualsScores QualsScores;
+        public QualsScoresHistory QualsScoresHistory;
         public ScheduleDetail ScheduledMatch;
         public ScheduleStation ScheduledMatchStation;
         public Team Team;
@@ -34,8 +38,10 @@ namespace FEMC
             ElimsCommitHistory = new ElimsCommitHistory(db);
             ElimsData = new ElimsData(db);
             ElimsGameSpecific = new ElimsGameSpecific(db);
+            ElimsGameSpecificHistory = new ElimsGameSpecificHistory(db);
             ElimsResults = new ElimsResults(db);
             ElimsScores = new ElimsScores(db);
+            ElimsScoresHistory = new ElimsScoresHistory(db);
             LeagueConfig = new LeagueConfig(db);
             LeagueHistory = new LeagueHistory(db);
             LeagueInfo = new LeagueInfo(db);
@@ -46,8 +52,10 @@ namespace FEMC
             QualsCommitHistory = new QualsCommitHistory(db);
             QualsData = new QualsData(db);
             QualsGameSpecific = new QualsGameSpecific(db);
+            QualsGameSpecificHistory = new QualsGameSpecificHistory(db);
             QualsResults = new QualsResults(db);
             QualsScores = new QualsScores(db);
+            QualsScoresHistory = new QualsScoresHistory(db);
             ScheduledMatch = new ScheduleDetail(db);
             ScheduledMatchStation = new ScheduleStation(db);
             Team = new Team(db);
@@ -60,8 +68,10 @@ namespace FEMC
             ElimsCommitHistory.Clear();
             ElimsData.Clear();
             ElimsGameSpecific.Clear();
+            ElimsGameSpecificHistory.Clear();
             ElimsResults.Clear();
             ElimsScores.Clear();
+            ElimsScoresHistory.Clear();
             LeagueConfig.Clear();
             LeagueHistory.Clear();
             LeagueInfo.Clear();
@@ -72,8 +82,10 @@ namespace FEMC
             QualsCommitHistory.Clear();
             QualsData.Clear();
             QualsGameSpecific.Clear();
+            QualsGameSpecificHistory.Clear();
             QualsResults.Clear();
             QualsScores.Clear();
+            QualsScoresHistory.Clear();
             ScheduledMatch.Clear();
             ScheduledMatchStation.Clear();
             Team.Clear();
@@ -86,8 +98,10 @@ namespace FEMC
             ElimsCommitHistory.Load();
             ElimsData.Load();
             ElimsGameSpecific.Load();
+            ElimsGameSpecificHistory.Load();
             ElimsResults.Load();
             ElimsScores.Load();
+            ElimsScoresHistory.Load();
             LeagueConfig.Load();
             LeagueHistory.Load();
             LeagueInfo.Load();
@@ -98,8 +112,10 @@ namespace FEMC
             QualsCommitHistory.Load();
             QualsData.Load();
             QualsGameSpecific.Load();
+            QualsGameSpecificHistory.Load();
             QualsResults.Load();
             QualsScores.Load();
+            QualsScoresHistory.Load();
             ScheduledMatch.Load();
             ScheduledMatchStation.Load();
             Team.Load();

@@ -8,12 +8,12 @@ namespace FEMC.DBTables
         public class Row : TableRow<Tuple<NullableLong, DateTimeAsInteger>>
             {
             public NullableLong Match;
-            public DateTimeAsInteger CommitTime;
+            public DateTimeAsInteger Ts;
             public DateTimeAsInteger Start;
             public NullableLong Random;
             public NullableLong CommitType;
 
-            public override Tuple<NullableLong, DateTimeAsInteger> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger>(Match, CommitTime);
+            public override Tuple<NullableLong, DateTimeAsInteger> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger>(Match, Ts);
             }
 
         protected PhaseCommitHistory(Database database) : base(database)

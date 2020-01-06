@@ -123,6 +123,11 @@
     <Compile Include="DAL\Scores.cs" />
     <Compile Include="DAL\SkystoneScores.cs" />
     <Compile Include="DBTables\ElimsCommitHistory.cs" />
+    <Compile Include="DBTables\ElimsScoresHistory.cs" />
+    <Compile Include="DBTables\PhaseGameSpecificHistory.cs" />
+    <Compile Include="DBTables\ElimsGameSpecificHistory.cs" />
+    <Compile Include="DBTables\QualsGameSpecificHistory.cs" />
+    <Compile Include="DBTables\QualsScoresHistory.cs" />
     <Compile Include="DBTables\QualsCommitHistory.cs" />
     <Compile Include="Enums\TCommitType.cs" />
     <Compile Include="Enums\TEventType.cs" />

@@ -10,6 +10,6 @@ namespace FEMC
             SetParameterValue(parameter, MsSince1970UnixEpoch);
             }
 
-        public static DateTimeOffset QualsDataDefault = DateTimeOffset.FromUnixTimeMilliseconds(-1);
+        public static DateTimeOffset QualsDataDefault = DateTimeOffset.FromUnixTimeMilliseconds(-1).UtcDateTime;
         }
     }

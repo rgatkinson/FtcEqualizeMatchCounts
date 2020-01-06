@@ -41,4 +41,16 @@ namespace FEMC
             return $"Error loading database '{programOptions.Filename}': is this an FTC ScoreKeeper database?";
             }
         }
+
+    class UnexpectedRowCountException : Exception
+        {
+        public UnexpectedRowCountException(string verb, string table, int expected, int found) : base (GetMessage(verb, table, expected, found))
+            {
+            }
+
+        private static String GetMessage(string verb, string table, int expected, int found)
+            {
+            return $"{table}: {verb} expected to affect {expected} row; affected {found} rows";
+            }
+        }
     }

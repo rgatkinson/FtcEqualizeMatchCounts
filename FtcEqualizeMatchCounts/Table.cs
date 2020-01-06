@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 
 
@@ -9,11 +10,13 @@ namespace FEMC
     // Table
     //--------------------------------------------------------------------------------------------------------------------------
 
-    abstract class AbstractTable<TRow>
+    abstract class AbstractTable<TRowAbstract>
         {
         public abstract string TableName { get; }
-        public abstract void AddRow(TRow row);
+        public abstract void AddRow(TRowAbstract row);
+
         public abstract Database Database { get; }
+        public abstract List<string> ColumnNames { get; }
 
         public ProgramOptions ProgramOptions => Database.ProgramOptions;
         }
@@ -30,6 +33,10 @@ namespace FEMC
 
         public override Database Database => database;
 
+        public override List<string> ColumnNames => columnNames;
+
+        private List<string> columnNames = new List<string>();
+
         //----------------------------------------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------------------------------------
@@ -40,25 +47,55 @@ namespace FEMC
             this.database = database;
             }
 
+        public TRow NewRow()
+            {
+            TRow result = new TRow();
+            result.Table = this;
+            result.InitializeFields();
+            return result;
+            }
+
+        public TRow CopyRow(TRow row)
+            {
+            TRow result = NewRow();
+            foreach (var field in row.LocalStoredFields)
+                {
+                field.SetValue(result, field.GetValue(row));
+                }
+            return result;
+            }
+
         //----------------------------------------------------------------------------------------------------------------------
         // Loading
         //----------------------------------------------------------------------------------------------------------------------
 
         public override void AddRow(TableRow<TPrimaryKey> row)
             {
-            row.Table = this;
+            Trace.Assert(row.Table == this);
             Rows.Add((TRow) row);
             }
 
         public void Clear()
             {
             Rows.Clear();
+            columnNames.Clear();
             Map.Clear();
             }
 
         public void Load()
             {
             Clear();
+            using (var cmd = database.Connection.CreateCommand())
+                {
+                cmd.CommandText = $"PRAGMA table_info('{ TableName }');";
+                SqliteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                    {
+                    string columnName = (string)rdr[1];
+                    columnNames.Add(columnName);
+                    }
+                }
+
             using (var cmd = database.Connection.CreateCommand())
                 { 
                 cmd.CommandText = $"SELECT * FROM { TableName }";
@@ -67,6 +104,7 @@ namespace FEMC
                 while (rdr.Read())
                     {
                     TRow row = new TRow();
+                    row.Table = this;
                     for (int i = 0; i < rdr.FieldCount; i++)
                         {
                         object value = rdr.IsDBNull(i) ? null : rdr[i];

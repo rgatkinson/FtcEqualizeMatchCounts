@@ -162,7 +162,7 @@
     <Compile Include="Enums\TMatchType.cs" />
     <Compile Include="Enums\TRandomization.cs" />
     <Compile Include="Enums\TStation.cs" />
-    <Compile Include="Enums\TMatchStatus.cs" />
+    <Compile Include="Enums\TMatchState.cs" />
     <Compile Include="Enums\TTournamentLevel.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Program.cs" />

@@ -14,6 +14,7 @@ namespace FEMC
         public int          AveragingMatchCountCap = 10;
         public bool         OptionMGiven = false;
         public bool         OptionCGiven = false;
+        public bool         ScoreEqualizationMatches = false;
         public bool         ShowUsage = false;
         public bool         Verbose = false;
         public List<String> ExtraOptions = new List<string>();
@@ -60,6 +61,7 @@ namespace FEMC
                     { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => OptionMGiven = m != null },
                     { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountCap = count; OptionCGiven = true; } },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
+                    { "s|score",   $"automatically score equalization matches", (string s) => ScoreEqualizationMatches = s != null },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
                     { "h|help|?",  $"show this message and exit", (string h) => ShowUsage = h != null },
                 #if DEBUG
@@ -223,7 +225,8 @@ namespace FEMC
                     if (!ProgramOptions.Quiet)
                         { 
                         do  { 
-                            ProgramOptions.StdOut.Write($"Update this event with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
+                            string verb = ProgramOptions.ScoreEqualizationMatches ? "Update and score" : "Update";
+                            ProgramOptions.StdOut.Write($"{verb} this event with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
                             response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
                             if (response != ConsoleKey.Enter)
                                 {
@@ -237,7 +240,7 @@ namespace FEMC
                         {
                         if (Database.BackupFile())
                             { 
-                            int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                            int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose, ProgramOptions.ScoreEqualizationMatches);
                             Database.CommitTransaction();
                             ProgramOptions.StdOut.WriteLine();
                             ProgramOptions.StdOut.WriteLine($"Database updated with {equalizationMatchesCreated} new equalization matches.");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Data.Sqlite;
@@ -37,7 +38,7 @@ namespace FEMC
 
         public virtual TPrimaryKey PrimaryKey => throw new NotImplementedException();
 
-        protected List<FieldInfo> LocalStoredFields
+        public List<FieldInfo> LocalStoredFields
             {
             get {
                 Type type = GetType();
@@ -52,6 +53,43 @@ namespace FEMC
                 return result;
                 }
             }
+
+        public List<FieldInfo> Columns(IEnumerable<string> fieldNames)
+            {
+            List<FieldInfo> result = new List<FieldInfo>();
+            foreach (string name in fieldNames)
+                {
+                FieldInfo field = null;
+                foreach (var candidate in LocalStoredFields)
+                    {
+                    if (candidate.Name == name)
+                        {
+                        field = candidate;
+                        break;
+                        }
+                    }
+                result.Add(field);
+                }
+            return result;
+            }
+
+        public List<Tuple<FieldInfo, object>> Where(string fieldName, object value)
+            {
+            return Where(new string[] { fieldName }, new object[] { value });
+            }
+
+        public List<Tuple<FieldInfo, object>> Where(IEnumerable<string> fieldNames, IEnumerable<object> values)
+            {
+            List<Tuple<FieldInfo, object>> result = new List<Tuple<FieldInfo, object>>();
+            var columns = Columns(fieldNames);
+            foreach (var pair in columns.Zip(values, (f,v) => new { field = f, value = v }))
+                {
+                result.Add(new Tuple<FieldInfo, object>(pair.field, pair.value));
+                }
+            return result;
+            }
+
+        protected int ColumnOrdinalZ(FieldInfo fieldInfo) => LocalStoredFields.IndexOf(fieldInfo);
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
@@ -113,6 +151,59 @@ namespace FEMC
                 }
             }
 
+        public void Update(IEnumerable<FieldInfo> columns, IEnumerable<Tuple<FieldInfo,object>> where)
+            {
+            FieldInfo[] columnsArray = columns.ToArray();
+            Tuple<FieldInfo, object>[] whereArray = where.ToArray();
+            using var cmd = Table.Database.Connection.CreateCommand();
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append($"UPDATE { Table.TableName } SET ");
+
+            bool first = true;
+            foreach (FieldInfo field in columnsArray)
+                {
+                SqliteParameter parameter = cmd.CreateParameter();
+                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
+                parameter.IsNullable = true; // everything is nullable in our schema
+                cmd.Parameters.Add(parameter);
+                if (!first)
+                    {
+                    builder.Append(", ");
+                    }
+                builder.Append($"{GetColumnName(field)}={parameter.ParameterName}");
+                SetParameterValue(parameter, field);
+                first = false;
+                }
+
+            builder.Append(" WHERE ");
+            first = true;
+            foreach (var term in whereArray)
+                {
+                SqliteParameter parameter = cmd.CreateParameter();
+                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
+                parameter.IsNullable = true; // everything is nullable in our schema
+                cmd.Parameters.Add(parameter);
+                if (!first)
+                    {
+                    builder.Append(" AND ");
+                    }
+                FieldInfo field = term.Item1;
+                builder.Append($"{GetColumnName(field)}={parameter.ParameterName}");
+                SetParameterValue(parameter, field);
+                first = false;
+                }
+
+            builder.Append(";");
+
+            cmd.CommandText = builder.ToString();
+            var cRows = cmd.ExecuteNonQuery();
+            if (cRows != 1)
+                {
+                throw new UnexpectedRowCountException("UPDATE", Table.TableName, 1, cRows);
+                }
+            }
+
         public void SaveToDatabase()
             {
             using var cmd = Table.Database.Connection.CreateCommand();
@@ -120,39 +211,20 @@ namespace FEMC
             StringBuilder builder = new StringBuilder();
             builder.Append($"INSERT INTO { Table.TableName } VALUES (");
 
-            int iField = 0;
+            bool first = true;
             foreach (FieldInfo field in LocalStoredFields)
                 {
                 SqliteParameter parameter = cmd.CreateParameter();
-                parameter.ParameterName = $"$param{iField}";
+                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
                 parameter.IsNullable = true; // everything is nullable in our schema
                 cmd.Parameters.Add(parameter);
-
-                if (iField > 0)
+                if (!first)
                     {
                     builder.Append(", ");
                     }
                 builder.Append(parameter.ParameterName);
-
-                if (field.FieldType == typeof(string))
-                    {
-                    parameter.Value = field.GetValue(this);
-                    }
-                else if (field.FieldType == typeof(long))
-                    {
-                    parameter.Value = field.GetValue(this);
-                    }
-                else if (field.FieldType == typeof(double))
-                    {
-                    parameter.Value = field.GetValue(this);
-                    }
-                else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
-                    {
-                    TableColumn column = (TableColumn)field.GetValue(this);
-                    column.SaveDatabaseValue(parameter);
-                    }
-
-                iField++;
+                SetParameterValue(parameter, field);
+                first = false;
                 }
 
             builder.Append(");");
@@ -161,8 +233,59 @@ namespace FEMC
             var cRows = cmd.ExecuteNonQuery();
             if (cRows != 1)
                 {
-                Table.ProgramOptions.StdErr.WriteLine($"INSERT expected to affect 1 row; affected {cRows} rows");
+                throw new UnexpectedRowCountException("INSERT", Table.TableName, 1, cRows);
                 }
             }
+
+        public void AddToTable()
+            {
+            Table.AddRow(this);
+            }
+
+        protected void SetParameterValue(SqliteParameter parameter, FieldInfo field)
+            {
+            if (field.FieldType == typeof(string))
+                {
+                parameter.Value = field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(long))
+                {
+                parameter.Value = field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(double))
+                {
+                parameter.Value = field.GetValue(this);
+                }
+            else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                {
+                TableColumn column = (TableColumn)field.GetValue(this);
+                column.SaveDatabaseValue(parameter);
+                }
+            }
+        protected string GetColumnName(FieldInfo fieldInfo)
+            {
+            string result = fieldInfo.GetColumnName();
+            if (result == null)
+                {
+                int columnNumberZ = 0;
+                foreach (var f in LocalStoredFields)
+                    {
+                    if (f == fieldInfo)
+                        {
+                        result = Table.ColumnNames[columnNumberZ];
+                        break;
+                        }
+                    columnNumberZ++;
+                    }
+                }
+            return result;
+            }
+
+        public void AddToTableAndSave()
+            {
+            AddToTable();
+            SaveToDatabase();
+            }
+
         }
     }

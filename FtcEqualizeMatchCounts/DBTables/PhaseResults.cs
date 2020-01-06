@@ -5,13 +5,13 @@ namespace FEMC.DBTables
         {
         public class Row : TableRow<NullableLong>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong RedScore;
             public NullableLong BlueScore;
             public NullableLong RedPenaltyCommitted;
             public NullableLong BluePenaltyCommitted;
 
-            public override NullableLong PrimaryKey => Match;
+            public override NullableLong PrimaryKey => MatchNumber;
             }
 
         protected PhaseResults(Database database) : base(database)

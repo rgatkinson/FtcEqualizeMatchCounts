@@ -18,7 +18,7 @@ namespace FEMC.DAL
 
         public FMSEventId FMSEventId => fmsEventId.Value==null ? Scheduled.FMSEventId : fmsEventId;
 
-        public override string EventCode => Equals(Database.FMSEventId, FMSEventId) ? Database.ThisEventCode : null;
+        public override string EventCode => Equals(Database.ThisFMSEventId, FMSEventId) ? Database.ThisEventCode : null;
         public virtual ScheduledMatch Scheduled => Database.ScheduledMatchesById[FMSScheduleDetailId];
         public override long MatchNumber => Scheduled.MatchNumber;
         public override bool IsEqualizationMatch => Scheduled.IsEqualizationMatch;

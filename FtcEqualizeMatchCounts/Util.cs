@@ -69,6 +69,30 @@ namespace FEMC
             }
         }
 
+    public class ColumnName : Attribute
+        {
+        public string Value { get; private set; }
+
+        public ColumnName(string value)
+            {
+            Value = value;
+            }
+        }
+
+    public static class FieldUtil
+        {
+        public static string GetColumnName(this FieldInfo fieldInfo)
+            {
+            string stringValue = null;
+            ColumnName[] attrs = fieldInfo.GetCustomAttributes(typeof(ColumnName), false) as ColumnName[];
+            if (attrs.Length > 0)
+                {
+                stringValue = attrs[0].Value;
+                }
+            return stringValue;
+            }
+        }
+
     public static class EnumUtil
         {
         public static IEnumerable<T> GetValues<T>()
@@ -89,6 +113,15 @@ namespace FEMC
             }
 
         public static T From<T>(int value) where T : Enum
+            {
+            if (Enum.IsDefined(typeof(T), value))
+                {
+                return (T)Enum.ToObject(typeof(T), value);
+                }
+            return default(T);
+            }
+
+        public static T From<T>(long value) where T : Enum
             {
             if (Enum.IsDefined(typeof(T), value))
                 {

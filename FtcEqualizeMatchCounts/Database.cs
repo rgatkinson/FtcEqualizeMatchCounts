@@ -50,7 +50,7 @@ namespace FEMC
         private TimeSpan      endOfTournamentDuration;
         public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
         public Event          ThisEvent => EventsByCode[ThisEventCode];
-        public FMSEventId     FMSEventId => TableColumn.Create<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
+        public FMSEventId     ThisFMSEventId => TableColumn.Create<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
         public DateTime       Start => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeNonNull;
         public DateTime       End => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeNonNull;
 
@@ -296,6 +296,28 @@ namespace FEMC
                 playedMatches.Add(playedMatch);
                 }
 
+            foreach (var row in Tables.QualsData.Rows.Concat(Tables.ElimsData.Rows))
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.Match.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            foreach (var row in Tables.QualsCommitHistory.Rows.Concat(Tables.ElimsCommitHistory.Rows))
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
             LeagueHistoryMatch.DetermineLeagueMatchesThatCount(this, programOptions.LeagueMatchesToConsider);
             }
 
@@ -443,7 +465,7 @@ namespace FEMC
                 }
             }
 
-        public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose)
+        public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose, bool scoreMatches)
             {
             if (EqualizationMatches.Count > 0)
                 {
@@ -451,7 +473,7 @@ namespace FEMC
 
                 foreach (var equalizationMatch in EqualizationMatches)
                     {
-                    equalizationMatch.SaveToDatabase();
+                    equalizationMatch.SaveToDatabase(scoreMatches);
                     }
                 EqualizationMatch.SaveEqualizationMatchesBlock(this, EqualizationMatches.First().ScheduleStart, EqualizationMatches.Count);
                 }

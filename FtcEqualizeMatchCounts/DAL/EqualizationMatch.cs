@@ -1,7 +1,6 @@
-﻿using FEMC.DBTables;
+﻿using FEMC.Enums;
 using System;
 using System.Collections.Generic;
-using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -13,7 +12,7 @@ namespace FEMC.DAL
 
         private const long FirstEqualizationMatchNumber = 1000; // assume will be bigger than any real match number
         
-        public EqualizationMatch(Database db, List<Team> teams, List<bool> isSurrogates, DateTime startTime, TimeSpan duration) : base(db, db.FMSEventId, NewFMSScheduleDetailId())
+        public EqualizationMatch(Database db, List<Team> teams, List<bool> isSurrogates, DateTime startTime, TimeSpan duration) : base(db, db.ThisFMSEventId, NewFMSScheduleDetailId())
             {
             CreatedBy = db.EqualizationMatchCreatorName;
             matchNumber = db.EqualizationMatches.Count==0 ? Math.Max(FirstEqualizationMatchNumber, Event.LastMatchNumber + 1) : Event.LastMatchNumber + 1;
@@ -42,9 +41,14 @@ namespace FEMC.DAL
         //----------------------------------------------------------------------------------------
 
         // Play this match with the required Win for Blue
-        public void PlayMatch()
+        public PlayedMatch PlayMatch()
             {
-            // Not yet implemented
+            PlayedMatch match = new PlayedMatch(Database, FMSScheduleDetailId);
+            match.Start = DateTime.UtcNow;
+            //
+            // More to come
+            //
+            return match;
             }
 
         //----------------------------------------------------------------------------------------
@@ -53,11 +57,8 @@ namespace FEMC.DAL
 
         public static void SaveEndOfTournamentBlock(Database db, DateTime start, TimeSpan duration)
             {
-            var blocksRow = new DBTables.Blocks.Row();
-            var matchScheduleRow = new MatchSchedule.Row();
-
-            blocksRow.InitializeFields();
-            matchScheduleRow.InitializeFields();
+            var blocksRow = db.Tables.Blocks.NewRow();
+            var matchScheduleRow = db.Tables.MatchSchedule.NewRow();
 
             blocksRow.Start.Value = start;
             blocksRow.Type.Value = (int)TMatchScheduleType.AdminBreak;
@@ -70,18 +71,13 @@ namespace FEMC.DAL
             matchScheduleRow.Type.Value = blocksRow.Type.Value;
             matchScheduleRow.Label.Value = blocksRow.Label.Value;
 
-            db.Tables.Blocks.AddRow(blocksRow);
-            db.Tables.MatchSchedule.AddRow(matchScheduleRow);
-
-            blocksRow.SaveToDatabase();
-            matchScheduleRow.SaveToDatabase();
+            blocksRow.AddToTableAndSave();
+            matchScheduleRow.AddToTableAndSave();
             }
 
         public static void SaveEqualizationMatchesBlock(Database db, DateTime start, int count)
             {
-            var blocksRow = new DBTables.Blocks.Row();
-
-            blocksRow.InitializeFields();
+            var blocksRow = db.Tables.Blocks.NewRow();
 
             blocksRow.Start.Value = start;
             blocksRow.Type.Value = (int)TMatchScheduleType.Match;
@@ -89,22 +85,15 @@ namespace FEMC.DAL
             blocksRow.Count.Value = count;
             blocksRow.Label.Value = null;
 
-            db.Tables.Blocks.AddRow(blocksRow);
-
-            blocksRow.SaveToDatabase();
+            blocksRow.AddToTableAndSave();
             }
 
-        public void SaveToDatabase()
+        public void SaveToDatabase(bool scoreMatch)
             {
-            var scheduledMatchRow = new DBTables.ScheduleDetail.Row();
-            var qualsRow = new Quals.Row();
-            var qualsDataRow = new QualsData.Row();
-            var matchScheduleRow = new MatchSchedule.Row();
-
-            scheduledMatchRow.InitializeFields();
-            qualsRow.InitializeFields();
-            qualsDataRow.InitializeFields();
-            matchScheduleRow.InitializeFields();
+            var scheduledMatchRow = Database.Tables.ScheduledMatch.NewRow();
+            var qualsRow = Database.Tables.Quals.NewRow();
+            var qualsDataRow = Database.Tables.QualsData.NewRow();
+            var matchScheduleRow = Database.Tables.MatchSchedule.NewRow();
 
             scheduledMatchRow.FMSScheduleDetailId = FMSScheduleDetailId;
             scheduledMatchRow.FMSEventId = FMSEventId;
@@ -131,7 +120,7 @@ namespace FEMC.DAL
             qualsRow.Blue2Surrogate.Value = Blue2Surrogate;
 
             qualsDataRow.Match.Value = MatchNumber;
-            qualsDataRow.Status.Value = (int)Enums.TMatchStatus.DefaultValue;
+            qualsDataRow.Status.Value = (int)Enums.TMatchState.Unplayed;
             qualsDataRow.Randomization.Value = (int)TRandomization.DefaultValue;
             qualsDataRow.Start.Value = DateTimeAsInteger.QualsDataDefault;
             qualsDataRow.ScheduleStart.Value = ScheduleStart;
@@ -144,22 +133,16 @@ namespace FEMC.DAL
             matchScheduleRow.Type.Value = (int)TMatchScheduleType.Match;
             matchScheduleRow.Label.Value = Description;
 
-            Database.Tables.ScheduledMatch.AddRow(scheduledMatchRow);
-            Database.Tables.Quals.AddRow(qualsRow);
-            Database.Tables.QualsData.AddRow(qualsDataRow);
-            Database.Tables.MatchSchedule.AddRow(matchScheduleRow);
-
-            scheduledMatchRow.SaveToDatabase();
-            qualsRow.SaveToDatabase();
-            qualsDataRow.SaveToDatabase();
-            matchScheduleRow.SaveToDatabase();
+            scheduledMatchRow.AddToTableAndSave();
+            qualsRow.AddToTableAndSave();
+            qualsDataRow.AddToTableAndSave();
+            matchScheduleRow.AddToTableAndSave();
 
             foreach (var alliance in EnumUtil.GetValues<TAlliance>())
                 {
                 foreach (var station in EnumUtil.GetValues<TStation>())
                     {
-                    DBTables.ScheduleStation.Row row = new DBTables.ScheduleStation.Row();
-                    row.InitializeFields();
+                    DBTables.ScheduleStation.Row row = Database.Tables.ScheduledMatchStation.NewRow();
 
                     row.FMSScheduleDetailId = FMSScheduleDetailId;
                     row.Alliance.Value = (int)alliance;
@@ -174,9 +157,40 @@ namespace FEMC.DAL
                     row.ModifedOn = scheduledMatchRow.ModifiedOn;
                     row.ModifiedBy = scheduledMatchRow.ModifiedBy;
 
-                    Database.Tables.ScheduledMatchStation.AddRow(row);
-                    row.SaveToDatabase();
+                    row.AddToTableAndSave();
                     }
+                }
+
+            if (scoreMatch)
+                {
+                // See SQLiteMatchDAO.java.commitMatch()
+                PlayedMatch match = PlayMatch();
+                //
+                match.Commit(TCommitType.COMMIT);
+                //
+                var updateRow = Database.Tables.QualsData.CopyRow(qualsDataRow);
+                updateRow.Status.Value = (int)TMatchState.Committed;
+                updateRow.Randomization.Value = (int)match.Randomization;
+                updateRow.Start.Value = match.Start;
+                updateRow.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
+
+                var qualsCommitHistory = Database.Tables.QualsCommitHistory.NewRow();
+                qualsCommitHistory.MatchNumber.Value = match.MatchNumber;
+                qualsCommitHistory.Ts.Value = match.LastCommitTime;
+                qualsCommitHistory.Start.Value = match.Start;
+                qualsCommitHistory.Randomization.Value = (int)match.Randomization;
+                qualsCommitHistory.CommitType.Value = (int?)match.LastCommitType;
+                qualsCommitHistory.AddToTableAndSave();
+
+                var qualsResults = Database.Tables.QualsResults.NewRow();
+                qualsResults.MatchNumber.Value = match.MatchNumber;
+                qualsResults.RedScore.Value = match.RedScore;
+                qualsResults.BlueScore.Value = match.BlueScore;
+                qualsResults.RedPenaltyCommitted.Value = match.RedPenalty;
+                qualsResults.BluePenaltyCommitted.Value = match.BluePenalty;
+                qualsResults.AddToTableAndSave();
+
+                byte[] scoreDetailsGZIP = null; // To come
                 }
             }
         }

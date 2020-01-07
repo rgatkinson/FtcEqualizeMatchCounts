@@ -18,15 +18,6 @@ namespace FEMC.DAL
         public DateTime ScheduleStart;
         protected Guid? fmsMatchId;
         protected TimeSpan duration;
-        public override TMatchType MatchType // see SQLiteManagementDAO.java/saveFMSSchedule
-            {
-            get {
-                if (tournamentLevel==2) return TMatchType.QUALS;
-                if (tournamentLevel==3) return TMatchType.ELIMS;
-                return TMatchType.TEST; // should never happen?
-                }
-            }
-
         public void SetMatchType(TMatchType value) => tournamentLevel = value == TMatchType.QUALS ? 2 : (value == TMatchType.ELIMS ? 3 : 0);
 
         public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
@@ -62,12 +53,21 @@ namespace FEMC.DAL
 
         public override ScheduledMatch Scheduled => this;
 
+        public override FMSEventId FMSEventId => fmsEventId?.Value == null ? Database.ThisFMSEventId : fmsEventId;
+
         public override long MatchNumber => matchNumber;
 
         public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && MatchType == TMatchType.QUALS;
 
-        public override FMSEventId FMSEventId => fmsEventId?.Value == null ? Database.ThisFMSEventId : fmsEventId;
-
+        public override TMatchType MatchType // see SQLiteManagementDAO.java/saveFMSSchedule
+            {
+            get
+                {
+                if (tournamentLevel == 2) return TMatchType.QUALS;
+                if (tournamentLevel == 3) return TMatchType.ELIMS;
+                return TMatchType.TEST; // should never happen?
+                }
+            }
 
         //----------------------------------------------------------------------------------------
         // Accessing

@@ -3,15 +3,15 @@ using System;
 
 namespace FEMC.DBTables
     {
-    class LeagueConfig: Table<LeagueConfig.Row, Tuple<StringColumn, StringColumn>>
+    class LeagueConfig: Table<LeagueConfig.Row, (string, string)>
         {
-        public class Row : TableRow<Row, Tuple<StringColumn, StringColumn>>
+        public class Row : TableRow<Row, (string, string)>
             {
             StringColumn League;
             StringColumn Key;
             StringColumn Value;
 
-            public override Tuple<StringColumn, StringColumn> PrimaryKey => new Tuple<StringColumn, StringColumn>(League, Key);
+            public override (string, string) PrimaryKey => (League.NonNullValue, Key.NonNullValue);
             }
 
         public LeagueConfig(Database database) : base(database)

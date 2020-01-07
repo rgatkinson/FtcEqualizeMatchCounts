@@ -3,9 +3,9 @@
 #pragma warning disable 649
 namespace FEMC.DBTables
     {
-    abstract class PhaseGameSpecific : Table<PhaseGameSpecific.Row, Tuple<NullableLong, NullableLong>>
+    abstract class PhaseGameSpecific : Table<PhaseGameSpecific.Row, (long, long)>
         {
-        public class Row : TableRow<Row, Tuple<NullableLong, NullableLong>>
+        public class Row : TableRow<Row, (long, long)>
             {
             public NullableLong MatchNumber;
             public NullableLong Alliance;      // 0==Red or 1==Blue
@@ -33,7 +33,7 @@ namespace FEMC.DBTables
             public NullableLong Parked1;
             public NullableLong Parked2;
 
-            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(MatchNumber, Alliance);
+            public override (long, long) PrimaryKey => (MatchNumber.NonNullValue, Alliance.NonNullValue);
             }
 
         protected PhaseGameSpecific(Database database) : base(database)

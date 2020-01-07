@@ -1,4 +1,6 @@
-﻿#pragma warning disable 649
+﻿using System;
+
+#pragma warning disable 649
 
 namespace FEMC.DBTables
     {
@@ -6,9 +8,9 @@ namespace FEMC.DBTables
     // Match Schedule
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class Blocks : Table<Blocks.Row, DateTimeColumn>
+    class Blocks : Table<Blocks.Row, DateTimeOffset>
         {
-        public class Row : TableRow<Row, DateTimeColumn>
+        public class Row : TableRow<Row, DateTimeOffset>
             {
             public DateTimeAsInteger Start;     // primary
             public NullableLong      Type;      // see TMatchScheduleType: 0 == Qualification, 2 == 5 minute break for consecutive match 
@@ -16,7 +18,7 @@ namespace FEMC.DBTables
             public NullableLong      Count;
             public StringColumn      Label;
 
-            public override DateTimeColumn PrimaryKey => Start;
+            public override DateTimeOffset PrimaryKey => Start.DateTimeNonNull;
             }
 
         public Blocks(Database database) : base(database)

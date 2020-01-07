@@ -3,9 +3,9 @@
 #pragma warning disable 649
 namespace FEMC.DBTables
     {
-    abstract class PhaseGameSpecificHistory : Table<PhaseGameSpecificHistory.Row, Tuple<NullableLong, DateTimeAsInteger, NullableLong>>
+    abstract class PhaseGameSpecificHistory : Table<PhaseGameSpecificHistory.Row, (long, DateTimeOffset, long)>
         {
-        public class Row : TableRow<Row, Tuple<NullableLong, DateTimeAsInteger, NullableLong>>
+        public class Row : TableRow<Row, (long, DateTimeOffset, long)>
             {
             public NullableLong MatchNumber;
             public DateTimeAsInteger Ts;
@@ -34,7 +34,7 @@ namespace FEMC.DBTables
             public NullableLong Parked1;
             public NullableLong Parked2;
 
-            public override Tuple<NullableLong, DateTimeAsInteger, NullableLong> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger, NullableLong>(MatchNumber, Ts, Alliance);
+            public override (long, DateTimeOffset, long) PrimaryKey => (MatchNumber.NonNullValue, Ts.DateTimeOffsetNonNull, Alliance.NonNullValue);
             }
 
         protected PhaseGameSpecificHistory(Database database) : base(database)

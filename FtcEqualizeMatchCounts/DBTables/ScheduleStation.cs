@@ -7,10 +7,10 @@ namespace FEMC.DBTables
     // ScheduleStation
     //--------------------------------------------------------------------------------------------------------------------------
 
-    class ScheduleStation : Table<ScheduleStation.Row, Tuple<FMSScheduleDetailId, long, long>>
+    class ScheduleStation : Table<ScheduleStation.Row, (FMSScheduleDetailId, long, long)>
         {
         // Four records for each match Alliance (1,2) x Station (1,2)
-        public class Row : TableRow<Row, Tuple<FMSScheduleDetailId, long, long>>
+        public class Row : TableRow<Row, (FMSScheduleDetailId, long, long)>
             {
             public FMSScheduleDetailId FMSScheduleDetailId;  // primary
             public NullableLong Alliance; // primary
@@ -23,7 +23,7 @@ namespace FEMC.DBTables
             public DateTimeAsString ModifedOn;
             public StringColumn ModifiedBy;
 
-            public override Tuple<FMSScheduleDetailId, long, long> PrimaryKey => new Tuple<FMSScheduleDetailId, long, long>(FMSScheduleDetailId, Alliance.NonNullValue, Station.NonNullValue);
+            public override (FMSScheduleDetailId, long, long) PrimaryKey => (FMSScheduleDetailId, Alliance.NonNullValue, Station.NonNullValue);
             }
 
         public ScheduleStation(Database database) : base(database)

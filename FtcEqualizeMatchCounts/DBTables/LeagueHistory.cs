@@ -4,9 +4,9 @@ using System;
 namespace FEMC.DBTables
     {
     // Note: league history does not contain rows for a team's participation as a surrogate
-    class LeagueHistory: Table<LeagueHistory.Row, Tuple<NullableLong, StringColumn, NullableLong>>
+    class LeagueHistory: Table<LeagueHistory.Row, (long, string, long)>
         {
-        public class Row : TableRow<Row, Tuple<NullableLong, StringColumn, NullableLong>>
+        public class Row : TableRow<Row, (long, string, long)>
             {
             public NullableLong Team;
             public StringColumn EventCode;
@@ -17,7 +17,7 @@ namespace FEMC.DBTables
             public BooleanAsInteger DQorNoShow;
             public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"; see TMatchOutcome
 
-            public override Tuple<NullableLong, StringColumn, NullableLong> PrimaryKey => new Tuple<NullableLong, StringColumn, NullableLong>(Team, EventCode, Match);
+            public override (long, string, long) PrimaryKey => (Team.NonNullValue, EventCode.NonNullValue, Match.NonNullValue);
             }
 
         public LeagueHistory(Database database) : base(database)

@@ -123,11 +123,7 @@ namespace FEMC
 
         public static T From<T>(long value) where T : Enum
             {
-            if (Enum.IsDefined(typeof(T), value))
-                {
-                return (T)Enum.ToObject(typeof(T), value);
-                }
-            return default(T);
+            return From<T>((int) value);
             }
 
         public static string GetStringValue(this Enum value)

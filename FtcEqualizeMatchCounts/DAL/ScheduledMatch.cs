@@ -18,7 +18,17 @@ namespace FEMC.DAL
         public DateTime ScheduleStart;
         protected Guid? fmsMatchId;
         protected TimeSpan duration;
-        public TTournamentLevel TournamentLevel => Enum.IsDefined(typeof(TTournamentLevel), tournamentLevel) ? (TTournamentLevel)tournamentLevel : TTournamentLevel.Unknown;
+        public override TMatchType MatchType // see SQLiteManagementDAO.java/saveFMSSchedule
+            {
+            get {
+                if (tournamentLevel==2) return TMatchType.QUALS;
+                if (tournamentLevel==3) return TMatchType.ELIMS;
+                return TMatchType.TEST; // should never happen?
+                }
+            }
+
+        public void SetMatchType(TMatchType value) => tournamentLevel = value == TMatchType.QUALS ? 2 : (value == TMatchType.ELIMS ? 3 : 0);
+
         public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
         public Guid FMSMatchId 
             {
@@ -50,7 +60,7 @@ namespace FEMC.DAL
 
         public override long MatchNumber => matchNumber;
 
-        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && TournamentLevel == TTournamentLevel.Qualification;
+        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && MatchType == TMatchType.QUALS;
 
 
         // Does this team play in this match?
@@ -122,7 +132,7 @@ namespace FEMC.DAL
             fieldType = (int)row.FieldType.NonNullValue;
             ScheduleStart = row.StartTime.DateTimeNonNull;
 
-            var qual = db.Tables.Quals.Map[row.MatchNumber];
+            var qual = db.Tables.Quals.Map[row.MatchNumber.NonNullValue];
 
             Red1 = db.TeamsByNumber[qual.Red1.NonNullValue];
             Red2 = db.TeamsByNumber[qual.Red2.NonNullValue];

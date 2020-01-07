@@ -5,11 +5,28 @@ namespace FEMC
     {
     class DateTimeAsInteger : DateTimeColumn
         {
-        public override void SaveDatabaseValue(SqliteParameter parameter)
+        public override object GetDatabaseValue()
             {
-            SetParameterValue(parameter, MsSince1970UnixEpoch);
+            return MsSince1970UnixEpoch;
             }
 
-        public static DateTimeOffset QualsDataDefault = DateTimeOffset.FromUnixTimeMilliseconds(-1).UtcDateTime;
+        public override bool Equals(object obj)
+            {
+            if (GetType() == obj?.GetType())
+                {
+                DateTimeAsInteger them = (DateTimeAsInteger)obj;
+                return Equals(MsSince1970UnixEpoch, them.MsSince1970UnixEpoch);
+                }
+            return false;
+
+            }
+
+        public override int GetHashCode()
+            {
+            return HashCode.Combine(GetType(), MsSince1970UnixEpoch, 0x9081833);
+            }
+
+
+        public static System.DateTimeOffset QualsDataDefault = System.DateTimeOffset.FromUnixTimeMilliseconds(-1).UtcDateTime;
         }
     }

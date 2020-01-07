@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FEMC.DBTables;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -11,14 +12,14 @@ namespace FEMC.DAL
         {
         // public long firstBrick; // not used
         public long secondBrick;
-        // public long autoDelivered; // not used
+        public long autoDelivered;
         public long autoReturned;
         public long firstBrickReturned;
         public long autoPlaced;
         public long repositioned;
         public long navigated1;
         public long navigated2;
-        public byte[] autoDelivered = new byte[6]; // was autoStones
+        public byte[] autoStones = new byte[6];
 
         public long teleopDelivered;
         public long teleopReturned;
@@ -46,11 +47,101 @@ namespace FEMC.DAL
         private const long MINOR_PENALTY_VALUE = 5;
         private const long MAJOR_PENALTY_VALUE = 20;
 
+        public SkystoneScores(Match match) : base(match)
+            {
+            }
+
+        public SkystoneScoreDetail CalculateBreakdown() // see SkystoneScores.java
+            {
+            scoredPoints = 0;
+            penaltyPoints = 5 * minor + 20 * major;
+            autoDelivered = 0;
+
+            long i;
+            for (i = 0; i < autoStones.Length; ++i)
+                {
+                if (autoStones[i] > 0)
+                    {
+                    ++autoDelivered;
+                    }
+                }
+
+            i = autoDelivered - Math.Max(0, autoReturned);
+            long targetReturned = autoReturned > 0 && firstBrickReturned > 0 ? 1 : 0;
+            long targets = (autoStones[0] == 2 ? 1 : 0) + (autoStones[1] == 2 ? 1 : 0);
+            long navigated = Math.Max(0, navigated1) + Math.Max(0, navigated2);
+            long teleopDeliveredNet = Math.Max(0, teleopDelivered) - Math.Max(0, teleopReturned);
+            long parked = Math.Max(0, parked1) + Math.Max(0, parked2);
+            long capstones = (capstone1 > -1 ? 1 : 0) + (capstone2 > -1 ? 1 : 0);
+            long capstoneHeight = (capstone1 > -1 ? capstone1 : 0) + (capstone2 > -1 ? capstone2 : 0);
+            SkystoneScoreDetail scoreDetail = new SkystoneScoreDetail();
+            scoreDetail.totalPenaltyPoints = penaltyPoints;
+            scoreDetail.minorPenalties = minor;
+            scoreDetail.majorPenalties = major;
+            scoredPoints += scoreDetail.autoTransport = 2 * i - targetReturned * 8 + 8 * targets;
+            scoredPoints += scoreDetail.autoPlaced = 4 * Math.Max(0, autoPlaced);
+            scoredPoints += scoreDetail.navigated = 5 * navigated;
+            scoredPoints += scoreDetail.repositioned = 10 * Math.Max(0, repositioned);
+            autonomousPoints = scoredPoints;
+            scoredPoints += scoreDetail.teleopTransport = 1 * teleopDeliveredNet;
+            scoredPoints += scoreDetail.teleopPlaced = 1 * Math.Max(0, teleopPlaced);
+            scoredPoints += scoreDetail.towerBonus = 2 * Math.Max(0, tallestTower);
+            teleopPoints = scoredPoints - autonomousPoints;
+            teleopToSubtractFromAuto = scoreDetail.teleopPlaced;
+            scoredPoints += scoreDetail.capstone = 5 * capstones + 1 * capstoneHeight;
+            scoredPoints += scoreDetail.foundationMoved = 15 * Math.Max(0, foundationMoved);
+            scoredPoints += scoreDetail.parked = 5 * parked;
+            endGamePoints = scoredPoints - autonomousPoints - teleopPoints;
+            if (Match.MatchType == TMatchType.ELIMS && card1 >= 2)
+                {
+                scoredPoints = adjust;
+                }
+            scoreDetail.totalScore = scoredPoints;
+            return scoreDetail;
+            }
+
+        protected override void SetEqualizationMatch()
+            {
+            base.SetEqualizationMatch();
+            firstBrickReturned = 0;
+            secondBrick = 0;
+            autoStones = new byte[6]; // all zero
+            autoReturned = 0;
+            autoPlaced = 0;
+            repositioned = 0;
+            navigated1 = 0;
+            navigated2 = 0;
+            teleopDelivered = 0;
+            teleopReturned = 0;
+            teleopPlaced = 0;
+            tallestTower = 0;
+            capstone1 = -1;
+            capstone2 = -1;
+            foundationMoved = 0;
+            parked1 = 0;
+            parked2 = 0;
+            }
+
+        public SkystoneScoreDetail SetRedEqualizationMatch()
+            {
+            SetEqualizationMatch();
+
+            return CalculateBreakdown();
+            }
+
+        public SkystoneScoreDetail SetBlueEqualizationMatch()
+            {
+            SetEqualizationMatch();
+            autoStones[0] = 2;
+
+            return CalculateBreakdown();
+            }
+
         public void Save(PhaseGameSpecific.Row row) // See SQLineMatchDAO.commitMatch
             {
             row.FirstReturnedSkyStone.Value = firstBrickReturned;
             row.SecondBrick.Value = secondBrick;
-            row.AutoDelivered.Value = (byte[])autoDelivered.Clone();
+            row.AutoDelivered.Value = (byte[])autoStones.Clone();
             row.AutoReturned.Value = autoReturned;
             row.AutoPlaced.Value = autoPlaced;
             row.Repositioned.Value = repositioned;
@@ -73,7 +164,7 @@ namespace FEMC.DAL
             {
             firstBrickReturned = row.FirstReturnedSkyStone.NonNullValue;
             secondBrick = row.SecondBrick.NonNullValue;
-            autoDelivered = row.AutoDelivered.Value.Take(6).ToArray();
+            autoStones = row.AutoDelivered.Value.Take(6).ToArray();
             autoReturned = row.AutoReturned.NonNullValue;
             autoPlaced = row.AutoPlaced.NonNullValue;
             repositioned = row.Repositioned.NonNullValue;

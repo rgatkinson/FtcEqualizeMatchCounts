@@ -5,9 +5,9 @@ namespace FEMC.DBTables
     {
     class ElimsScoresHistory : Table<ElimsScoresHistory.Row, Tuple<NullableLong, DateTimeAsInteger>>
         {
-        public class Row : TableRow<Tuple<NullableLong, DateTimeAsInteger>>
+        public class Row : TableRow<Row, Tuple<NullableLong, DateTimeAsInteger>>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public DateTimeAsInteger Ts;
 
             public NullableLong Alliance;
@@ -20,7 +20,7 @@ namespace FEMC.DBTables
             public NullableLong Minor;
             public NullableLong Adjust;
 
-            public override Tuple<NullableLong, DateTimeAsInteger> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger>(Match, Ts);
+            public override Tuple<NullableLong, DateTimeAsInteger> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger>(MatchNumber, Ts);
             }
 
         public override string TableName => "elimsScoresHistory";

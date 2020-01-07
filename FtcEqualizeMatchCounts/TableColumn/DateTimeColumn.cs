@@ -7,7 +7,8 @@ namespace FEMC
         {
         public System.DateTimeOffset? Value;
 
-        public System.DateTimeOffset DateTimeOffsetNonNull => Value ?? throw MustBeNonNull(GetType().Name);
+        public System.DateTimeOffset? DateTimeOffset => Value?.ToUniversalTime();
+        public System.DateTimeOffset DateTimeOffsetNonNull => DateTimeOffset ?? throw MustBeNonNull(GetType().Name);
 
         public System.DateTime? DateTime => Value?.UtcDateTime.ToUniversalTime();
         public System.DateTime DateTimeNonNull => DateTime ?? throw MustBeNonNull(GetType().Name);
@@ -27,12 +28,12 @@ namespace FEMC
 
         public void LoadDatabaseValue(string value)
             {
-            SetValue(value == null ? (DateTimeOffset?)null : DateTimeOffset.Parse(value));
+            SetValue(value == null ? (System.DateTimeOffset?)null : System.DateTimeOffset.Parse(value));
             }
 
         public void LoadDatabaseValue(long msSince1970UnixEpoch)
             {
-            SetValue(DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
+            SetValue(System.DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
             }
 
         public override void LoadDatabaseValue(object value)

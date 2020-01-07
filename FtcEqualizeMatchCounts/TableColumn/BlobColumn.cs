@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System;
+using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
@@ -21,9 +22,25 @@ namespace FEMC
             SetValue((byte[])value);
             }
 
-        public override void SaveDatabaseValue(SqliteParameter parameter)
+        public override object GetDatabaseValue()
             {
-            SetParameterValue(parameter, Value);
+            return Value;
+            }
+
+        public override bool Equals(object obj)
+            {
+            if (GetType() == obj?.GetType())
+                {
+                BlobColumn them = (BlobColumn)obj;
+                return Equals(Value, them.Value);
+                }
+            return false;
+
+            }
+
+        public override int GetHashCode()
+            {
+            return HashCode.Combine(GetType(), Value, 0x387199);
             }
         }
     }

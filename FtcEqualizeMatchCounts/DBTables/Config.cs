@@ -4,7 +4,7 @@ namespace FEMC.DBTables
     {
     class Config: Table<Config.Row, string>
         {
-        public class Row : TableRow<string>
+        public class Row : TableRow<Row, string>
             {
             public StringColumn Key;
             public StringColumn Value;

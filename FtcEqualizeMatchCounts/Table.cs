@@ -21,7 +21,7 @@ namespace FEMC
         public ProgramOptions ProgramOptions => Database.ProgramOptions;
         }
 
-    abstract class Table<TRow, TPrimaryKey> : AbstractTable<TableRow<TPrimaryKey>> where TRow : TableRow<TPrimaryKey>, new()
+    abstract class Table<TRow, TPrimaryKey> : AbstractTable<TableRow<TRow, TPrimaryKey>> where TRow : TableRow<TRow, TPrimaryKey>, new()
         {
         //----------------------------------------------------------------------------------------------------------------------
         // State
@@ -55,21 +55,11 @@ namespace FEMC
             return result;
             }
 
-        public TRow CopyRow(TRow row)
-            {
-            TRow result = NewRow();
-            foreach (var field in row.LocalStoredFields)
-                {
-                field.SetValue(result, field.GetValue(row));
-                }
-            return result;
-            }
-
         //----------------------------------------------------------------------------------------------------------------------
         // Loading
         //----------------------------------------------------------------------------------------------------------------------
 
-        public override void AddRow(TableRow<TPrimaryKey> row)
+        public override void AddRow(TableRow<TRow, TPrimaryKey> row)
             {
             Trace.Assert(row.Table == this);
             Rows.Add((TRow) row);

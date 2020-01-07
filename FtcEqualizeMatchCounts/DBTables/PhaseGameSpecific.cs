@@ -5,9 +5,9 @@ namespace FEMC.DBTables
     {
     abstract class PhaseGameSpecific : Table<PhaseGameSpecific.Row, Tuple<NullableLong, NullableLong>>
         {
-        public class Row : TableRow<Tuple<NullableLong, NullableLong>>
+        public class Row : TableRow<Row, Tuple<NullableLong, NullableLong>>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong Alliance;      // 0==Red or 1==Blue
 
             // Autonomous
@@ -33,7 +33,7 @@ namespace FEMC.DBTables
             public NullableLong Parked1;
             public NullableLong Parked2;
 
-            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(Match, Alliance);
+            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(MatchNumber, Alliance);
             }
 
         protected PhaseGameSpecific(Database database) : base(database)

@@ -3,11 +3,11 @@ using System;
 
 namespace FEMC.DBTables
     {
-    class QualsScores : Table<QualsScores.Row, Tuple<NullableLong, NullableLong>>
+    class QualsScores : Table<QualsScores.Row, Tuple<long, long>>
         {
-        public class Row : TableRow<Tuple<NullableLong, NullableLong>>
+        public class Row : TableRow<Row, Tuple<long, long>>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong Alliance;
             public NullableLong Card1;
             public NullableLong Card2;
@@ -19,7 +19,7 @@ namespace FEMC.DBTables
             public NullableLong Minor;
             public NullableLong Adjust;
 
-            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(Match, Alliance);
+            public override Tuple<long, long> PrimaryKey => new Tuple<long, long>(MatchNumber.NonNullValue, Alliance.NonNullValue);
             }
 
         public QualsScores(Database database) : base(database)

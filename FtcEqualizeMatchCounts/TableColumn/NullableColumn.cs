@@ -43,9 +43,9 @@ namespace FEMC
             LoadDatabaseValue((T?)value);
             }
 
-        public override void SaveDatabaseValue(SqliteParameter parameter)
+        public override object GetDatabaseValue()
             {
-            SetParameterValue(parameter, Value);
+            return Value;
             }
         }
     }

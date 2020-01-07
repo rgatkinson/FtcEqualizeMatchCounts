@@ -7,11 +7,11 @@ namespace FEMC.DBTables
 
     class ScheduleDetail : Table<ScheduleDetail.Row, FMSScheduleDetailId>
         {
-        public class Row : TableRow<FMSScheduleDetailId>
+        public class Row : TableRow<Row, FMSScheduleDetailId>
             {
             public FMSScheduleDetailId FMSScheduleDetailId; // primary
             public FMSEventId FMSEventId;
-            public NullableLong TournamentLevel;    // 2 for quals?
+            public NullableLong TournamentLevel;    // 2 for quals, 3 for elims, others zero; see also TMatchType
             public NullableLong MatchNumber;        // see quals.Match
             public NullableLong FieldType;          // always 1: see SQLiteManagementDAO.saveFMSSchedule()
             public StringColumn Description;

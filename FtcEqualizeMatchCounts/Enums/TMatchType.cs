@@ -2,9 +2,9 @@
     {
     public enum TMatchType // org.usfirst.ftc.event.MatchType
         {
-        PRACTICE,
-        QUALS,
-        ELIMS,
-        TEST,
+        [StringValue("Practice")] PRACTICE,
+        [StringValue("Qualification")] QUALS,
+        [StringValue("Elimination")] ELIMS,
+        [StringValue("Test Match")] TEST,
         }
     }

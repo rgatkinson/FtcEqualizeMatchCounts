@@ -5,7 +5,7 @@ namespace FEMC.DBTables
     {
     abstract class PhaseCommitHistory : Table<PhaseCommitHistory.Row, Tuple<NullableLong, DateTimeAsInteger>>
         {
-        public class Row : TableRow<Tuple<NullableLong, DateTimeAsInteger>>
+        public class Row : TableRow<Row, Tuple<NullableLong, DateTimeAsInteger>>
             {
             public NullableLong MatchNumber;
             public DateTimeAsInteger Ts;

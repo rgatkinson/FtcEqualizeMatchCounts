@@ -4,9 +4,9 @@ namespace FEMC
     {
     class GuidColumnAsString : GuidColumn
         {
-        public override void SaveDatabaseValue(SqliteParameter parameter)
+        public override object GetDatabaseValue()
             {
-            SetParameterValue(parameter, Value?.ToString("D"));
+            return Value?.ToString("D");
             }
         }
     }

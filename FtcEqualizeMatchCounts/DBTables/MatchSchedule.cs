@@ -8,7 +8,7 @@ namespace FEMC.DBTables
 
     class MatchSchedule : Table<MatchSchedule.Row, DateTimeColumn>
         {
-        public class Row : TableRow<DateTimeColumn>
+        public class Row : TableRow<Row, DateTimeColumn>
             {
             public DateTimeAsInteger Start; // primary
             public DateTimeAsInteger End;

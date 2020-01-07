@@ -9,6 +9,8 @@ namespace FEMC.DAL
     {
     class Scores
         {
+        public Match Match;
+
         public bool reqRefInteraction;
         public long major;
         public long minor;
@@ -22,6 +24,26 @@ namespace FEMC.DAL
         public bool noshow1;
         public bool noshow2;
         public bool noshow3;
+
+        protected long penaltyPoints;
+        protected long scoredPoints;
+        protected long autonomousPoints;
+        protected long teleopPoints;
+        protected long endGamePoints;
+        protected long teleopToSubtractFromAuto;
+
+        public long PenaltyPoints => penaltyPoints;
+        public long ScoredPoints => scoredPoints;
+
+        public Scores(Match match)
+            {
+            Match = match;
+            }
+
+        protected virtual void SetEqualizationMatch()
+            {
+            // TODO: WRONG: NOT IMPLEMENTED
+            }
 
         public void Save(QualsScores.Row row)
             {

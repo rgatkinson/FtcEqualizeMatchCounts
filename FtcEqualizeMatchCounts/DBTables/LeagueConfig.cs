@@ -5,7 +5,7 @@ namespace FEMC.DBTables
     {
     class LeagueConfig: Table<LeagueConfig.Row, Tuple<StringColumn, StringColumn>>
         {
-        public class Row : TableRow<Tuple<StringColumn, StringColumn>>
+        public class Row : TableRow<Row, Tuple<StringColumn, StringColumn>>
             {
             StringColumn League;
             StringColumn Key;

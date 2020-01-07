@@ -3,9 +3,9 @@ namespace FEMC.DBTables
     {
     abstract class PhaseData : Table<PhaseData.Row, NullableLong>
         {
-        public class Row : TableRow<NullableLong>
+        public class Row : TableRow<Row, NullableLong>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong Status;
             public NullableLong Randomization;
             public DateTimeAsInteger Start;
@@ -14,7 +14,7 @@ namespace FEMC.DBTables
             public FMSMatchIdAsString FMSMatchId;
             public FMSScheduleDetailIdAsString FMSScheduleDetailId;
 
-            public override NullableLong PrimaryKey => Match;
+            public override NullableLong PrimaryKey => MatchNumber;
             }
 
         protected PhaseData(Database database) : base(database)

@@ -4,7 +4,7 @@ namespace FEMC.DBTables
     {
     class LeagueInfo: Table<LeagueInfo.Row, StringColumn>
         {
-        public class Row : TableRow<StringColumn>
+        public class Row : TableRow<Row, StringColumn>
             {
             public StringColumn Code;
             public StringColumn Name;

@@ -1,16 +1,12 @@
 ﻿#pragma warning disable 649
 namespace FEMC.DBTables
     {
-    //--------------------------------------------------------------------------------------------------------------------------
-    // Match (probably don't need: written when match is *scored*)
-    //--------------------------------------------------------------------------------------------------------------------------
-
     /**
      * Keeps track of Matches actually played: one row for each play of a match
      */
     class Match : Table<Match.Row, FMSMatchId>
         {
-        public class Row : TableRow<FMSMatchId>
+        public class Row : TableRow<Row, FMSMatchId>
             {
             // Comments for a stylized, manually-scored Equalization Match unless otherwise stated.
             public FMSMatchId FMSMatchId; // primary, a new allocated for every play of a given MatchNumber
@@ -35,7 +31,7 @@ namespace FEMC.DBTables
             public NullableLong BluePenalty;                // 0
             public NullableLong RedAutoScore;               // 0
             public NullableLong BlueAutoScore;              // 10
-            public ScoreDetails ScoreDetails;               // blobified details: scoreDetailsGZIP
+            public ScoreDetailsColumn ScoreDetails;         // blobified details: scoreDetailsGZIP
             public NullableLong HeadRefReview;              // 0
             public StringColumn VideoUrl;                   // null
             public DateTimeAsString CreatedOn;              // non-null

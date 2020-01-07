@@ -280,11 +280,12 @@ namespace FEMC
                 }
             Teams.Sort((a, b) => a.TeamNumber - b.TeamNumber);
 
-            foreach (var row in Tables.ScheduledMatch.Rows)
+            foreach (var row in Tables.ScheduleDetail.Rows)
                 {
                 ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
                 }
 
+            // fmsMatch
             foreach (var row in Tables.Match.Rows)
                 {
                 PlayedMatch playedMatch = new PlayedMatch(this, row);
@@ -296,9 +297,10 @@ namespace FEMC
                 playedMatches.Add(playedMatch);
                 }
 
+            // psData
             foreach (var row in Tables.QualsData.Rows.Concat(Tables.ElimsData.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.Match.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
                     {
                     foreach (PlayedMatch match in playedMatches)
                         {
@@ -307,7 +309,88 @@ namespace FEMC
                     }
                 }
 
+            // psScores
+            foreach (var row in Tables.QualsScores.Rows)
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+            foreach (var row in Tables.ElimsScores.Rows)
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            // psGame
+            foreach (var row in Tables.QualsGameSpecific.Rows.Concat(Tables.ElimsGameSpecific.Rows))
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            // psResult
+            foreach (var row in Tables.QualsResults.Rows.Concat(Tables.ElimsResults.Rows))
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            // psHistory
             foreach (var row in Tables.QualsCommitHistory.Rows.Concat(Tables.ElimsCommitHistory.Rows))
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            // psScoresHistory
+            foreach (var row in Tables.QualsScoresHistory.Rows)
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+            foreach (var row in Tables.ElimsScoresHistory.Rows)
+                {
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                    {
+                    foreach (PlayedMatch match in playedMatches)
+                        {
+                        match.Load(row);
+                        }
+                    }
+                }
+
+            // psGameHistory
+            foreach (var row in Tables.QualsGameSpecificHistory.Rows.Concat(Tables.ElimsGameSpecificHistory.Rows))
                 {
                 if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
                     {

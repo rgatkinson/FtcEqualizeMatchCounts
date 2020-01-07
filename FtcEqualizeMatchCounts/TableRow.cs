@@ -8,13 +8,49 @@ using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
-    class TableRow<TPrimaryKey>
+    class TableRow<TRow, TPrimaryKey> where TRow : TableRow<TRow, TPrimaryKey>, new()
         {
+        //----------------------------------------------------------------------------------------------------------------------
+        // State
+        //----------------------------------------------------------------------------------------------------------------------
+
+        public AbstractTable<TableRow<TRow, TPrimaryKey>> Table = null;
+        public List<FieldInfo> LocalStoredFields => localStoredFields;
+
+        private List<FieldInfo> localStoredFields;
+
+        //----------------------------------------------------------------------------------------------------------------------
+        // Construction
+        //----------------------------------------------------------------------------------------------------------------------
+
+        protected TableRow()
+            {
+            localStoredFields = CalcLocalStoredFields;
+            }
+
+        protected List<FieldInfo> CalcLocalStoredFields
+            {
+            get
+                {
+                Type type = GetType();
+                List<FieldInfo> result = new List<FieldInfo>();
+                foreach (FieldInfo field in type.GetFields())
+                    {
+                    if (field.DeclaringType == type)
+                        {
+                        if (field.IsPublic)
+                            {
+                            result.Add(field);
+                            }
+                        }
+                    }
+                return result;
+                }
+            }
+
         //----------------------------------------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------------------------------------
-
-        public AbstractTable<TableRow<TPrimaryKey>> Table = null;
 
         public override string ToString()
             {
@@ -38,21 +74,9 @@ namespace FEMC
 
         public virtual TPrimaryKey PrimaryKey => throw new NotImplementedException();
 
-        public List<FieldInfo> LocalStoredFields
-            {
-            get {
-                Type type = GetType();
-                List<FieldInfo> result = new List<FieldInfo>();
-                foreach (FieldInfo field in type.GetFields())
-                    {
-                    if (field.DeclaringType == type)
-                        {
-                        result.Add(field);
-                        }
-                    }
-                return result;
-                }
-            }
+        //----------------------------------------------------------------------------------------------------------------------
+        // SQL
+        //----------------------------------------------------------------------------------------------------------------------
 
         public List<FieldInfo> Columns(IEnumerable<string> fieldNames)
             {
@@ -89,7 +113,20 @@ namespace FEMC
             return result;
             }
 
-        protected int ColumnOrdinalZ(FieldInfo fieldInfo) => LocalStoredFields.IndexOf(fieldInfo);
+        public TRow CopyRow()
+            {
+            TRow result = new TRow();
+            result.Table = Table;
+            // result.InitializeFields(); // not needed, as we exhaustively call SetField
+
+            for (int index = 0; index < LocalStoredFields.Count; index++)
+                {
+                FieldInfo field = LocalStoredFields[index];
+                result.SetField(index, GetField(index));
+                }
+
+            return result;
+            }
 
         // See
         //  https://www.bricelam.net/2018/05/24/microsoft-data-sqlite-2-1.html#comment-3980760585
@@ -98,28 +135,54 @@ namespace FEMC
         // "we embrace the fact that SQLite only supports four primitive types (INTEGER, REAL, TEXT, and BLOB)
         // and implement ADO.NET APIs in a way that helps you coerce values between these and .NET types"
         // 
-        public void SetField(int index, object value)
+        public void SetField(int index, object databaseValue)
             {
             FieldInfo field = LocalStoredFields[index];
-            Trace.Assert(field.IsPublic);   // TableRow are of limited structure
 
             if (field.FieldType == typeof(string))
                 {
-                field.SetValue(this, value);
+                field.SetValue(this, databaseValue);
                 }
             else if (field.FieldType == typeof(long))
                 {
-                field.SetValue(this, value);
+                field.SetValue(this, databaseValue);
                 }
             else if (field.FieldType == typeof(double))
                 {
-                field.SetValue(this, value);
+                field.SetValue(this, databaseValue);
                 }
             else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
                 {
                 TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
-                column.LoadDatabaseValue(value);
+                column.LoadDatabaseValue(databaseValue);
                 field.SetValue(this, column);
+                }
+            else
+                {
+                throw new NotImplementedException($"FileType={field.FieldType} not yet implemented");
+                }
+            }
+
+        public object GetField(int index)
+            {
+            FieldInfo field = LocalStoredFields[index];
+
+            if (field.FieldType == typeof(string))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(long))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(double))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                {
+                TableColumn column = (TableColumn)field.GetValue(this);
+                return column.GetDatabaseValue();
                 }
             else
                 {

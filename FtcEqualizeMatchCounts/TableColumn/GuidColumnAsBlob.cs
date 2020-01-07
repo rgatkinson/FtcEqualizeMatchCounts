@@ -7,7 +7,7 @@ namespace FEMC
     {
     class GuidColumnAsBlob : GuidColumn
         {
-        public override void SaveDatabaseValue(SqliteParameter parameter)
+        public override object GetDatabaseValue()
             {
             if (Value.HasValue)
                 {
@@ -16,11 +16,11 @@ namespace FEMC
                     {
                     guid = MiscUtil.ByteSwap(guid);
                     }
-                SetParameterValue(parameter, guid.ToByteArray());
+                return guid.ToByteArray();
                 }
             else
                 {
-                SetParameterValue(parameter, null);
+                return null;
                 }
             }
         }

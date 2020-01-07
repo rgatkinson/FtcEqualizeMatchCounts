@@ -5,9 +5,9 @@ namespace FEMC.DBTables
     {
     class ElimsScores : Table<ElimsScores.Row, Tuple<NullableLong, NullableLong>>
         {
-        public class Row : TableRow<Tuple<NullableLong, NullableLong>>
+        public class Row : TableRow<Row, Tuple<NullableLong, NullableLong>>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong Alliance;
             public NullableLong Card;
             public BooleanAsInteger DQ;
@@ -18,7 +18,7 @@ namespace FEMC.DBTables
             public NullableLong Minor;
             public NullableLong Adjust;
 
-            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(Match, Alliance);
+            public override Tuple<NullableLong, NullableLong> PrimaryKey => new Tuple<NullableLong, NullableLong>(MatchNumber, Alliance);
             }
 
         public ElimsScores(Database database) : base(database)

@@ -18,6 +18,10 @@ namespace FEMC.DAL
         public override string EventCode => eventCode;
         public override long MatchNumber => matchNumber;
 
+        public override TMatchType MatchType => EventCode == Database.ThisEventCode
+            ? Database.ScheduledMatchesByNumber[MatchNumber].MatchType
+            : TMatchType.QUALS; // by definition: historical matches are in meets, which only quals
+
         public override bool Plays(Team team) => Teams.Contains(team);
 
         //----------------------------------------------------------------------------------------

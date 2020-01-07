@@ -15,7 +15,11 @@ namespace FEMC
             }
 
         public abstract void LoadDatabaseValue(object value);
-        public abstract void SaveDatabaseValue(SqliteParameter parameter);
+        public abstract object GetDatabaseValue();
+        public void SaveDatabaseValue(SqliteParameter parameter)
+            {
+            SetParameterValue(parameter, GetDatabaseValue());
+            }
 
         protected void SetParameterValue(SqliteParameter parameter, object value)
             {

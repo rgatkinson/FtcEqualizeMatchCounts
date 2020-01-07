@@ -17,7 +17,7 @@ namespace FEMC.DAL
             CreatedBy = db.EqualizationMatchCreatorName;
             matchNumber = db.EqualizationMatches.Count==0 ? Math.Max(FirstEqualizationMatchNumber, Event.LastMatchNumber + 1) : Event.LastMatchNumber + 1;
             Description = $"Equalization {matchNumber}";
-            tournamentLevel = (int)TTournamentLevel.Qualification;
+            SetMatchType(TMatchType.QUALS);
             fieldType = (int)TFieldType.Usual;
             ScheduleStart = startTime;
             this.duration = duration;
@@ -44,7 +44,17 @@ namespace FEMC.DAL
         public PlayedMatch PlayMatch()
             {
             PlayedMatch match = new PlayedMatch(Database, FMSScheduleDetailId);
-            match.Start = DateTime.UtcNow;
+            // match.MatchNumber = MatchNumber; // not needed: match number comes via FMSScheduleDetailId
+            match.FmsMatchId.Value = fmsMatchId;
+            match.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
+            match.FieldType = 1; // ditto
+            match.Start = DateTimeOffset.UtcNow;
+            match.RedScores.SetRedEqualizationMatch();
+            match.BlueScores.SetBlueEqualizationMatch();
+            match.RedScore = match.RedScores.ScoredPoints;
+            match.RedPenalty = match.RedScores.PenaltyPoints;
+            match.BlueScore = match.BlueScores.ScoredPoints;
+            match.BluePenalty = match.BlueScores.PenaltyPoints;
             //
             // More to come
             //
@@ -88,9 +98,9 @@ namespace FEMC.DAL
             blocksRow.AddToTableAndSave();
             }
 
-        public void SaveToDatabase(bool scoreMatch)
+        public void SaveToDatabase(bool scoreThisMatch)
             {
-            var scheduledMatchRow = Database.Tables.ScheduledMatch.NewRow();
+            var scheduledMatchRow = Database.Tables.ScheduleDetail.NewRow();
             var qualsRow = Database.Tables.Quals.NewRow();
             var qualsDataRow = Database.Tables.QualsData.NewRow();
             var matchScheduleRow = Database.Tables.MatchSchedule.NewRow();
@@ -109,7 +119,7 @@ namespace FEMC.DAL
             scheduledMatchRow.ModifiedBy.Value = null;
             scheduledMatchRow.RowVersion.Value = Guid.Empty.ToByteArray(); // ScheduleDetail seems to use 16 byte all-zero RowVersions; 'don't know why
 
-            qualsRow.Match.Value = MatchNumber;
+            qualsRow.MatchNumber.Value = MatchNumber;
             qualsRow.Red1.Value = Red1.TeamNumber;
             qualsRow.Red2.Value = Red2.TeamNumber;
             qualsRow.Blue1.Value = Blue1.TeamNumber;
@@ -119,7 +129,7 @@ namespace FEMC.DAL
             qualsRow.Blue1Surrogate.Value = Blue1Surrogate;
             qualsRow.Blue2Surrogate.Value = Blue2Surrogate;
 
-            qualsDataRow.Match.Value = MatchNumber;
+            qualsDataRow.MatchNumber.Value = MatchNumber;
             qualsDataRow.Status.Value = (int)Enums.TMatchState.Unplayed;
             qualsDataRow.Randomization.Value = (int)TRandomization.DefaultValue;
             qualsDataRow.Start.Value = DateTimeAsInteger.QualsDataDefault;
@@ -161,36 +171,45 @@ namespace FEMC.DAL
                     }
                 }
 
-            if (scoreMatch)
+            if (scoreThisMatch)
                 {
                 // See SQLiteMatchDAO.java.commitMatch()
                 PlayedMatch match = PlayMatch();
                 //
                 match.Commit(TCommitType.COMMIT);
                 //
-                var updateRow = Database.Tables.QualsData.CopyRow(qualsDataRow);
-                updateRow.Status.Value = (int)TMatchState.Committed;
-                updateRow.Randomization.Value = (int)match.Randomization;
-                updateRow.Start.Value = match.Start;
-                updateRow.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
+                var psData = qualsDataRow.CopyRow();
+                psData.Status.Value = (int)TMatchState.Committed;
+                psData.Randomization.Value = (int)match.Randomization;
+                psData.Start.Value = match.Start;
+                psData.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
 
-                var qualsCommitHistory = Database.Tables.QualsCommitHistory.NewRow();
-                qualsCommitHistory.MatchNumber.Value = match.MatchNumber;
-                qualsCommitHistory.Ts.Value = match.LastCommitTime;
-                qualsCommitHistory.Start.Value = match.Start;
-                qualsCommitHistory.Randomization.Value = (int)match.Randomization;
-                qualsCommitHistory.CommitType.Value = (int?)match.LastCommitType;
-                qualsCommitHistory.AddToTableAndSave();
+                var psHistory = Database.Tables.QualsCommitHistory.NewRow();
+                psHistory.MatchNumber.Value = match.MatchNumber;
+                psHistory.Ts.Value = match.LastCommitTime;
+                psHistory.Start.Value = match.Start;
+                psHistory.Randomization.Value = (int)match.Randomization;
+                psHistory.CommitType.Value = (int?)match.LastCommitType;
+                psHistory.AddToTableAndSave();
 
-                var qualsResults = Database.Tables.QualsResults.NewRow();
-                qualsResults.MatchNumber.Value = match.MatchNumber;
-                qualsResults.RedScore.Value = match.RedScore;
-                qualsResults.BlueScore.Value = match.BlueScore;
-                qualsResults.RedPenaltyCommitted.Value = match.RedPenalty;
-                qualsResults.BluePenaltyCommitted.Value = match.BluePenalty;
-                qualsResults.AddToTableAndSave();
+                var psResult = Database.Tables.QualsResults.NewRow();
+                psResult.MatchNumber.Value = match.MatchNumber;
+                psResult.RedScore.Value = match.RedScore;
+                psResult.BlueScore.Value = match.BlueScore;
+                psResult.RedPenaltyCommitted.Value = match.RedPenalty;
+                psResult.BluePenaltyCommitted.Value = match.BluePenalty;
+                psResult.AddToTableAndSave();
 
-                byte[] scoreDetailsGZIP = null; // To come
+                var fmsMatch = Database.Tables.Match.NewRow();
+                fmsMatch.FMSMatchId = match.FmsMatchId;                         // 1
+                fmsMatch.FMSScheduleDetailId = match.FMSScheduleDetailId;       // 2
+                fmsMatch.PlayNumber.Value = match.PlayNumber;                   // 3
+                fmsMatch.FieldType.Value = match.FieldType;                     // 4
+                fmsMatch.InitialPrestartTime.Value = match.InitialPreStartTime; // 5
+                fmsMatch.FinalPreStartTime.Value = match.FinalPreStartTime;     // 6
+                fmsMatch.PreStartCount.Value = match.PreStartCount;             // 7
+
+                // byte[] scoreDetailsGZIP = null; // To come
                 }
             }
         }

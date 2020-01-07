@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -22,6 +18,7 @@ namespace FEMC.DAL
         public virtual ScheduledMatch Scheduled => Database.ScheduledMatchesById[FMSScheduleDetailId];
         public override long MatchNumber => Scheduled.MatchNumber;
         public override bool IsEqualizationMatch => Scheduled.IsEqualizationMatch;
+        public override TMatchType MatchType => Scheduled.MatchType;
 
         public override bool Plays(Team team) => Scheduled.Plays(team);
 

@@ -5,9 +5,17 @@ namespace FEMC
     {
     abstract class GuidColumn : TableColumn
         {
+        //-----------------------------------------------------------------------------
+        // State
+        //-----------------------------------------------------------------------------
+
         public Guid? Value = null;
 
         public Guid NonNullValue => Value ?? throw MustBeNonNull(GetType().Name);
+
+        //-----------------------------------------------------------------------------
+        // Construction
+        //-----------------------------------------------------------------------------
 
         // Conversion from sting to blob or visa versa is main use
         public static S CreateFrom<S>(GuidColumn t) where S : GuidColumn, new()

@@ -121,6 +121,7 @@
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
     <Compile Include="DAL\Scores.cs" />
+    <Compile Include="DAL\SkystoneScoreDetail.cs" />
     <Compile Include="DAL\SkystoneScores.cs" />
     <Compile Include="DBTables\ElimsCommitHistory.cs" />
     <Compile Include="DBTables\ElimsScoresHistory.cs" />
@@ -163,7 +164,6 @@
     <Compile Include="Enums\TRandomization.cs" />
     <Compile Include="Enums\TStation.cs" />
     <Compile Include="Enums\TMatchState.cs" />
-    <Compile Include="Enums\TTournamentLevel.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -192,7 +192,7 @@
     <Compile Include="TableColumn\StringColumn.cs" />
     <Compile Include="TableColumn\NullableColumn.cs" />
     <Compile Include="TableColumn\RowVersion.cs" />
-    <Compile Include="TableColumn\ScoreDetails.cs" />
+    <Compile Include="TableColumn\ScoreDetailsColumn.cs" />
     <Compile Include="TableColumn\TableColumn.cs" />
     <Compile Include="TableRow.cs" />
     <Compile Include="Tables.cs" />

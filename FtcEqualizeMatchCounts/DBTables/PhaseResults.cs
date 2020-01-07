@@ -1,9 +1,9 @@
 ﻿#pragma warning disable 649
 namespace FEMC.DBTables
     {
-    abstract class PhaseResults : Table<PhaseResults.Row, NullableLong>
+    abstract class PhaseResults : Table<PhaseResults.Row, long>
         {
-        public class Row : TableRow<NullableLong>
+        public class Row : TableRow<Row, long>
             {
             public NullableLong MatchNumber;
             public NullableLong RedScore;
@@ -11,7 +11,7 @@ namespace FEMC.DBTables
             public NullableLong RedPenaltyCommitted;
             public NullableLong BluePenaltyCommitted;
 
-            public override NullableLong PrimaryKey => MatchNumber;
+            public override long PrimaryKey => MatchNumber.NonNullValue;
             }
 
         protected PhaseResults(Database database) : base(database)

@@ -3,11 +3,11 @@
 #pragma warning disable 649
 namespace FEMC.DBTables
     {
-    class QualsScoresHistory : Table<QualsScoresHistory.Row, Tuple<NullableLong, DateTimeAsInteger>>
+    class QualsScoresHistory : Table<QualsScoresHistory.Row, Tuple<long, DateTimeAsInteger>>
         {
-        public class Row : TableRow<Tuple<NullableLong, DateTimeAsInteger>>
+        public class Row : TableRow<Row, Tuple<long, DateTimeAsInteger>>
             {
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public DateTimeAsInteger Ts;
 
             public NullableLong Alliance;
@@ -21,7 +21,7 @@ namespace FEMC.DBTables
             public NullableLong Minor;
             public NullableLong Adjust;
 
-            public override Tuple<NullableLong, DateTimeAsInteger> PrimaryKey => new Tuple<NullableLong, DateTimeAsInteger>(Match, Ts);
+            public override Tuple<long, DateTimeAsInteger> PrimaryKey => new Tuple<long, DateTimeAsInteger>(MatchNumber.NonNullValue, Ts);
             }
 
         public override string TableName => "qualsScoresHistory";

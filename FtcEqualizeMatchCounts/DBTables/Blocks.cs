@@ -8,7 +8,7 @@ namespace FEMC.DBTables
 
     class Blocks : Table<Blocks.Row, DateTimeColumn>
         {
-        public class Row : TableRow<DateTimeColumn>
+        public class Row : TableRow<Row, DateTimeColumn>
             {
             public DateTimeAsInteger Start;     // primary
             public NullableLong      Type;      // see TMatchScheduleType: 0 == Qualification, 2 == 5 minute break for consecutive match 

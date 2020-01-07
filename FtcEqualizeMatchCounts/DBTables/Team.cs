@@ -7,7 +7,7 @@ namespace FEMC.DBTables
 
     class Team : Table<Team.Row, FMSTeamId>
         {
-        public class Row : TableRow<FMSTeamId> // Four records for each match Alliance (1,2) x Station (1,2)
+        public class Row : TableRow<Row, FMSTeamId> // Four records for each match Alliance (1,2) x Station (1,2)
             {
             public FMSTeamId FMSTeamId;     // primary
             public FMSSeasonId FMSSeasonId;

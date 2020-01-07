@@ -42,7 +42,16 @@ namespace FEMC.DAL
 
         protected virtual void SetEqualizationMatch()
             {
-            // TODO: WRONG: NOT IMPLEMENTED
+            major = 0;
+            minor = 0;
+            adjust = 0;
+            card1 = 0;
+            card2 = 0;
+            dq1 = false;
+            dq2 = false;
+            noshow1 = false;
+            noshow2 = false;
+            noshow3 = false;
             }
 
         public void Save(QualsScores.Row row)
@@ -53,7 +62,19 @@ namespace FEMC.DAL
             row.DQ2.Value = dq2;
             row.NoShow1.Value = noshow1;
             row.NoShow2.Value = noshow2;
+            row.Major.Value = major;
+            row.Minor.Value = minor;
+            row.Adjust.Value = adjust;
+            }
 
+        public void Save(QualsScoresHistory.Row row)
+            {
+            row.Card1.Value = card1;
+            row.Card2.Value = card2;
+            row.DQ1.Value = dq1;
+            row.DQ2.Value = dq2;
+            row.NoShow1.Value = noshow1;
+            row.NoShow2.Value = noshow2;
             row.Major.Value = major;
             row.Minor.Value = minor;
             row.Adjust.Value = adjust;
@@ -68,7 +89,6 @@ namespace FEMC.DAL
             noshow1 = row.NoShow1.NonNullValue;
             noshow2 = row.NoShow2.NonNullValue;
             noshow3 = false;
-
             major = row.Major.NonNullValue;
             minor = row.Minor.NonNullValue;
             adjust = row.Adjust.NonNullValue;
@@ -81,7 +101,17 @@ namespace FEMC.DAL
             row.NoShow1.Value = noshow1;
             row.NoShow2.Value = noshow2;
             row.NoShow3.Value = noshow3;
-
+            row.Major.Value = major;
+            row.Minor.Value = minor;
+            row.Adjust.Value = adjust;
+            }
+        public void Save(ElimsScoresHistory.Row row)
+            {
+            row.Card.Value = card1;
+            row.DQ.Value = dq1;
+            row.NoShow1.Value = noshow1;
+            row.NoShow2.Value = noshow2;
+            row.NoShow3.Value = noshow3;
             row.Major.Value = major;
             row.Minor.Value = minor;
             row.Adjust.Value = adjust;
@@ -96,7 +126,6 @@ namespace FEMC.DAL
             noshow1 = row.NoShow1.NonNullValue;
             noshow2 = row.NoShow2.NonNullValue;
             noshow3 = row.NoShow3.NonNullValue;
-
             major = row.Major.NonNullValue;
             minor = row.Minor.NonNullValue;
             adjust = row.Adjust.NonNullValue;

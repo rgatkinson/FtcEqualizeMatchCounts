@@ -12,10 +12,10 @@ namespace FEMC.DBTables
 
             public NullableLong Alliance;
             public NullableLong Card;
-            public NullableLong DQ;
-            public NullableLong NoShow1;
-            public NullableLong NoShow2;
-            public NullableLong NoShow3;
+            public BooleanAsInteger DQ;
+            public BooleanAsInteger NoShow1;
+            public BooleanAsInteger NoShow2;
+            public BooleanAsInteger NoShow3;
             public NullableLong Major;
             public NullableLong Minor;
             public NullableLong Adjust;

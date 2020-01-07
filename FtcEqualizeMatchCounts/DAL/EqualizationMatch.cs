@@ -43,22 +43,27 @@ namespace FEMC.DAL
         // Play this match with the required Win for Blue
         public PlayedMatch PlayMatch()
             {
-            PlayedMatch match = new PlayedMatch(Database, FMSScheduleDetailId);
+            PlayedMatch m = new PlayedMatch(Database, FMSScheduleDetailId);
             // match.MatchNumber = MatchNumber; // not needed: match number comes via FMSScheduleDetailId
-            match.FmsMatchId.Value = fmsMatchId;
-            match.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
-            match.FieldType = 1; // ditto
-            match.Start = DateTimeOffset.UtcNow;
-            match.RedScores.SetRedEqualizationMatch();
-            match.BlueScores.SetBlueEqualizationMatch();
-            match.RedScore = match.RedScores.ScoredPoints;
-            match.RedPenalty = match.RedScores.PenaltyPoints;
-            match.BlueScore = match.BlueScores.ScoredPoints;
-            match.BluePenalty = match.BlueScores.PenaltyPoints;
-            //
-            // More to come
-            //
-            return match;
+            m.FmsMatchId.Value = fmsMatchId;
+            m.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
+            m.FieldType = 1; // ditto
+            m.RedScores.SetRedEqualizationMatch();
+            m.BlueScores.SetBlueEqualizationMatch();
+            m.ScoreDetails = SkystoneScores.EqualizationScoreDetails();
+            m.RedScore = m.RedScores.ScoredPoints;
+            m.RedPenalty = m.RedScores.PenaltyPoints;
+            m.BlueScore = m.BlueScores.ScoredPoints;
+            m.BluePenalty = m.BlueScores.PenaltyPoints;
+            
+            m.Commit(TCommitType.COMMIT);
+            m.ScoreKeeperCommitTime = m.LastCommitTime;
+            m.CreatedBy = CreatedBy;
+            m.CreatedOn = m.LastCommitTime;
+            m.ModifiedOn = m.LastCommitTime;
+
+            m.StartTime = DateTimeOffset.UtcNow;
+            return m;
             }
 
         //----------------------------------------------------------------------------------------
@@ -152,7 +157,7 @@ namespace FEMC.DAL
                 {
                 foreach (var station in EnumUtil.GetValues<TStation>())
                     {
-                    DBTables.ScheduleStation.Row row = Database.Tables.ScheduledMatchStation.NewRow();
+                    DBTables.ScheduleStation.Row row = Database.Tables.ScheduleStation.NewRow();
 
                     row.FMSScheduleDetailId = FMSScheduleDetailId;
                     row.Alliance.Value = (int)alliance;
@@ -173,43 +178,122 @@ namespace FEMC.DAL
 
             if (scoreThisMatch)
                 {
-                // See SQLiteMatchDAO.java.commitMatch()
-                PlayedMatch match = PlayMatch();
-                //
-                match.Commit(TCommitType.COMMIT);
-                //
-                var psData = qualsDataRow.CopyRow();
-                psData.Status.Value = (int)TMatchState.Committed;
-                psData.Randomization.Value = (int)match.Randomization;
-                psData.Start.Value = match.Start;
-                psData.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
+                PlayedMatch m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
 
-                var psHistory = Database.Tables.QualsCommitHistory.NewRow();
-                psHistory.MatchNumber.Value = match.MatchNumber;
-                psHistory.Ts.Value = match.LastCommitTime;
-                psHistory.Start.Value = match.Start;
-                psHistory.Randomization.Value = (int)match.Randomization;
-                psHistory.CommitType.Value = (int?)match.LastCommitType;
-                psHistory.AddToTableAndSave();
+                // BLOCK
+                    {
+                    var psData = qualsDataRow.CopyRow();
+                    psData.Status.Value = (int)TMatchState.Committed;
+                    psData.Randomization.Value = (int)m.Randomization;
+                    psData.Start.Value = m.StartTime;
+                    psData.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
+                    }
 
-                var psResult = Database.Tables.QualsResults.NewRow();
-                psResult.MatchNumber.Value = match.MatchNumber;
-                psResult.RedScore.Value = match.RedScore;
-                psResult.BlueScore.Value = match.BlueScore;
-                psResult.RedPenaltyCommitted.Value = match.RedPenalty;
-                psResult.BluePenaltyCommitted.Value = match.BluePenalty;
-                psResult.AddToTableAndSave();
+                // BLOCK
+                    { 
+                    var psHistory = Database.Tables.QualsCommitHistory.NewRow();
+                    psHistory.MatchNumber.Value = m.MatchNumber;
+                    psHistory.Ts.Value = m.LastCommitTime;
+                    psHistory.Start.Value = m.StartTime;
+                    psHistory.Randomization.Value = (int)m.Randomization;
+                    psHistory.CommitType.Value = (int?)m.LastCommitType;
+                    psHistory.AddToTableAndSave();
+                    }
 
-                var fmsMatch = Database.Tables.Match.NewRow();
-                fmsMatch.FMSMatchId = match.FmsMatchId;                         // 1
-                fmsMatch.FMSScheduleDetailId = match.FMSScheduleDetailId;       // 2
-                fmsMatch.PlayNumber.Value = match.PlayNumber;                   // 3
-                fmsMatch.FieldType.Value = match.FieldType;                     // 4
-                fmsMatch.InitialPrestartTime.Value = match.InitialPreStartTime; // 5
-                fmsMatch.FinalPreStartTime.Value = match.FinalPreStartTime;     // 6
-                fmsMatch.PreStartCount.Value = match.PreStartCount;             // 7
+                // BLOCK
+                    {
+                    var psResult = Database.Tables.QualsResults.NewRow();
+                    psResult.MatchNumber.Value = m.MatchNumber;
+                    psResult.RedScore.Value = m.RedScore;
+                    psResult.BlueScore.Value = m.BlueScore;
+                    psResult.RedPenaltyCommitted.Value = m.RedPenalty;
+                    psResult.BluePenaltyCommitted.Value = m.BluePenalty;
+                    psResult.AddToTableAndSave();
+                    }
 
-                // byte[] scoreDetailsGZIP = null; // To come
+                // BLOCK
+                    { 
+                    var fmsMatch = Database.Tables.Match.NewRow();
+                    fmsMatch.FMSMatchId.Value = m.FmsMatchId.Value;             // 1
+                    fmsMatch.FMSScheduleDetailId.Value = m.FMSScheduleDetailId.Value; // 2
+                    fmsMatch.PlayNumber.Value = m.PlayNumber;                   // 3
+                    fmsMatch.FieldType.Value = m.FieldType;                     // 4
+                    fmsMatch.InitialPrestartTime.Value = m.InitialPreStartTime; // 5
+                    fmsMatch.FinalPreStartTime.Value = m.FinalPreStartTime;     // 6
+                    fmsMatch.PreStartCount.Value = m.PreStartCount;             // 7
+                    fmsMatch.AutoStartTime.Value = m.AutoStartTime;             // 8
+                    fmsMatch.AutoEndTime.Value = m.AutoEndTime;                 // 9
+                    fmsMatch.TeleopStartTime.Value = m.TeleopStartTime;         // 10
+                    fmsMatch.TeleopEndTime.Value = m.TeleopEndTime;             // 11 - TODO: compute from history?
+                    fmsMatch.RefCommitTime.Value = m.RefCommitTime;             // 12 - TODO: compute from history?
+                    fmsMatch.ScoreKeeperCommitTime.Value = m.ScoreKeeperCommitTime;   // 13
+                    fmsMatch.PostMatchTime.Value = m.PostMatchTime;
+                    fmsMatch.CancelMatchTime.Value = m.CancelMatchTime;
+                    fmsMatch.CycleTime.Value = m.CycleTime;                     // 16
+
+                    fmsMatch.RedScore.Value = m.RedScore;
+                    fmsMatch.BlueScore.Value = m.BlueScore;
+                    fmsMatch.RedPenalty.Value = m.RedPenalty;
+                    fmsMatch.BluePenalty.Value = m.BluePenalty;
+                    fmsMatch.RedAutoScore.Value = m.RedAutoScore;
+                    fmsMatch.BlueAutoScore.Value = m.BlueAutoScore;             // 22
+                    
+                    fmsMatch.ScoreDetails.Value = m.ScoreDetails;               // 23
+                    fmsMatch.HeadRefReview.Value = m.HeadRefReview;             // 24
+                    fmsMatch.VideoUrl.Value = m.VideoUrl;                       // 25
+                    
+                    fmsMatch.CreatedOn.Value = m.ScoreKeeperCommitTime;         // 26
+                    fmsMatch.CreatedBy.Value = m.CreatedBy;                     // 27
+                    fmsMatch.ModifiedOn.Value = m.ModifiedOn;                   // 28
+                    fmsMatch.ModifiedBy.Value = m.ModifiedBy;                   // 29
+                    fmsMatch.FMSEventId.Value = m.FmsEventId.Value;             // 30
+                    fmsMatch.RowVersion.Value = m.RowVersion.Value;             // 31
+
+                    fmsMatch.AddToTableAndSave();
+                    }
+
+                foreach (var s in new SkystoneScores[] { m.RedScores, m.BlueScores })
+                    {
+                    int alliance = s == m.RedScores ? 0 : 1;
+
+                    // BLOCK
+                        { 
+                        var psScores = Database.Tables.QualsScores.NewRow();
+                        psScores.MatchNumber.Value = MatchNumber;
+                        psScores.Alliance.Value = alliance;
+                        s.Save(psScores);
+                        psScores.AddToTableAndSave();
+                        }
+
+                    // BLOCK
+                        {
+                        var psScoresHistory = Database.Tables.QualsScoresHistory.NewRow();
+                        psScoresHistory.MatchNumber.Value = MatchNumber;
+                        psScoresHistory.Ts.Value = DateTimeOffset.UtcNow;
+                        psScoresHistory.Alliance.Value = alliance;
+                        s.Save(psScoresHistory);
+                        psScoresHistory.AddToTableAndSave();
+                        }
+
+                    // BLOCK
+                        {
+                        var psGame = Database.Tables.QualsGameSpecific.NewRow();
+                        psGame.MatchNumber.Value = MatchNumber;
+                        psGame.Alliance.Value = alliance;
+                        s.Save(psGame);
+                        psGame.AddToTableAndSave();
+                        }
+
+                    // BLOCK
+                        {
+                        var psGameHistory = Database.Tables.QualsGameSpecificHistory.NewRow();
+                        psGameHistory.MatchNumber.Value = MatchNumber;
+                        psGameHistory.Ts.Value = DateTimeOffset.UtcNow;
+                        psGameHistory.Alliance.Value = alliance;
+                        s.Save(psGameHistory);
+                        psGameHistory.AddToTableAndSave();
+                        }
+                    }
                 }
             }
         }

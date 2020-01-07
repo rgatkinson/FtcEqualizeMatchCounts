@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security.Permissions;
 using FEMC.DBTables;
 using FEMC.Enums;
 
@@ -22,10 +23,33 @@ namespace FEMC.DAL
         public long RedPenalty;
         public long BlueScore;
         public long BluePenalty;
+        public long RedAutoScore;
+        public long BlueAutoScore;
+        public byte[] ScoreDetails = new byte[0];
 
         public TRandomization Randomization = TRandomization.DefaultValue;
         public TMatchState Status = TMatchState.Unplayed;
-        public DateTimeOffset Start = DateTimeAsInteger.QualsDataDefault;
+        public DateTimeOffset StartTime = DateTimeAsInteger.QualsDataDefault;
+        public DateTimeOffset AutoStartTime => StartTime; // redundantly stored
+        public DateTimeOffset? AutoEndTime = null;
+        public DateTimeOffset? TeleopStartTime = null;
+        public DateTimeOffset? TeleopEndTime = null;
+        public DateTimeOffset? RefCommitTime = null;
+        public DateTimeOffset? ScoreKeeperCommitTime = DateTimeAsInteger.QualsDataDefault; // never null in the DB
+        public DateTimeOffset? PostMatchTime = null;
+        public DateTimeOffset? CancelMatchTime = null;
+        public DateTimeOffset? CycleTime = null;
+
+        public long HeadRefReview = 0;
+        public string VideoUrl = null;
+
+        public DateTimeOffset? CreatedOn = null;
+        public string CreatedBy = null;
+        public DateTimeOffset? ModifiedOn = null;
+        public string ModifiedBy = null;
+
+        public FMSEventId FmsEventId = new FMSEventId();
+        public RowVersion RowVersion = new RowVersion();
 
         public DateTimeOffset LastCommitTime = DateTimeAsInteger.QualsDataDefault;
         public TCommitType? LastCommitType = null;
@@ -63,18 +87,40 @@ namespace FEMC.DAL
             FinalPreStartTime = row.FinalPreStartTime.DateTimeOffset;
             PreStartCount = row.PreStartCount.NonNullValue;
 
+            AutoEndTime = row.AutoEndTime.DateTimeOffset;
+            TeleopStartTime = row.TeleopStartTime.DateTimeOffset;
+            TeleopEndTime = row.TeleopEndTime.DateTimeOffset;
+            RefCommitTime = row.RefCommitTime.DateTimeOffset;
+            ScoreKeeperCommitTime = row.ScoreKeeperCommitTime.DateTimeOffset;
+            PostMatchTime = row.PostMatchTime.DateTimeOffset;
+            CancelMatchTime = row.CancelMatchTime.DateTimeOffset;
+            CycleTime = row.CycleTime.DateTimeOffset;
+
             RedScore = row.RedScore.NonNullValue;
             RedPenalty = row.RedPenalty.NonNullValue;
             BlueScore = row.BlueScore.NonNullValue;
             BluePenalty = row.BluePenalty.NonNullValue;
-            // more
+            RedAutoScore = row.RedAutoScore.NonNullValue;
+            BlueAutoScore = row.BlueAutoScore.NonNullValue;
+            ScoreDetails = row.ScoreDetails.Value;
+
+            HeadRefReview = row.HeadRefReview.NonNullValue;
+            VideoUrl = row.VideoUrl.Value;
+
+            CreatedOn = row.CreatedOn.DateTimeOffset;
+            CreatedBy = row.CreatedBy.Value;
+            ModifiedOn = row.ModifiedOn.DateTimeOffset;
+            ModifiedBy = row.ModifiedBy.Value;
+
+            FMSEventId.Value = row.FMSEventId.Value;
+            RowVersion.Value = row.RowVersion.Value;
             }
 
         public void Load(PhaseData.Row row)
             {
             Randomization = EnumUtil.From<TRandomization>(row.Randomization.NonNullValue);
             Status = EnumUtil.From<TMatchState>(row.Status.NonNullValue);
-            Start = row.Start.DateTimeNonNull;
+            StartTime = row.Start.DateTimeNonNull;
             // more
             }
 

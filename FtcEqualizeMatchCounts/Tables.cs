@@ -28,7 +28,7 @@ namespace FEMC
         public QualsScores QualsScores;
         public QualsScoresHistory QualsScoresHistory;
         public ScheduleDetail ScheduleDetail;
-        public ScheduleStation ScheduledMatchStation;
+        public ScheduleStation ScheduleStation;
         public Team Team;
 
         public Tables(Database db)
@@ -57,7 +57,7 @@ namespace FEMC
             QualsScores = new QualsScores(db);
             QualsScoresHistory = new QualsScoresHistory(db);
             ScheduleDetail = new ScheduleDetail(db);
-            ScheduledMatchStation = new ScheduleStation(db);
+            ScheduleStation = new ScheduleStation(db);
             Team = new Team(db);
             }
 
@@ -87,7 +87,7 @@ namespace FEMC
             QualsScores.Clear();
             QualsScoresHistory.Clear();
             ScheduleDetail.Clear();
-            ScheduledMatchStation.Clear();
+            ScheduleStation.Clear();
             Team.Clear();
             }
 
@@ -117,7 +117,7 @@ namespace FEMC
             QualsScores.Load();
             QualsScoresHistory.Load();
             ScheduleDetail.Load();
-            ScheduledMatchStation.Load();
+            ScheduleStation.Load();
             Team.Load();
             }
         }

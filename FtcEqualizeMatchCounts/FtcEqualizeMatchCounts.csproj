@@ -120,6 +120,7 @@
   <ItemGroup>
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
+    <Compile Include="DAL\MatchResult.cs" />
     <Compile Include="DAL\Scores.cs" />
     <Compile Include="DAL\SkystoneScoreDetail.cs" />
     <Compile Include="DAL\SkystoneScores.cs" />

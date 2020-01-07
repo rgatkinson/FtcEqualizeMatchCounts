@@ -167,7 +167,7 @@ namespace FEMC.DAL
             return details;
             }
 
-        public string ScoreDetailsJson
+        public string ScoreDetailsJson // mostly for debugging
             {
             get
                 {

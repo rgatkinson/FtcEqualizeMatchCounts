@@ -25,8 +25,6 @@ namespace FEMC.DAL.Support
         // Make the first letter upper case
         protected override string ResolvePropertyName(string name)
             {
-            // Debug.WriteLine($"resolve: {name}");
-
             if (string.IsNullOrEmpty(name))
                 return name;
 

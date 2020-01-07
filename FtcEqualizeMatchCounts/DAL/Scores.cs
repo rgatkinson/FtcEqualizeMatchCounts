@@ -34,6 +34,7 @@ namespace FEMC.DAL
 
         public long PenaltyPoints => penaltyPoints;
         public long ScoredPoints => scoredPoints;
+        public long AutonomousPoints => autonomousPoints;
 
         public Scores(Match match)
             {

@@ -21,7 +21,7 @@ namespace FEMC.DAL
             fieldType = (int)TFieldType.Usual;
             ScheduleStart = startTime;
             this.duration = duration;
-            fmsMatchId = Guid.NewGuid();        // we are the source of the id (apparently?)
+            fmsMatchIdGuid = Guid.NewGuid();        // we are the source of the id (apparently?)
 
             Red1 = teams[0];
             Red2 = teams[1];
@@ -45,7 +45,7 @@ namespace FEMC.DAL
             {
             PlayedMatch m = new PlayedMatch(Database, FMSScheduleDetailId);
             // match.MatchNumber = MatchNumber; // not needed: match number comes via FMSScheduleDetailId
-            m.FmsMatchId.Value = fmsMatchId;
+            m.FmsMatchId.Value = FMSMatchIdGuid;
             m.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
             m.FieldType = 1; // ditto
             m.RedScores.SetRedEqualizationMatch();
@@ -55,6 +55,8 @@ namespace FEMC.DAL
             m.RedPenalty = m.RedScores.PenaltyPoints;
             m.BlueScore = m.BlueScores.ScoredPoints;
             m.BluePenalty = m.BlueScores.PenaltyPoints;
+            m.RedAutoScore = m.RedScores.AutonomousPoints;
+            m.BlueAutoScore = m.BlueScores.AutonomousPoints;
             
             m.Commit(TCommitType.COMMIT);
             m.ScoreKeeperCommitTime = m.LastCommitTime;
@@ -140,7 +142,7 @@ namespace FEMC.DAL
             qualsDataRow.Start.Value = DateTimeAsInteger.QualsDataDefault;
             qualsDataRow.ScheduleStart.Value = ScheduleStart;
             qualsDataRow.PostedTime.Value = DateTimeAsInteger.QualsDataDefault;
-            qualsDataRow.FMSMatchId.Value = FMSMatchId;
+            qualsDataRow.FMSMatchId.Value = FMSMatchIdGuid;
             qualsDataRow.FMSScheduleDetailId = FMSScheduleDetailIdAsString.CreateFrom(FMSScheduleDetailId);
 
             matchScheduleRow.Start.Value = ScheduleStart;
@@ -186,7 +188,7 @@ namespace FEMC.DAL
                     psData.Status.Value = (int)TMatchState.Committed;
                     psData.Randomization.Value = (int)m.Randomization;
                     psData.Start.Value = m.StartTime;
-                    psData.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("Match", MatchNumber));
+                    psData.Update(qualsDataRow.Columns(new [] { "Status", "Randomization", "Start" }), qualsDataRow.Where("MatchNumber", MatchNumber));
                     }
 
                 // BLOCK
@@ -246,7 +248,7 @@ namespace FEMC.DAL
                     fmsMatch.CreatedBy.Value = m.CreatedBy;                     // 27
                     fmsMatch.ModifiedOn.Value = m.ModifiedOn;                   // 28
                     fmsMatch.ModifiedBy.Value = m.ModifiedBy;                   // 29
-                    fmsMatch.FMSEventId.Value = m.FmsEventId.Value;             // 30
+                    fmsMatch.FMSEventId.Value = m.FMSEventId.Value;             // 30
                     fmsMatch.RowVersion.Value = m.RowVersion.Value;             // 31
 
                     fmsMatch.AddToTableAndSave();
@@ -269,7 +271,7 @@ namespace FEMC.DAL
                         {
                         var psScoresHistory = Database.Tables.QualsScoresHistory.NewRow();
                         psScoresHistory.MatchNumber.Value = MatchNumber;
-                        psScoresHistory.Ts.Value = DateTimeOffset.UtcNow;
+                        psScoresHistory.Ts.Value = m.LastCommitTime;
                         psScoresHistory.Alliance.Value = alliance;
                         s.Save(psScoresHistory);
                         psScoresHistory.AddToTableAndSave();
@@ -288,7 +290,7 @@ namespace FEMC.DAL
                         {
                         var psGameHistory = Database.Tables.QualsGameSpecificHistory.NewRow();
                         psGameHistory.MatchNumber.Value = MatchNumber;
-                        psGameHistory.Ts.Value = DateTimeOffset.UtcNow;
+                        psGameHistory.Ts.Value = m.LastCommitTime;
                         psGameHistory.Alliance.Value = alliance;
                         s.Save(psGameHistory);
                         psGameHistory.AddToTableAndSave();

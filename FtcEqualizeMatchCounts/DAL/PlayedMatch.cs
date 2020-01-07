@@ -1,8 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.Security.Permissions;
-using FEMC.DBTables;
+﻿using FEMC.DBTables;
 using FEMC.Enums;
+using System;
+using System.Diagnostics;
 
 namespace FEMC.DAL
     {
@@ -12,7 +11,7 @@ namespace FEMC.DAL
         // State
         //----------------------------------------------------------------------------------------
 
-        public FMSMatchId FmsMatchId;
+        public FMSMatchId FmsMatchId = new FMSMatchId();
         public long PlayNumber;
         public long FieldType;
         public DateTimeOffset? InitialPreStartTime;
@@ -48,7 +47,6 @@ namespace FEMC.DAL
         public DateTimeOffset? ModifiedOn = null;
         public string ModifiedBy = null;
 
-        public FMSEventId FmsEventId = new FMSEventId();
         public RowVersion RowVersion = new RowVersion();
 
         public DateTimeOffset LastCommitTime = DateTimeAsInteger.QualsDataDefault;
@@ -76,6 +74,7 @@ namespace FEMC.DAL
             {
             RedScores = new SkystoneScores(this);
             BlueScores = new SkystoneScores(this);
+            RowVersion.Value = new byte[0];
             }
 
         public void Load(DBTables.Match.Row row)
@@ -112,7 +111,7 @@ namespace FEMC.DAL
             ModifiedOn = row.ModifiedOn.DateTimeOffset;
             ModifiedBy = row.ModifiedBy.Value;
 
-            FMSEventId.Value = row.FMSEventId.Value;
+            // FMSEventId.Value = row.FMSEventId.Value; Don't load: our event id comes from our Scheduled guy
             RowVersion.Value = row.RowVersion.Value;
             }
 

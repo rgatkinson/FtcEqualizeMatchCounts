@@ -97,18 +97,18 @@ namespace FEMC
             return result;
             }
 
-        public List<Tuple<FieldInfo, object>> Where(string fieldName, object value)
+        public List<(FieldInfo, object)> Where(string fieldName, object value)
             {
             return Where(new string[] { fieldName }, new object[] { value });
             }
 
-        public List<Tuple<FieldInfo, object>> Where(IEnumerable<string> fieldNames, IEnumerable<object> values)
+        public List<(FieldInfo, object)> Where(IEnumerable<string> fieldNames, IEnumerable<object> values)
             {
-            List<Tuple<FieldInfo, object>> result = new List<Tuple<FieldInfo, object>>();
+            List<(FieldInfo, object)> result = new List<(FieldInfo, object)>();
             var columns = Columns(fieldNames);
             foreach (var pair in columns.Zip(values, (f,v) => new { field = f, value = v }))
                 {
-                result.Add(new Tuple<FieldInfo, object>(pair.field, pair.value));
+                result.Add((pair.field, pair.value));
                 }
             return result;
             }
@@ -214,10 +214,10 @@ namespace FEMC
                 }
             }
 
-        public void Update(IEnumerable<FieldInfo> columns, IEnumerable<Tuple<FieldInfo,object>> where)
+        public void Update(IEnumerable<FieldInfo> columns, IEnumerable<(FieldInfo,object)> where)
             {
             FieldInfo[] columnsArray = columns.ToArray();
-            Tuple<FieldInfo, object>[] whereArray = where.ToArray();
+            (FieldInfo, object)[] whereArray = where.ToArray();
             using var cmd = Table.Database.Connection.CreateCommand();
 
             StringBuilder builder = new StringBuilder();

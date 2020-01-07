@@ -16,17 +16,17 @@ namespace FEMC.DAL
         protected int tournamentLevel;
         protected int fieldType;
         public DateTime ScheduleStart;
-        protected Guid? fmsMatchId;
+        protected Guid? fmsMatchIdGuid;
         protected TimeSpan duration;
         public void SetMatchType(TMatchType value) => tournamentLevel = value == TMatchType.QUALS ? 2 : (value == TMatchType.ELIMS ? 3 : 0);
 
         public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
-        public Guid FMSMatchId 
+        public Guid FMSMatchIdGuid 
             {
             get
                 {
-                if (fmsMatchId != null)
-                    return fmsMatchId.Value;
+                if (fmsMatchIdGuid != null)
+                    return fmsMatchIdGuid.Value;
                 else
                     {
                     var row = Database.Tables.QualsData.FindFirstRow(r => Equals(r.FMSScheduleDetailId.NonNullValue, FMSScheduleDetailId.NonNullValue));

@@ -2,6 +2,12 @@
 using FEMC.Enums;
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using FEMC.DAL.Support;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Serialization;
 
 namespace FEMC.DAL
     {
@@ -115,6 +121,73 @@ namespace FEMC.DAL
             RowVersion.Value = row.RowVersion.Value;
             }
 
+        // see SQLiteMatchDAO.java/commitMatch. We're a little simpler here because the C# type system is
+        // stronger than the Java type system
+        public byte[] EncodeScoreDetails() 
+            {
+            FMSScoreDetails details = new FMSScoreDetails();
+            details.RedAllianceScore = new FMSSkystoneScoreDetail(RedScores, BlueScores.PenaltyPoints);
+            details.BlueAllianceScore = new FMSSkystoneScoreDetail(BlueScores, RedScores.PenaltyPoints);
+
+            using MemoryStream ms = new MemoryStream();
+            using (GZipStream gzipOut = new GZipStream(ms, CompressionMode.Compress))
+                {
+                DefaultContractResolver contractResolver = new DefaultContractResolver
+                    {
+                    NamingStrategy = new UpperCamelCaseNamingStrategy(true, false),
+                    };
+                JsonSerializer serializer = JsonSerializer.Create(new JsonSerializerSettings
+                    {
+                    ContractResolver = contractResolver
+                    });
+                using BsonDataWriter bsonDataWriter = new BsonDataWriter(gzipOut);
+                serializer.Serialize(bsonDataWriter, details);
+                }
+
+            byte[] result = ms.ToArray();
+            return result;
+            }
+
+        public FMSScoreDetails DecodeScoreDetails()
+            {
+            using GZipStream gzipIn = new GZipStream(new MemoryStream(ScoreDetails), CompressionMode.Decompress);
+            MemoryStream scoreDetailsBson = MiscUtil.ReadFully(gzipIn);
+            scoreDetailsBson.Seek(0, SeekOrigin.Begin);
+            using BsonDataReader bsonReader = new BsonDataReader(scoreDetailsBson);
+
+            DefaultContractResolver contractResolver = new DefaultContractResolver
+                {
+                NamingStrategy = new CamelCaseNamingStrategy(true, false)
+                };
+            JsonSerializer serializer = JsonSerializer.Create(new JsonSerializerSettings
+                {
+                ContractResolver = contractResolver
+                });
+            FMSScoreDetails details = serializer.Deserialize<FMSScoreDetails>(bsonReader);
+            return details;
+            }
+
+        public string ScoreDetailsJson
+            {
+            get
+                {
+                using GZipStream input = new GZipStream(new MemoryStream(ScoreDetails), CompressionMode.Decompress);
+                MemoryStream scoreDetailsBson = MiscUtil.ReadFully(input);
+                scoreDetailsBson.Seek(0, SeekOrigin.Begin);
+                using BsonDataReader bsonReader = new BsonDataReader(scoreDetailsBson);
+                using StringWriter stringWriter = new StringWriter();
+                using (JsonWriter jsonWriter = new JsonTextWriter(stringWriter))
+                    {
+                    while (bsonReader.Read())
+                        {
+                        jsonWriter.WriteToken(bsonReader.TokenType, bsonReader.Value);
+                        }
+                    }
+                string json = stringWriter.GetStringBuilder().ToString();
+                return json;
+                }
+            }
+    
         public void Load(PhaseData.Row row)
             {
             Randomization = EnumUtil.From<TRandomization>(row.Randomization.NonNullValue);

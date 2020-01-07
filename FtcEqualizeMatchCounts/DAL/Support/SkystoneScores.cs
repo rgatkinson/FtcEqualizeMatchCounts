@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FEMC.DBTables;
+﻿using FEMC.DBTables;
 using FEMC.Enums;
+using System;
+using System.Linq;
 
-namespace FEMC.DAL
+namespace FEMC.DAL.Support
     {
     class SkystoneScores : Scores // See SkytoneScores.Java
         {

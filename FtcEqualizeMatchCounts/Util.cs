@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Data.Sqlite;
@@ -43,6 +44,19 @@ namespace FEMC
                 result[i] = bytes[bytes.Length-1-i];
                 }
             return result;
+            }
+
+        public static MemoryStream ReadFully(Stream input)
+            {
+            byte[] buffer = new byte[1024];
+            MemoryStream ms = new MemoryStream();
+            int read;
+            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                ms.Write(buffer, 0, read);
+                }
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
             }
 
         public static void DumpStackTrance(String name, IndentedTextWriter writer, Exception e)

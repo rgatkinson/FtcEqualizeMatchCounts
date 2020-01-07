@@ -82,11 +82,14 @@
     <Reference Include="Microsoft.Data.Sqlite, Version=3.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Data.Sqlite.Core.3.1.0\lib\netstandard2.0\Microsoft.Data.Sqlite.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Options, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Options.5.3.0.1\lib\net4-client\Mono.Options.dll</HintPath>
+    <Reference Include="Mono.Options, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Options.6.6.0.161\lib\net40\Mono.Options.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json.Bson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.2\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCLRaw.batteries_v2, Version=2.0.2.669, Culture=neutral, PublicKeyToken=8226ea5df37bcae9, processorArchitecture=MSIL">
       <HintPath>..\packages\SQLitePCLRaw.bundle_e_sqlite3.2.0.2\lib\net461\SQLitePCLRaw.batteries_v2.dll</HintPath>
@@ -124,9 +127,12 @@
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
     <Compile Include="DAL\MatchResult.cs" />
-    <Compile Include="DAL\Scores.cs" />
-    <Compile Include="DAL\SkystoneScoreDetail.cs" />
-    <Compile Include="DAL\SkystoneScores.cs" />
+    <Compile Include="DAL\Support\FMSScoreDetails.cs" />
+    <Compile Include="DAL\Support\FMSSkystoneScoreDetail.cs" />
+    <Compile Include="DAL\Support\UpperCamelCaseNamingStrategy.cs" />
+    <Compile Include="DAL\Support\Scores.cs" />
+    <Compile Include="DAL\Support\SkystoneScoreDetail.cs" />
+    <Compile Include="DAL\Support\SkystoneScores.cs" />
     <Compile Include="DBTables\ElimsCommitHistory.cs" />
     <Compile Include="DBTables\ElimsScoresHistory.cs" />
     <Compile Include="DBTables\PhaseGameSpecificHistory.cs" />

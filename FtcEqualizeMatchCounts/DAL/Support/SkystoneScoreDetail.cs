@@ -1,4 +1,4 @@
-﻿namespace FEMC.DAL
+﻿namespace FEMC.DAL.Support
     {
     class SkystoneScoreDetail
         {

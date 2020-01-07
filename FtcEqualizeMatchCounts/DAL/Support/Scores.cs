@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FEMC.DBTables;
+﻿using FEMC.DBTables;
 
-namespace FEMC.DAL
+namespace FEMC.DAL.Support
     {
     class Scores
         {
@@ -35,6 +30,8 @@ namespace FEMC.DAL
         public long PenaltyPoints => penaltyPoints;
         public long ScoredPoints => scoredPoints;
         public long AutonomousPoints => autonomousPoints;
+        public long TeleopPoints => teleopPoints;
+        public long EndGamePoints => endGamePoints;
 
         public Scores(Match match)
             {

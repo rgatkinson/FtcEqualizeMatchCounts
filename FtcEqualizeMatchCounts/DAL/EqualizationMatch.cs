@@ -1,6 +1,7 @@
 ﻿using FEMC.Enums;
 using System;
 using System.Collections.Generic;
+using FEMC.DAL.Support;
 
 namespace FEMC.DAL
     {
@@ -50,7 +51,7 @@ namespace FEMC.DAL
             m.FieldType = 1; // ditto
             m.RedScores.SetRedEqualizationMatch();
             m.BlueScores.SetBlueEqualizationMatch();
-            m.ScoreDetails = SkystoneScores.EqualizationScoreDetails();
+            m.ScoreDetails = m.EncodeScoreDetails();
             m.RedScore = m.RedScores.ScoredPoints;
             m.RedPenalty = m.RedScores.PenaltyPoints;
             m.BlueScore = m.BlueScores.ScoredPoints;

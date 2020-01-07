@@ -78,7 +78,7 @@ namespace FEMC.DAL
             BlueScores = new SkystoneScores(this);
             }
 
-    public void Load(DBTables.Match.Row row)
+        public void Load(DBTables.Match.Row row)
             {
             FmsMatchId = row.FMSMatchId;
             PlayNumber = row.PlayNumber.NonNullValue;

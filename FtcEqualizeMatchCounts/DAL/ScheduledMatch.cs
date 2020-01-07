@@ -7,7 +7,7 @@ namespace FEMC.DAL
     class ScheduledMatch : ThisEventMatch
         {
         //----------------------------------------------------------------------------------------
-        // Accessing
+        // State
         //----------------------------------------------------------------------------------------
 
         protected long matchNumber;
@@ -56,12 +56,22 @@ namespace FEMC.DAL
         public Team Blue2;
         public bool Blue2Surrogate;
 
+        //----------------------------------------------------------------------------------------
+        // Overrides
+        //----------------------------------------------------------------------------------------
+
         public override ScheduledMatch Scheduled => this;
 
         public override long MatchNumber => matchNumber;
 
         public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && MatchType == TMatchType.QUALS;
 
+        public override FMSEventId FMSEventId => fmsEventId?.Value == null ? Database.ThisFMSEventId : fmsEventId;
+
+
+        //----------------------------------------------------------------------------------------
+        // Accessing
+        //----------------------------------------------------------------------------------------
 
         // Does this team play in this match?
         public override bool Plays(Team team)

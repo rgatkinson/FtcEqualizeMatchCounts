@@ -453,8 +453,9 @@ namespace FEMC
             {
             int averagingMatchCountGoal = ProgramOptions.AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
+            if (afterUpdates) writer.Indent++;
             writer.WriteLine($"Teams: averaging match count goal: {averagingMatchCountGoal}");
-            writer.Indent++;
+            if (!afterUpdates) writer.Indent++;
 
             int teamsReported = 0;
             int totalAveragingMatchesNeeded = 0;
@@ -482,21 +483,18 @@ namespace FEMC
 
             if (teamsReported == 0)
                 {
-                writer.WriteLine();
-                writer.WriteLine("Averaging matches for all teams is up to date.");
-                if (unscoredLoadedEqualizationMatches.Count > 0)
-                    {
-                    writer.WriteLine($"{unscoredLoadedEqualizationMatches.Count} {existing}equalization matches remain to be scored.");
-                    }
+                if (!afterUpdates) writer.WriteLine();
+                writer.WriteLine("Averaging match count for all teams is up to date.");
                 }
             else
                 {
                 writer.WriteLine("----------------");
-                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {NewEqualizationMatches.Count} new equalization matches");
-                if (unscoredLoadedEqualizationMatches.Count > 0)
-                    {
-                    writer.WriteLine($"{unscoredLoadedEqualizationMatches.Count} {existing}equalization matches remain to be scored.");
-                    }
+                writer.WriteLine($"Total: the needed {totalAveragingMatchesNeeded} team averaging matches can be accomplished in {NewEqualizationMatches.Count} new equalization matches");
+                }
+
+            if (LoadedEqualizationMatches.Count > 0)
+                {
+                writer.WriteLine($"{LoadedEqualizationMatches.Count} {existing}equalization matches exist, of which {unscoredLoadedEqualizationMatches.Count} remain to be scored.");
                 }
 
             writer.Indent--;

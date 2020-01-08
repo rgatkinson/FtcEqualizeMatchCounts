@@ -303,7 +303,7 @@ namespace FEMC
                                     }
                                 if (scoringNeeded)
                                     {
-                                    ProgramOptions.StdOut.WriteLine($"Scored {matchesToScore.Count} in database.");
+                                    ProgramOptions.StdOut.WriteLine($"Scored {matchesToScore.Count} equalization event matches in database.");
                                     }
                                 ProgramOptions.StdOut.WriteLine();
                                 }
@@ -319,6 +319,8 @@ namespace FEMC
                     // Report new state
                     Database.BeginTransaction(); // mostly (?) for isolation; harmless in any case
                     Database.ClearAndLoad();
+
+                    ProgramOptions.StdOut.WriteLine("Post-Update Report:");
                     Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, false, true);
                     }
                 else

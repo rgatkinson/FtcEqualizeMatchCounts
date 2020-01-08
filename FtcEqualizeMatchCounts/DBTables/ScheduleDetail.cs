@@ -1,4 +1,6 @@
-﻿#pragma warning disable 649
+﻿using FEMC.Enums;
+
+#pragma warning disable 649
 namespace FEMC.DBTables
     {
     //--------------------------------------------------------------------------------------------------------------------------
@@ -24,6 +26,8 @@ namespace FEMC.DBTables
             public RowVersion RowVersion;
 
             public override FMSScheduleDetailId PrimaryKey => FMSScheduleDetailId;
+
+            public bool IsEqualizationMatch(Database db) => Equals(CreatedBy.Value, db.EqualizationMatchCreatorName) && MatchNumber.NonNullValue >= db.FirstEqualizationMatchNumber;
             }
 
         public ScheduleDetail(Database database) : base(database)

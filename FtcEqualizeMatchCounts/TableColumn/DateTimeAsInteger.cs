@@ -27,6 +27,6 @@ namespace FEMC
             }
 
 
-        public static System.DateTimeOffset QualsDataDefault = System.DateTimeOffset.FromUnixTimeMilliseconds(-1).UtcDateTime;
+        public static System.DateTimeOffset NegativeOne = System.DateTimeOffset.FromUnixTimeMilliseconds(-1).UtcDateTime;
         }
     }

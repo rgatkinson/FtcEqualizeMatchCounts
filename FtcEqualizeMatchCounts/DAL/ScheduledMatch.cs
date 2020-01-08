@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security.Permissions;
+using FEMC.DBTables;
 using FEMC.Enums;
 
 namespace FEMC.DAL
@@ -15,9 +17,8 @@ namespace FEMC.DAL
         public string CreatedBy;
         protected int tournamentLevel;
         protected int fieldType;
-        public DateTime ScheduleStart;
+        public DateTimeOffset ScheduleStart;
         protected Guid? fmsMatchIdGuid;
-        protected TimeSpan duration;
         public void SetMatchType(TMatchType value) => tournamentLevel = value == TMatchType.QUALS ? 2 : (value == TMatchType.ELIMS ? 3 : 0);
 
         public TFieldType FieldType => Enum.IsDefined(typeof(TFieldType), fieldType) ? (TFieldType)fieldType : TFieldType.Unknown;
@@ -36,7 +37,6 @@ namespace FEMC.DAL
                 }
             }
 
-        public TimeSpan Duration => duration != null ? duration : throw new NotImplementedException("ScheduledMatch.Duration");
 
         public Team Red1;
         public bool Red1Surrogate;
@@ -57,7 +57,7 @@ namespace FEMC.DAL
 
         public override long MatchNumber => matchNumber;
 
-        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && MatchType == TMatchType.QUALS;
+        public override bool IsEqualizationMatch => Equals(CreatedBy, Database.EqualizationMatchCreatorName) && MatchNumber >= Database.FirstEqualizationMatchNumber;
 
         public override TMatchType MatchType // see SQLiteManagementDAO.java/saveFMSSchedule
             {
@@ -140,7 +140,7 @@ namespace FEMC.DAL
             CreatedBy = row.CreatedBy.Value;
             tournamentLevel = (int)row.TournamentLevel.NonNullValue;
             fieldType = (int)row.FieldType.NonNullValue;
-            ScheduleStart = row.StartTime.DateTimeNonNull;
+            ScheduleStart = row.StartTime.DateTimeOffsetNonNull;
 
             var qual = db.Tables.Quals.Map[row.MatchNumber.NonNullValue];
 

@@ -17,9 +17,14 @@ namespace FEMC
             Value = value;
             }
 
-        public override void LoadDatabaseValue(object value)
+        public override void SetValue(object runtimeValue)
             {
-            SetValue((byte[])value);
+            SetValue((byte[])runtimeValue);
+            }
+
+        public override void LoadDatabaseValue(object databaseValue)
+            {
+            SetValue((byte[])databaseValue);
             }
 
         public override object GetDatabaseValue()
@@ -35,7 +40,6 @@ namespace FEMC
                 return Equals(Value, them.Value);
                 }
             return false;
-
             }
 
         public override int GetHashCode()

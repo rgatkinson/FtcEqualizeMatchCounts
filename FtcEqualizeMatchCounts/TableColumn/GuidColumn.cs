@@ -25,12 +25,12 @@ namespace FEMC
             return result;
             }
 
-        public override void LoadDatabaseValue(object value)
+        public override void LoadDatabaseValue(object databaseValue)
             {
-            if (value==null || value is byte[])
-                LoadDatabaseValue((byte[])value);
+            if (databaseValue==null || databaseValue is byte[])
+                LoadDatabaseValue((byte[])databaseValue);
             else
-                LoadDatabaseValue((string)value);
+                LoadDatabaseValue((string)databaseValue);
             }
 
         public void LoadDatabaseValue(byte[] bytes)
@@ -61,6 +61,11 @@ namespace FEMC
         public override string ToString()
             {
             return $"{GetType().Name}: { Value?.ToString() ?? "null" }";
+            }
+
+        public override void SetValue(object runtimeValue)
+            {
+            SetValue((Guid?)runtimeValue);
             }
 
         public void SetValue(Guid? guid)

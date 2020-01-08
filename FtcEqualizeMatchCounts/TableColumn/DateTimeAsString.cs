@@ -18,7 +18,6 @@ namespace FEMC
                 return Equals(Iso8601String, them.Iso8601String);
                 }
             return false;
-
             }
 
         public override int GetHashCode()

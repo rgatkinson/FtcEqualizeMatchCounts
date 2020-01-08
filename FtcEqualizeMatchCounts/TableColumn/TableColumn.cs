@@ -7,23 +7,32 @@ namespace FEMC
     {
     abstract class TableColumn
         {
-        public static T Create<T>(object value) where T: TableColumn, new()
+        public static T CreateFromValue<T>(object value) where T: TableColumn, new()
             {
             T t = new T();
-            t.LoadDatabaseValue(value);
+            t.SetValue(value);
             return t;
             }
 
-        public abstract void LoadDatabaseValue(object value);
+        public static T CreateFromDatabaseValue<T>(object databaseValue) where T : TableColumn, new()
+            {
+            T t = new T();
+            t.LoadDatabaseValue(databaseValue);
+            return t;
+            }
+
+        public abstract void SetValue(object runtimeValue);
+        public abstract void LoadDatabaseValue(object databaseValue);
         public abstract object GetDatabaseValue();
+
         public void SaveDatabaseValue(SqliteParameter parameter)
             {
             SetParameterValue(parameter, GetDatabaseValue());
             }
 
-        protected void SetParameterValue(SqliteParameter parameter, object value)
+        public static void SetParameterValue(SqliteParameter parameter, object databaseValue)
             {
-            parameter.Value = value ?? DBNull.Value;
+            parameter.Value = databaseValue ?? DBNull.Value;
             }
 
         protected static Exception MustBeNonNull(string message)

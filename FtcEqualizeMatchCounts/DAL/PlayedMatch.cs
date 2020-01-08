@@ -1,9 +1,11 @@
 ﻿using FEMC.DBTables;
 using FEMC.Enums;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using FEMC.DAL.Support;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
@@ -34,13 +36,10 @@ namespace FEMC.DAL
 
         public TRandomization Randomization = TRandomization.DefaultValue;
         public TMatchState Status = TMatchState.Unplayed;
-        public DateTimeOffset StartTime = DateTimeAsInteger.QualsDataDefault;
+        public DateTimeOffset StartTime = DateTimeAsInteger.NegativeOne;
         public DateTimeOffset AutoStartTime => StartTime; // redundantly stored
         public DateTimeOffset? AutoEndTime = null;
         public DateTimeOffset? TeleopStartTime = null;
-        public DateTimeOffset? TeleopEndTime = null;
-        public DateTimeOffset? RefCommitTime = null;
-        public DateTimeOffset? ScoreKeeperCommitTime = DateTimeAsInteger.QualsDataDefault; // never null in the DB
         public DateTimeOffset? PostMatchTime = null;
         public DateTimeOffset? CancelMatchTime = null;
         public DateTimeOffset? CycleTime = null;
@@ -48,18 +47,63 @@ namespace FEMC.DAL
         public long HeadRefReview = 0;
         public string VideoUrl = null;
 
-        public DateTimeOffset? CreatedOn = null;
         public string CreatedBy = null;
-        public DateTimeOffset? ModifiedOn = null;
         public string ModifiedBy = null;
 
         public RowVersion RowVersion = new RowVersion();
 
-        public DateTimeOffset LastCommitTime = DateTimeAsInteger.QualsDataDefault;
-        public TCommitType? LastCommitType = null;
+        public List<Commit> CommitHistory;
 
         public SkystoneScores RedScores;
         public SkystoneScores BlueScores;
+
+        //----------------------------------------------------------------------------------------
+        // Accessing
+        //----------------------------------------------------------------------------------------
+
+        public void AddCommitHistory(Commit commit)
+            {
+            CommitHistory.Add(commit);
+            }
+
+        public IEnumerable<Commit> CommitHistoryAscending
+            {
+            get {
+                CommitHistory.Sort((a, b) => a.Ts < b.Ts ? -1 : (a.Ts == b.Ts ? 0 : 1));
+                return CommitHistory;
+                }
+            }
+
+        public Commit CommitHistoryLatest => FindLatestCommit(commit => true);
+
+        public Commit FindLatestCommit(Predicate<Commit> predicate)
+            {
+            Commit result = null;
+            foreach (Commit commit in CommitHistory)
+                {
+                if (predicate(commit))
+                    {
+                    if (result == null || result.Ts < commit.Ts)
+                        {
+                        result = commit;
+                        }
+                    }
+                }
+            return result;
+            }
+
+        public DateTimeOffset NewCommitInstant
+            {
+            get {
+                DateTimeOffset result = DateTimeOffset.UtcNow;
+                Commit last = CommitHistoryLatest;
+                if (last != null && result <= last.Ts)
+                    {
+                    result = last.Ts + TimeSpan.FromMilliseconds(1);
+                    }
+                return result;
+                }
+            }
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -81,7 +125,12 @@ namespace FEMC.DAL
             RedScores = new SkystoneScores(this);
             BlueScores = new SkystoneScores(this);
             RowVersion.Value = new byte[0];
+            CommitHistory = new List<Commit>();
             }
+
+        //----------------------------------------------------------------------------------------
+        // Loading
+        //----------------------------------------------------------------------------------------
 
         public void Load(DBTables.Match.Row row)
             {
@@ -94,9 +143,6 @@ namespace FEMC.DAL
 
             AutoEndTime = row.AutoEndTime.DateTimeOffset;
             TeleopStartTime = row.TeleopStartTime.DateTimeOffset;
-            TeleopEndTime = row.TeleopEndTime.DateTimeOffset;
-            RefCommitTime = row.RefCommitTime.DateTimeOffset;
-            ScoreKeeperCommitTime = row.ScoreKeeperCommitTime.DateTimeOffset;
             PostMatchTime = row.PostMatchTime.DateTimeOffset;
             CancelMatchTime = row.CancelMatchTime.DateTimeOffset;
             CycleTime = row.CycleTime.DateTimeOffset;
@@ -112,9 +158,7 @@ namespace FEMC.DAL
             HeadRefReview = row.HeadRefReview.NonNullValue;
             VideoUrl = row.VideoUrl.Value;
 
-            CreatedOn = row.CreatedOn.DateTimeOffset;
             CreatedBy = row.CreatedBy.Value;
-            ModifiedOn = row.ModifiedOn.DateTimeOffset;
             ModifiedBy = row.ModifiedBy.Value;
 
             // FMSEventId.Value = row.FMSEventId.Value; Don't load: our event id comes from our Scheduled guy
@@ -239,11 +283,7 @@ namespace FEMC.DAL
 
         public void Load(PhaseCommitHistory.Row row)
             {
-            if (LastCommitTime < row.Ts.DateTimeOffsetNonNull)
-                {
-                LastCommitTime = row.Ts.DateTimeOffsetNonNull;
-                LastCommitType = EnumUtil.From<TCommitType>(row.CommitType.NonNullValue);
-                }
+            AddCommitHistory(new Commit(row.Ts.DateTimeOffsetNonNull, EnumUtil.From<TCommitType>(row.CommitType.NonNullValue)));
             // more
             }
 
@@ -263,17 +303,203 @@ namespace FEMC.DAL
             }
 
         //----------------------------------------------------------------------------------------
-        // Accessing
+        // Saving
         //----------------------------------------------------------------------------------------
 
-        public void Commit(TCommitType commitType)
+        public void SaveNonCommitMatchHistory(TCommitType commitType) // see SQLiteMatchDAO/saveNonCommitMatchHistory
             {
-            DateTimeOffset commitTime = DateTimeOffset.Now.ToUniversalTime();
-            Trace.Assert(LastCommitTime <= commitTime);
+            PlayedMatch m = this;
 
-            LastCommitTime = commitTime;
-            LastCommitType = commitType;
+            m.AddCommitHistory(new Commit(m.NewCommitInstant, commitType));
+            DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
+
+            // BLOCK
+                {
+                var psHistory = Database.Tables.QualsCommitHistory.NewRow();
+                psHistory.MatchNumber.Value = m.MatchNumber;
+                psHistory.Ts.Value = commitTime;
+                psHistory.Start.Value = m.StartTime;
+                psHistory.Randomization.Value = (int)m.Randomization;
+                psHistory.CommitType.Value = (int?)commitType;
+                psHistory.AddToTableAndSave();
+                }
+
+            foreach (var s in new [] { m.RedScores, m.BlueScores })
+                {
+                int alliance = s == m.RedScores ? 0 : 1;
+
+                // BLOCK
+                    {
+                    var psScoresHistory = Database.Tables.QualsScoresHistory.NewRow();
+                    psScoresHistory.MatchNumber.Value = MatchNumber;
+                    psScoresHistory.Ts.Value = commitTime;
+                    psScoresHistory.Alliance.Value = alliance;
+                    s.Save(psScoresHistory);
+                    psScoresHistory.AddToTableAndSave();
+                    }
+
+                // BLOCK
+                    {
+                    var psGameHistory = Database.Tables.QualsGameSpecificHistory.NewRow();
+                    psGameHistory.MatchNumber.Value = MatchNumber;
+                    psGameHistory.Ts.Value = commitTime;
+                    psGameHistory.Alliance.Value = alliance;
+                    s.Save(psGameHistory);
+                    psGameHistory.AddToTableAndSave();
+                    }
+                }
             }
 
+        public void CommitMatch()
+            {
+            PlayedMatch m = this;
+
+            m.AddCommitHistory(new Commit(m.NewCommitInstant, TCommitType.COMMIT));
+            DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
+
+            // BLOCK
+                {
+                var psData = Database.Tables.QualsData.NewRow();
+                psData.MatchNumber.Value = m.MatchNumber;
+                psData.Status.Value = (int)TMatchState.Committed;
+                psData.Randomization.Value = (int)m.Randomization;
+                psData.Start.Value = m.StartTime;
+                psData.Update(psData.Columns(new[] { nameof(psData.Status), nameof(psData.Randomization), nameof(psData.Start) }), psData.Where(nameof(psData.MatchNumber), MatchNumber));
+                }
+
+            // BLOCK
+                {
+                // (MatchNumber, Ts) must be unique
+                var psHistory = Database.Tables.QualsCommitHistory.NewRow();
+                psHistory.MatchNumber.Value = m.MatchNumber;
+                psHistory.Ts.Value = commitTime;
+                psHistory.Start.Value = m.StartTime;
+                psHistory.Randomization.Value = (int)m.Randomization;
+                psHistory.CommitType.Value = (int?)m.CommitHistoryLatest.CommitType;
+                psHistory.AddToTableAndSave();
+                }
+
+            // BLOCK
+                {
+                var psResult = Database.Tables.QualsResults.NewRow();
+                psResult.MatchNumber.Value = m.MatchNumber;
+                psResult.RedScore.Value = m.RedScore;
+                psResult.BlueScore.Value = m.BlueScore;
+                psResult.RedPenaltyCommitted.Value = m.RedPenalty;
+                psResult.BluePenaltyCommitted.Value = m.BluePenalty;
+                psResult.AddToTableAndSave();
+                }
+
+            // BLOCK
+                {
+                Commit matchEnd = null;
+                Commit referee = null;
+                Commit scoreKeeper = null;
+                Commit firstScoreKeeper = null;
+                foreach (var commit in CommitHistoryAscending)
+                    {
+                    switch (commit.CommitType)
+                        {
+                        case TCommitType.COMMIT:
+                            scoreKeeper = commit;
+                            if (firstScoreKeeper == null)
+                                {
+                                firstScoreKeeper = commit;
+                                }
+                            break;
+
+                        case TCommitType.MATCH_END:
+                            matchEnd = commit;
+                            break;
+
+                        case TCommitType.BLUE_REF_SUBMIT:
+                        case TCommitType.RED_REF_SUBMIT:
+                            referee = commit;
+                            break;
+                        }
+                    }
+
+                var fmsMatch = Database.Tables.Match.NewRow();
+                fmsMatch.FMSMatchId.Value = m.FmsMatchId.Value;             // 1
+                fmsMatch.FMSScheduleDetailId.Value = m.FMSScheduleDetailId.Value; // 2
+                fmsMatch.PlayNumber.Value = m.PlayNumber;                   // 3
+                fmsMatch.FieldType.Value = m.FieldType;                     // 4
+                fmsMatch.InitialPrestartTime.Value = m.InitialPreStartTime; // 5
+                fmsMatch.FinalPreStartTime.Value = m.FinalPreStartTime;     // 6
+                fmsMatch.PreStartCount.Value = m.PreStartCount;             // 7
+                fmsMatch.AutoStartTime.Value = m.AutoStartTime;             // 8
+                fmsMatch.AutoEndTime.Value = m.AutoEndTime;                 // 9
+                fmsMatch.TeleopStartTime.Value = m.TeleopStartTime;         // 10
+                fmsMatch.TeleopEndTime.Value = matchEnd?.Ts;                // 11
+                fmsMatch.RefCommitTime.Value = referee?.Ts;                 // 12
+                fmsMatch.ScoreKeeperCommitTime.Value = scoreKeeper?.Ts;     // 13
+                fmsMatch.PostMatchTime.Value = m.PostMatchTime;
+                fmsMatch.CancelMatchTime.Value = m.CancelMatchTime;
+                fmsMatch.CycleTime.Value = m.CycleTime;                     // 16
+
+                fmsMatch.RedScore.Value = m.RedScore;
+                fmsMatch.BlueScore.Value = m.BlueScore;
+                fmsMatch.RedPenalty.Value = m.RedPenalty;
+                fmsMatch.BluePenalty.Value = m.BluePenalty;
+                fmsMatch.RedAutoScore.Value = m.RedAutoScore;
+                fmsMatch.BlueAutoScore.Value = m.BlueAutoScore;             // 22
+
+                fmsMatch.ScoreDetails.Value = m.ScoreDetails;               // 23
+                fmsMatch.HeadRefReview.Value = m.HeadRefReview;             // 24
+                fmsMatch.VideoUrl.Value = m.VideoUrl;                       // 25
+
+                fmsMatch.CreatedOn.Value = firstScoreKeeper?.Ts ?? DateTimeAsInteger.NegativeOne; // 26
+                fmsMatch.CreatedBy.Value = m.CreatedBy;                     // 27
+                fmsMatch.ModifiedOn.Value = scoreKeeper?.Ts ?? DateTimeAsInteger.NegativeOne; // 28
+                fmsMatch.ModifiedBy.Value = m.ModifiedBy;                   // 29
+                fmsMatch.FMSEventId.Value = m.FMSEventId.Value;             // 30
+                fmsMatch.RowVersion.Value = m.RowVersion.Value;             // 31
+
+                fmsMatch.AddToTableAndSave();
+                }
+
+            foreach (var s in new [] { m.RedScores, m.BlueScores })
+                {
+                int alliance = s == m.RedScores ? 0 : 1;
+
+                // BLOCK
+                    {
+                    var psScores = Database.Tables.QualsScores.NewRow();
+                    psScores.MatchNumber.Value = MatchNumber;
+                    psScores.Alliance.Value = alliance;
+                    s.Save(psScores);
+                    psScores.AddToTableAndSave();
+                    }
+
+                // BLOCK
+                    {
+                    var psScoresHistory = Database.Tables.QualsScoresHistory.NewRow();
+                    psScoresHistory.MatchNumber.Value = MatchNumber;
+                    psScoresHistory.Ts.Value = commitTime;
+                    psScoresHistory.Alliance.Value = alliance;
+                    s.Save(psScoresHistory);
+                    psScoresHistory.AddToTableAndSave();
+                    }
+
+                // BLOCK
+                    {
+                    var psGame = Database.Tables.QualsGameSpecific.NewRow();
+                    psGame.MatchNumber.Value = MatchNumber;
+                    psGame.Alliance.Value = alliance;
+                    s.Save(psGame);
+                    psGame.AddToTableAndSave();
+                    }
+
+                // BLOCK
+                    {
+                    var psGameHistory = Database.Tables.QualsGameSpecificHistory.NewRow();
+                    psGameHistory.MatchNumber.Value = MatchNumber;
+                    psGameHistory.Ts.Value = commitTime;
+                    psGameHistory.Alliance.Value = alliance;
+                    s.Save(psGameHistory);
+                    psGameHistory.AddToTableAndSave();
+                    }
+                }
+            }
         }
     }

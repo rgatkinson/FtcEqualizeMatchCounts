@@ -10,6 +10,25 @@ namespace FEMC
     {
     static class MiscUtil
         {
+        public static IEnumerable<TResult> Zip<TFirst, TSecond, TThird, TResult>(
+          IEnumerable<TFirst> first,
+          IEnumerable<TSecond> second,
+          IEnumerable<TThird> third,
+          Func<TFirst, TSecond, TThird, TResult> resultSelector)
+            {
+            using (IEnumerator<TFirst> e1 = first.GetEnumerator())
+                {
+                using (IEnumerator<TSecond> e2 = second.GetEnumerator())
+                    {
+                    using (IEnumerator<TThird> e3 = third.GetEnumerator())
+                        { 
+                        while (e1.MoveNext() && e2.MoveNext() && e3.MoveNext())
+                            yield return resultSelector(e1.Current, e2.Current, e3.Current);
+                        }
+                    }
+                }
+            }
+
         public static long ByteSwap(long value) => BitConverter.ToInt64(ByteSwap(BitConverter.GetBytes(value)), 0);
         public static ulong ByteSwap(ulong value) => BitConverter.ToUInt64(ByteSwap(BitConverter.GetBytes(value)), 0);
         public static int ByteSwap(int value) => BitConverter.ToInt32(ByteSwap(BitConverter.GetBytes(value)), 0);

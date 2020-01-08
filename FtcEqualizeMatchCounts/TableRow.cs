@@ -1,10 +1,10 @@
-﻿using System;
+﻿using FEMC.Enums;
+using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.Data.Sqlite;
 
 namespace FEMC
     {
@@ -97,35 +97,31 @@ namespace FEMC
             return result;
             }
 
-        public List<(FieldInfo, object)> Where(string fieldName, object value)
+        public List<(FieldInfo, SqlOperator, object)> Where(string fieldName, object value)
             {
-            return Where(new string[] { fieldName }, new object[] { value });
+            return Where(new string[] { fieldName }, new SqlOperator[] { SqlOperator.EQUAL }, new object[] { value });
             }
 
-        public List<(FieldInfo, object)> Where(IEnumerable<string> fieldNames, IEnumerable<object> values)
+        public List<(FieldInfo, SqlOperator, object)> Where(IEnumerable<string> fieldNames, IEnumerable<SqlOperator> operators, IEnumerable<object> values)
             {
-            List<(FieldInfo, object)> result = new List<(FieldInfo, object)>();
-            var columns = Columns(fieldNames);
-            foreach (var pair in columns.Zip(values, (f,v) => new { field = f, value = v }))
+            List<(FieldInfo, SqlOperator, object)> result = new List<(FieldInfo, SqlOperator, object)>();
+            var fieldInfos = Columns(fieldNames);
+            foreach (var pair in MiscUtil.Zip(fieldInfos, operators, values, (f,o,v) => new { field = f, op = o, value = v }))
                 {
-                result.Add((pair.field, pair.value));
+                result.Add((pair.field, pair.op, pair.value));
                 }
             return result;
             }
 
-        public TRow CopyRow()
+        public List<(FieldInfo, SqlOperator, object)> Where(IEnumerable<(string, SqlOperator, object)> fieldNamesAndValues)
             {
-            TRow result = new TRow();
-            result.Table = Table;
-            // result.InitializeFields(); // not needed, as we exhaustively call SetField
-
-            for (int index = 0; index < LocalStoredFields.Count; index++)
-                {
-                FieldInfo field = LocalStoredFields[index];
-                result.SetField(index, GetField(index));
-                }
-
-            return result;
+            // ReSharper disable once PossibleMultipleEnumeration
+            IEnumerable<string> fieldNames = fieldNamesAndValues.Select((pair) => pair.Item1);
+            // ReSharper disable once PossibleMultipleEnumeration
+            IEnumerable<SqlOperator> operators = fieldNamesAndValues.Select((pair) => pair.Item2);
+            // ReSharper disable once PossibleMultipleEnumeration
+            IEnumerable<object> values = fieldNamesAndValues.Select((pair) => pair.Item3);
+            return Where(fieldNames, operators, values);
             }
 
         // See
@@ -135,7 +131,7 @@ namespace FEMC
         // "we embrace the fact that SQLite only supports four primitive types (INTEGER, REAL, TEXT, and BLOB)
         // and implement ADO.NET APIs in a way that helps you coerce values between these and .NET types"
         // 
-        public void SetField(int index, object databaseValue)
+        public void SetFieldFromDatabase(int index, object databaseValue)
             {
             FieldInfo field = LocalStoredFields[index];
 
@@ -163,25 +159,24 @@ namespace FEMC
                 }
             }
 
-        public object GetField(int index)
+        public object AsDatabaseValue(FieldInfo field, object value)
             {
-            FieldInfo field = LocalStoredFields[index];
-
             if (field.FieldType == typeof(string))
                 {
-                return field.GetValue(this);
+                return value;
                 }
             else if (field.FieldType == typeof(long))
                 {
-                return field.GetValue(this);
+                return value;
                 }
             else if (field.FieldType == typeof(double))
                 {
-                return field.GetValue(this);
+                return value;
                 }
             else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
                 {
-                TableColumn column = (TableColumn)field.GetValue(this);
+                TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
+                column.SetValue(value);
                 return column.GetDatabaseValue();
                 }
             else
@@ -214,10 +209,54 @@ namespace FEMC
                 }
             }
 
-        public void Update(IEnumerable<FieldInfo> columns, IEnumerable<(FieldInfo,object)> where)
+        public void Delete(IEnumerable<(FieldInfo, SqlOperator, object)> where)
+            {
+            var whereArray = where.ToArray();
+            using var cmd = Table.Database.Connection.CreateCommand();
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append($"DELETE FROM { Table.TableName } WHERE ");
+
+            AppendWhere(builder, cmd, whereArray);
+            builder.Append(";");
+
+            cmd.CommandText = builder.ToString();
+            var cRows = cmd.ExecuteNonQuery();
+            }
+
+        protected void AppendWhere(StringBuilder builder, SqliteCommand cmd, IEnumerable<(FieldInfo, SqlOperator, object)> whereArray)
+            {
+            bool first = true;
+            foreach (var term in whereArray)
+                {
+                SqliteParameter parameter = NewParameter(cmd);
+                if (!first)
+                    {
+                    builder.Append(" AND ");
+                    }
+                FieldInfo field = term.Item1;
+                builder.Append($"{GetColumnName(field)}{term.Item2.GetStringValue()}{parameter.ParameterName}");
+
+                object databaseValue = AsDatabaseValue(field, term.Item3);
+                TableColumn.SetParameterValue(parameter, databaseValue);
+
+                first = false;
+                }
+            }
+
+        protected SqliteParameter NewParameter(SqliteCommand cmd)
+            {
+            SqliteParameter parameter = cmd.CreateParameter();
+            parameter.ParameterName = $"$param{cmd.Parameters.Count}";
+            parameter.IsNullable = true; // everything is nullable in our schema
+            cmd.Parameters.Add(parameter);
+            return parameter;
+            }
+
+        public void Update(IEnumerable<FieldInfo> columns, IEnumerable<(FieldInfo, SqlOperator, object)> where)
             {
             FieldInfo[] columnsArray = columns.ToArray();
-            (FieldInfo, object)[] whereArray = where.ToArray();
+            var whereArray = where.ToArray();
             using var cmd = Table.Database.Connection.CreateCommand();
 
             StringBuilder builder = new StringBuilder();
@@ -226,10 +265,7 @@ namespace FEMC
             bool first = true;
             foreach (FieldInfo field in columnsArray)
                 {
-                SqliteParameter parameter = cmd.CreateParameter();
-                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
-                parameter.IsNullable = true; // everything is nullable in our schema
-                cmd.Parameters.Add(parameter);
+                SqliteParameter parameter = NewParameter(cmd);
                 if (!first)
                     {
                     builder.Append(", ");
@@ -240,23 +276,7 @@ namespace FEMC
                 }
 
             builder.Append(" WHERE ");
-            first = true;
-            foreach (var term in whereArray)
-                {
-                SqliteParameter parameter = cmd.CreateParameter();
-                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
-                parameter.IsNullable = true; // everything is nullable in our schema
-                cmd.Parameters.Add(parameter);
-                if (!first)
-                    {
-                    builder.Append(" AND ");
-                    }
-                FieldInfo field = term.Item1;
-                builder.Append($"{GetColumnName(field)}={parameter.ParameterName}");
-                SetParameterValue(parameter, field);
-                first = false;
-                }
-
+            AppendWhere(builder, cmd, whereArray);
             builder.Append(";");
 
             cmd.CommandText = builder.ToString();
@@ -277,10 +297,7 @@ namespace FEMC
             bool first = true;
             foreach (FieldInfo field in LocalStoredFields)
                 {
-                SqliteParameter parameter = cmd.CreateParameter();
-                parameter.ParameterName = $"$param{cmd.Parameters.Count}";
-                parameter.IsNullable = true; // everything is nullable in our schema
-                cmd.Parameters.Add(parameter);
+                SqliteParameter parameter = NewParameter(cmd);
                 if (!first)
                     {
                     builder.Append(", ");
@@ -325,6 +342,7 @@ namespace FEMC
                 column.SaveDatabaseValue(parameter);
                 }
             }
+
         protected string GetColumnName(FieldInfo fieldInfo)
             {
             string result = fieldInfo.GetColumnName();

@@ -19,14 +19,19 @@ namespace FEMC
             Value = value;
             }
 
+        public override void SetValue(object runtimeValue)
+            {
+            SetValue((bool?)runtimeValue);
+            }
+
         public void LoadDatabaseValue(long? value)
             {
             SetValue(value==null ? (bool?)null : value.Value != 0);
             }
 
-        public override void LoadDatabaseValue(object value)
+        public override void LoadDatabaseValue(object databaseValue)
             {
-            LoadDatabaseValue((long?)value);
+            LoadDatabaseValue((long?)databaseValue);
             }
 
         public override object GetDatabaseValue()

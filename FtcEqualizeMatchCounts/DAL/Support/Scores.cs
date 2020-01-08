@@ -6,14 +6,18 @@ namespace FEMC.DAL.Support
         {
         public Match Match;
 
+        #pragma warning disable 649
         public bool reqRefInteraction;
+        #pragma warning restore 649
         public long major;
         public long minor;
         public long adjust;
         public long card1;
         public long card2;
+        #pragma warning disable 649
         public long oldCard1;
         public long oldCard2;
+        #pragma warning restore 649
         public bool dq1;
         public bool dq2;
         public bool noshow1;

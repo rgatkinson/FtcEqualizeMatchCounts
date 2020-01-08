@@ -30,7 +30,10 @@ namespace FEMC
         public readonly IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
         public readonly IDictionary<Tuple<string,long>, LeagueHistoryMatch> LeagueHistoryMatchesByEventAndMatchNumber = new Dictionary<Tuple<string,long>, LeagueHistoryMatch>(); // key: event code, match number
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
-        public readonly List<EqualizationMatch>                          EqualizationMatches = new List<EqualizationMatch>();
+        public readonly List<EqualizationMatch>                          NewEqualizationMatches = new List<EqualizationMatch>();
+        public readonly List<EqualizationMatch>                          LoadedEqualizationMatches = new List<EqualizationMatch>();
+        public List<EqualizationMatch> UnscoredEqualizationMatches => new List<EqualizationMatch>((NewEqualizationMatches.FindAll(match => !match.IsScored)).Concat(LoadedEqualizationMatches.FindAll(match => !match.IsScored)));
+        public List<EqualizationMatch> UnscoredLoadedEqualizationMatches => new List<EqualizationMatch>(LoadedEqualizationMatches.FindAll(match => !match.IsScored));
 
         public int MaxAveragingMatchCount
             {
@@ -46,13 +49,14 @@ namespace FEMC
 
         public ProgramOptions ProgramOptions => programOptions;
         public string         EqualizationMatchCreatorName => "FTC Equalize Match Counts";
-        private DateTime      endOfTournament;
-        private TimeSpan      endOfTournamentDuration;
+        public int            FirstEqualizationMatchNumber => 1000;
+        private DateTimeOffset tournamentEndBlockStart;
+        private TimeSpan      tournamentEndBlockDuration;
         public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
         public Event          ThisEvent => EventsByCode[ThisEventCode];
-        public FMSEventId     ThisFMSEventId => TableColumn.Create<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
-        public DateTime       Start => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeNonNull;
-        public DateTime       End => TableColumn.Create<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeNonNull;
+        public FMSEventId     ThisFMSEventId => TableColumn.CreateFromDatabaseValue<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
+        public DateTimeOffset TournamentNominalStart => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeOffsetNonNull;
+        public DateTimeOffset TournamentNominalEnd => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeOffsetNonNull;
 
         public List<Event> OtherEvents
             {
@@ -221,18 +225,18 @@ namespace FEMC
         // Querying
         //---------------------------------------------------------------------------------------------------
 
-        public void Load()
+        public void ClearAndLoad()
             {
+            Tables.Clear();
+            ClearDataAccessLayer();
+
             try { 
-                Tables.Clear();
                 Tables.Load();
                 }
             catch (Exception e)
                 {
                 throw new CantLoadDatabaseException(programOptions, e);
                 }
-
-            ClearDataAccessLayer();
             LoadDataAccessLayer();
             }
 
@@ -255,7 +259,8 @@ namespace FEMC
             LeagueHistoryMatchesByEventAndMatchNumber.Clear();
             EventsByCode.Clear();
 
-            EqualizationMatches.Clear();
+            NewEqualizationMatches.Clear();
+            LoadedEqualizationMatches.Clear();
             }
 
         public void LoadDataAccessLayer()
@@ -282,7 +287,17 @@ namespace FEMC
 
             foreach (var row in Tables.ScheduleDetail.Rows)
                 {
-                ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
+                if (row.IsEqualizationMatch(this))
+                    {
+                    EqualizationMatch equalizationMatch = new EqualizationMatch(this, row);
+                    Trace.Assert(equalizationMatch.IsEqualizationMatch);
+                    LoadedEqualizationMatches.Add(equalizationMatch);
+                    }
+                else
+                    {
+                    ScheduledMatch scheduledMatch = new ScheduledMatch(this, row);
+                    Trace.Assert(!scheduledMatch.IsEqualizationMatch);
+                    }
                 }
 
             // fmsMatch
@@ -434,7 +449,7 @@ namespace FEMC
             writer.WriteLine();
             }
 
-        public int ReportTeamsAndPlanMatches(IndentedTextWriter writer, bool verbose)
+        public int ReportTeamsAndPlanMatches(IndentedTextWriter writer, bool verbose, bool afterUpdates)
             {
             int averagingMatchCountGoal = ProgramOptions.AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
@@ -460,27 +475,38 @@ namespace FEMC
                     }
                 }
 
-            PlanMatches();
+            PlanEqualizationMatches();
+
+            List<EqualizationMatch> unscoredLoadedEqualizationMatches = UnscoredLoadedEqualizationMatches;
+            string existing = afterUpdates ? "" : "existing ";
 
             if (teamsReported == 0)
                 {
                 writer.WriteLine();
-                writer.WriteLine("All teams up to date");
+                writer.WriteLine("Averaging matches for all teams is up to date.");
+                if (unscoredLoadedEqualizationMatches.Count > 0)
+                    {
+                    writer.WriteLine($"{unscoredLoadedEqualizationMatches.Count} {existing}equalization matches remain to be scored.");
+                    }
                 }
             else
                 {
                 writer.WriteLine("----------------");
-                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {EqualizationMatches.Count} equalization matches");
+                writer.WriteLine($"Total: needed {totalAveragingMatchesNeeded} averaging matches can be accomplished in {NewEqualizationMatches.Count} new equalization matches");
+                if (unscoredLoadedEqualizationMatches.Count > 0)
+                    {
+                    writer.WriteLine($"{unscoredLoadedEqualizationMatches.Count} {existing}equalization matches remain to be scored.");
+                    }
                 }
 
             writer.Indent--;
-            return EqualizationMatches.Count;
+            return NewEqualizationMatches.Count;
             }
 
         // Equalization matches cannot be ties, lest that biases the scoring results. Hence,
         // we decree that matches shall be scored (manually, using ScoreKeeper) as a win
         // for Blue. Thus all blue participants in equalization matches need to be surrogates.
-        protected void PlanMatches()
+        protected void PlanEqualizationMatches()
             {
             int averagingMatchCountGoal = ProgramOptions.AveragingMatchCountGoal ?? MaxAveragingMatchCount;
 
@@ -500,13 +526,13 @@ namespace FEMC
                 }
 
             List<Team> rotating = new List<Team>(completedTeams);
-            EqualizationMatches.Clear();
-            endOfTournament = End + TimeSpan.FromDays(2); // 1. haven't run eliminations yet 2. End is only day-granular
-            endOfTournamentDuration = TimeSpan.FromMinutes(10);
+            NewEqualizationMatches.Clear();
+            tournamentEndBlockStart = TournamentNominalEnd + TimeSpan.FromDays(2); // two days: 1. haven't run eliminations yet 2. End is only day-granular
+            tournamentEndBlockDuration = TimeSpan.FromMinutes(10);
 
-            DateTime startTime = endOfTournament + endOfTournamentDuration + TimeSpan.FromMinutes(10);
-            TimeSpan duration = TimeSpan.FromSeconds(5);
-            TimeSpan interval = TimeSpan.FromSeconds(7); // arbitrary, but close enough that re-runs of this tool will still likely be later
+            DateTimeOffset equalizationMatchStart = tournamentEndBlockStart + tournamentEndBlockDuration + TimeSpan.FromMinutes(10);
+            TimeSpan equalizationMatchDuration = TimeSpan.FromSeconds(5);
+            TimeSpan equalizationMatchInterval = TimeSpan.FromSeconds(7); // arbitrary, but close enough that re-runs of this tool will still likely be later
             while (matchesNeededByTeam.Count > 0)
                 {
                 // Take at most two teams for the red side
@@ -528,9 +554,9 @@ namespace FEMC
                 teams.AddRange(surrogates);
                 var isSurrogates = new List<bool>(teams.Select(team => surrogates.Contains(team)));
 
-                EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates, startTime, duration);
-                EqualizationMatches.Add(equalizationMatch);
-                startTime = startTime + interval;
+                EqualizationMatch equalizationMatch = new EqualizationMatch(this, teams, isSurrogates, equalizationMatchStart, equalizationMatchDuration);
+                NewEqualizationMatches.Add(equalizationMatch);
+                equalizationMatchStart = equalizationMatchStart + equalizationMatchInterval;
 
                 foreach (Team team in teams)
                     {
@@ -548,22 +574,23 @@ namespace FEMC
                 }
             }
 
-        public int SaveEqualizationMatches(IndentedTextWriter writer, bool verbose, bool scoreMatches)
+        public void ClearNewEqualizationMatches()
             {
-            if (EqualizationMatches.Count > 0)
+            NewEqualizationMatches.Clear();
+            }
+
+        public void SaveNewEqualizationMatches(IndentedTextWriter writer, bool verbose)
+            {
+            if (NewEqualizationMatches.Count > 0)
                 {
-                EqualizationMatch.SaveEndOfTournamentBlock(this, endOfTournament, endOfTournamentDuration);
+                EqualizationMatch.SaveEndOfTournamentBlock(this, tournamentEndBlockStart, tournamentEndBlockDuration);
 
-                foreach (var equalizationMatch in EqualizationMatches)
+                foreach (var equalizationMatch in NewEqualizationMatches)
                     {
-                    equalizationMatch.SaveToDatabase(scoreMatches);
+                    equalizationMatch.SaveToDatabase();
                     }
-                EqualizationMatch.SaveEqualizationMatchesBlock(this, EqualizationMatches.First().ScheduleStart, EqualizationMatches.Count);
+                EqualizationMatch.SaveEqualizationMatchesBlock(this, NewEqualizationMatches.First().ScheduleStart.LocalDateTime, NewEqualizationMatches.Count);
                 }
-
-            int result = EqualizationMatches.Count;
-            EqualizationMatches.Clear();
-            return result;
             }
 
         public bool BackupFile()

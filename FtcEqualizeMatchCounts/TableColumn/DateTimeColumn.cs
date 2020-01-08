@@ -26,6 +26,11 @@ namespace FEMC
             Value = dateTimeOffset;
             }
 
+        public override void SetValue(object runtimeValue)
+            {
+            SetValue((System.DateTimeOffset?)runtimeValue);
+            }
+
         public void LoadDatabaseValue(string value)
             {
             SetValue(value == null ? (System.DateTimeOffset?)null : System.DateTimeOffset.Parse(value));
@@ -36,12 +41,12 @@ namespace FEMC
             SetValue(System.DateTimeOffset.FromUnixTimeMilliseconds(msSince1970UnixEpoch));
             }
 
-        public override void LoadDatabaseValue(object value)
+        public override void LoadDatabaseValue(object databaseValue)
             {
-            if (value == null || value is string)
-                LoadDatabaseValue((string)value);
+            if (databaseValue == null || databaseValue is string)
+                LoadDatabaseValue((string)databaseValue);
             else 
-                LoadDatabaseValue((long)value);
+                LoadDatabaseValue((long)databaseValue);
             }
 
         public long? MsSince1970UnixEpoch => Value?.ToUnixTimeMilliseconds();

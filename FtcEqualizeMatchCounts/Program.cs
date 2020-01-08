@@ -2,9 +2,11 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using FEMC.DAL;
 
 namespace FEMC
     {
@@ -203,6 +205,7 @@ namespace FEMC
 
         void DoMain(string[] args)
             {
+            bool changesMade = false;
             ProgramOptions.Parse(args);
 
             OutputBannerAndCopyright(ProgramOptions.StdOut);
@@ -211,22 +214,54 @@ namespace FEMC
                 Database = new Database(ProgramOptions);
                 Database.Open();
                 Database.BeginTransaction();
-                Database.Load();
+                Database.ClearAndLoad();
 
                 Database.ReportEvents(ProgramOptions.StdOut);
                 Database.ValidateReadyForEqualization();
 
-                int equalizationMatchesNeeded = Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
-                if (equalizationMatchesNeeded > 0)
-                    { 
+                int equalizationMatchesNeeded = Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, ProgramOptions.Verbose, false);
+                bool equalizationNeeded = equalizationMatchesNeeded > 0;
+                if (equalizationNeeded)
+                    {
+                    if (Database.LoadedEqualizationMatches.Count > 0)
+                        {
+                        throw new EqualizationMatchesPresentException();
+                        }
+                    }
+
+                bool scoringNeeded = false;
+                if (ProgramOptions.ScoreEqualizationMatches)
+                    {
+                    if (equalizationNeeded || Database.LoadedEqualizationMatches.Exists(match => !match.IsScored))
+                        {
+                        scoringNeeded = true;
+                        }
+                    }
+
+                if (equalizationNeeded || scoringNeeded)
+                    {
                     ProgramOptions.StdOut.WriteLine();
                     ConsoleKey response = ConsoleKey.Y;
 
                     if (!ProgramOptions.Quiet)
                         { 
                         do  { 
-                            string verb = ProgramOptions.ScoreEqualizationMatches ? "Update and score" : "Update";
-                            ProgramOptions.StdOut.Write($"{verb} this event with {equalizationMatchesNeeded} new equalization matches? [y|n] ");
+                            string msg;
+                            if (equalizationNeeded && scoringNeeded)
+                                {
+                                msg = $"Update this event with {equalizationMatchesNeeded} new equalization matches and score them?";
+                                }
+                            else if (equalizationNeeded)
+                                {
+                                msg = $"Update this event with {equalizationMatchesNeeded} new equalization matches?";
+                                }
+                            else
+                                {
+                                int scoringMatchesNeeded = Database.LoadedEqualizationMatches.FindAll(match => !match.IsScored).Count;
+                                msg = $"Score the {scoringMatchesNeeded} equalization matches in this event?";
+                                }
+
+                            ProgramOptions.StdOut.Write($"{msg} [y|n]");
                             response = Console.ReadKey(false).Key;   // true is intercept key (don't show), false is show
                             if (response != ConsoleKey.Enter)
                                 {
@@ -240,24 +275,56 @@ namespace FEMC
                         {
                         if (Database.BackupFile())
                             { 
-                            int equalizationMatchesCreated = Database.SaveEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose, ProgramOptions.ScoreEqualizationMatches);
-                            Database.CommitTransaction();
-                            ProgramOptions.StdOut.WriteLine();
-                            ProgramOptions.StdOut.WriteLine($"Database updated with {equalizationMatchesCreated} new equalization matches.");
-                            ProgramOptions.StdOut.WriteLine();
+                            if (equalizationNeeded)
+                                { 
+                                Database.SaveNewEqualizationMatches(ProgramOptions.StdOut, ProgramOptions.Verbose);
+                                changesMade = true;
+                                }
 
-                            Database.Load();
-                            Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, false);
+                            List<EqualizationMatch> matchesToScore = Database.UnscoredEqualizationMatches;
+
+                            if (scoringNeeded)
+                                {
+                                Trace.Assert(matchesToScore.Count > 0);
+                                foreach (var match in matchesToScore)
+                                    {
+                                    match.ScoreMatch();
+                                    changesMade = true;
+                                    }
+                                }
+
+                            if (equalizationNeeded || scoringNeeded)
+                                {
+                                Trace.Assert(changesMade);
+                                ProgramOptions.StdOut.WriteLine();
+                                if (equalizationNeeded)
+                                    {
+                                    ProgramOptions.StdOut.WriteLine($"Database updated with {Database.NewEqualizationMatches.Count} new equalization matches.");
+                                    }
+                                if (scoringNeeded)
+                                    {
+                                    ProgramOptions.StdOut.WriteLine($"Scored {matchesToScore.Count} in database.");
+                                    }
+                                ProgramOptions.StdOut.WriteLine();
+                                }
+
                             }
-                        }
-                    else
-                        {
-                        ProgramOptions.StdOut.WriteLine($"No changes made to database");
                         }
                     }
 
-                Database.AbortTransaction();
-                Database.Close();
+                if (changesMade)
+                    {
+                    Database.CommitTransaction();
+
+                    // Report new state
+                    Database.BeginTransaction(); // mostly (?) for isolation; harmless in any case
+                    Database.ClearAndLoad();
+                    Database.ReportTeamsAndPlanMatches(ProgramOptions.StdOut, false, true);
+                    }
+                else
+                    {
+                    ProgramOptions.StdOut.WriteLine($"No changes made to database");
+                    }
                 }
             catch (DatabaseNotReadyException e)
                 {

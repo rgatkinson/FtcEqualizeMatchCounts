@@ -30,6 +30,13 @@ namespace FEMC
             }
         }
 
+    class EqualizationMatchesPresentException : DatabaseNotReadyException
+        {
+        public EqualizationMatchesPresentException() : base("Internal Error: This tool has already created equalization matches in this database, yet more are still needed.")
+            {
+            }
+        }
+
     class CantLoadDatabaseException : Exception
         {
         public CantLoadDatabaseException(ProgramOptions programOptions, Exception innerException=null) : base(GetMessage(programOptions), innerException)

@@ -127,6 +127,7 @@
     <Compile Include="DAL\EqualizationMatch.cs" />
     <Compile Include="DAL\LeagueHistoryMatch.cs" />
     <Compile Include="DAL\MatchResult.cs" />
+    <Compile Include="DAL\Support\Commit.cs" />
     <Compile Include="DAL\Support\FMSScoreDetails.cs" />
     <Compile Include="DAL\Support\FMSSkystoneScoreDetail.cs" />
     <Compile Include="DAL\Support\UpperCamelCaseNamingStrategy.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="DBTables\QualsGameSpecificHistory.cs" />
     <Compile Include="DBTables\QualsScoresHistory.cs" />
     <Compile Include="DBTables\QualsCommitHistory.cs" />
+    <Compile Include="Enums\SqlOperator.cs" />
     <Compile Include="Enums\TCommitType.cs" />
     <Compile Include="Enums\TEventType.cs" />
     <Compile Include="DAL\ThisEventMatch.cs" />

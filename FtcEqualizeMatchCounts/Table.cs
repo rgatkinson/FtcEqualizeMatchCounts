@@ -97,8 +97,8 @@ namespace FEMC
                     row.Table = this;
                     for (int i = 0; i < rdr.FieldCount; i++)
                         {
-                        object value = rdr.IsDBNull(i) ? null : rdr[i];
-                        row.SetField(i, value);
+                        object databaseValue = rdr.IsDBNull(i) ? null : rdr[i];
+                        row.SetFieldFromDatabase(i, databaseValue);
                         }
 
                     AddRow(row);

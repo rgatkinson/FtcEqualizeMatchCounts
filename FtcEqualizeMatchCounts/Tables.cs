@@ -30,6 +30,7 @@ namespace FEMC
         public ScheduleDetail ScheduleDetail;
         public ScheduleStation ScheduleStation;
         public Team Team;
+        public TeamRanking TeamRanking;
 
         public Tables(Database db)
             {
@@ -59,6 +60,7 @@ namespace FEMC
             ScheduleDetail = new ScheduleDetail(db);
             ScheduleStation = new ScheduleStation(db);
             Team = new Team(db);
+            TeamRanking = new TeamRanking(db);
             }
 
         public void Clear()
@@ -89,6 +91,7 @@ namespace FEMC
             ScheduleDetail.Clear();
             ScheduleStation.Clear();
             Team.Clear();
+            TeamRanking.Clear();
             }
 
         public void Load()
@@ -119,6 +122,7 @@ namespace FEMC
             ScheduleDetail.Load();
             ScheduleStation.Load();
             Team.Load();
+            TeamRanking.Load();
             }
         }
     }

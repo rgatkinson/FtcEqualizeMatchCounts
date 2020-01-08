@@ -3,53 +3,58 @@ using System.Diagnostics;
 
 namespace FEMC
     {
-    class StringColumn : TableColumn
+    class FloatColumn : TableColumn
         {
-        public string Value;
+        public double? Value;
 
-        public string NonNullValue
+        public double NonNullValue
             {
-            get { Trace.Assert(Value != null); return Value; }
+            get { Trace.Assert(Value != null); return Value.Value; }
             }
 
         public override string ToString()
             {
-            return Value ?? "null";
+            return Value?.ToString() ?? "null";
             }
 
         public override bool Equals(object obj)
             {
             if (GetType() == obj?.GetType())
                 {
-                StringColumn them = (StringColumn)obj;
-                return Value == them.Value;
+                FloatColumn them = (FloatColumn)obj;
+                return Equals(Value, them.Value);
                 }
             return false;
             }
 
         public override int GetHashCode()
             {
-            return HashCode.Combine(GetType(), Value, 0x9083);
+            return HashCode.Combine(GetType(), Value, 0x909383);
             }
 
-        public void SetValue(string value)
+        public void SetValue(double? value)
             {
             Value = value;
             }
 
+        public void SetValue(string value)
+            {
+            SetValue(value != null ? (double?)double.Parse(value) : (double?)null);
+            }
+
         public override void SetValue(object runtimeValue)
             {
-            SetValue((string) runtimeValue);
+            SetValue((double?) runtimeValue);
             }
 
         public override void LoadDatabaseValue(object databaseValue)
             {
-            SetValue((string) databaseValue);
+            SetValue((string?) databaseValue);
             }
 
         public override object GetDatabaseValue()
             {
-            return Value;
+            return Value?.ToString();
             }
         }
     }

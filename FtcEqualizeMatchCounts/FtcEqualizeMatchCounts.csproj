@@ -141,6 +141,7 @@
     <Compile Include="DBTables\QualsGameSpecificHistory.cs" />
     <Compile Include="DBTables\QualsScoresHistory.cs" />
     <Compile Include="DBTables\QualsCommitHistory.cs" />
+    <Compile Include="DBTables\TeamRanking.cs" />
     <Compile Include="Enums\SqlOperator.cs" />
     <Compile Include="Enums\TCommitType.cs" />
     <Compile Include="Enums\TEventType.cs" />
@@ -201,6 +202,7 @@
     <Compile Include="TableColumn\GuidColumnAsBlob.cs" />
     <Compile Include="TableColumn\GuidColumnAsString.cs" />
     <Compile Include="TableColumn\NullableLong.cs" />
+    <Compile Include="TableColumn\FloatColumn.cs" />
     <Compile Include="TableColumn\StringColumn.cs" />
     <Compile Include="TableColumn\NullableColumn.cs" />
     <Compile Include="TableColumn\RowVersion.cs" />

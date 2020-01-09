@@ -21,7 +21,7 @@ namespace FEMC.DBTables
             public FloatColumn PointsScoredAverage;
             public NullableLong PointsScoredAverageChange;
             public NullableLong MatchesPlayed;
-            public NullableLong Disqualified;
+            public NullableLong NumDisqualified;
             public FloatColumn SortOrder1;
             public FloatColumn SortOrder2;
             public FloatColumn SortOrder3;

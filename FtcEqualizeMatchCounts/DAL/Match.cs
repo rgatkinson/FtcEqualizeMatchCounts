@@ -1,11 +1,12 @@
-﻿using FEMC.Enums;
+﻿using System.Collections.Generic;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
     abstract class Match : DBObject
         {
         //----------------------------------------------------------------------------------------
-        // Accessing
+        // State
         //----------------------------------------------------------------------------------------
 
         public abstract string EventCode { get; }
@@ -14,7 +15,9 @@ namespace FEMC.DAL
 
         public abstract TMatchType MatchType { get; }
         
-        public abstract bool Plays(Team team); // Does this match play this team?
+        public bool Plays(int teamNumber) => PlayedTeams.Contains(teamNumber);
+
+        public abstract ICollection<int> PlayedTeams { get; }
 
         public Event Event => Database.EventsByCode[EventCode];
 
@@ -23,7 +26,7 @@ namespace FEMC.DAL
         //----------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------
-        
+
         protected Match(Database db) : base(db)
             {
             }

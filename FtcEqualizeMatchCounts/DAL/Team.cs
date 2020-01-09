@@ -1,6 +1,5 @@
 ﻿using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.IO;
 
 namespace FEMC.DAL
     {
@@ -52,15 +51,15 @@ namespace FEMC.DAL
                 }
             }
 
-        public List<PlayedMatch> PlayedMatchesThisEvent
+        public List<PlayedMatchThisEvent> PlayedMatchesThisEvent
             {
             get {
-                var result = new List<PlayedMatch>();
+                var result = new List<PlayedMatchThisEvent>();
                 foreach (var matches in Database.PlayedMatchesByNumber.Values)
                     {
                     foreach (var match in matches)
                         { 
-                        if (match.Plays(this))
+                        if (match.Plays(TeamNumber))
                             {
                             result.Add(match);
                             }
@@ -76,7 +75,7 @@ namespace FEMC.DAL
                 var result = new List<ScheduledMatch>();
                 foreach (var match in Database.ScheduledMatchesByNumber.Values)
                     {
-                    if (match.Plays(this))
+                    if (match.Plays(TeamNumber))
                         {
                         result.Add(match);
                         }

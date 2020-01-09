@@ -3,6 +3,13 @@ using System;
 
 namespace FEMC
     {
+    class InternalErrorException : Exception
+        {
+        public InternalErrorException(string msg) : base(msg)
+            {
+            }
+        }
+
     class CommitFailedException : SqliteException
         {
         public CommitFailedException(Database db, int rc) : base(GetMessage(db, rc), rc, rc)

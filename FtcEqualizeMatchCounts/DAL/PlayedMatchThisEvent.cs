@@ -1,19 +1,19 @@
-﻿using FEMC.DBTables;
+﻿using FEMC.DAL.Support;
+using FEMC.DBTables;
 using FEMC.Enums;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using FEMC.DAL.Support;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
+using System.IO;
+using System.IO.Compression;
 
 namespace FEMC.DAL
     {
-    class PlayedMatch : ThisEventMatch
+    class PlayedMatchThisEvent : ThisEventMatch, IPlayedMatch
         {
         //----------------------------------------------------------------------------------------
         // State
@@ -35,9 +35,9 @@ namespace FEMC.DAL
         public byte[] ScoreDetails = new byte[0];
 
         public TRandomization Randomization = TRandomization.DefaultValue;
-        public TMatchState Status = TMatchState.Unplayed;
+        public TMatchState MatchState = TMatchState.Unplayed;
         public DateTimeOffset StartTime = DateTimeAsInteger.NegativeOne;
-        public DateTimeOffset AutoStartTime => StartTime; // redundantly stored
+        public DateTimeOffset AutoStartTime => StartTime; // redundantly stored in db
         public DateTimeOffset? AutoEndTime = null;
         public DateTimeOffset? TeleopStartTime = null;
         public DateTimeOffset? PostMatchTime = null;
@@ -57,9 +57,129 @@ namespace FEMC.DAL
         public SkystoneScores RedScores;
         public SkystoneScores BlueScores;
 
+        public bool IsQual => isQual;
+        protected bool isQual = true;
+
+        public long RedTotal => MatchType==TMatchType.ELIMS && RedScores.card1 >= 2 
+            ? RedScores.ScoredPoints
+            : Math.Max(0, RedScores.ScoredPoints + BlueScores.PenaltyPoints);
+        
+        public long BlueTotal => MatchType == TMatchType.ELIMS && BlueScores.card1 >= 2
+            ? BlueScores.ScoredPoints
+            : Math.Max(0, BlueScores.ScoredPoints + RedScores.PenaltyPoints);
+
         //----------------------------------------------------------------------------------------
         // Accessing
         //----------------------------------------------------------------------------------------
+
+        public ICollection<MatchResult> MatchResults // MatchSubsystem.java / getResultsForMatch
+            {
+            get
+                {
+                List<MatchResult> results = new List<MatchResult>();
+                ScheduledMatch s = Scheduled;
+
+                RedScores.SetDqFromCard();
+                BlueScores.SetDqFromCard();
+
+                long redTotal = RedTotal;
+                long blueTotal = BlueTotal;
+
+                MatchResult red1Result = new MatchResult(s.Red1.TeamNumber, EventCode, MatchNumber, 0, 0, redTotal, RedScores.dq1 || RedScores.noshow1, TMatchOutcome.UNKNOWN);
+                MatchResult red2Result = new MatchResult(s.Red2.TeamNumber, EventCode, MatchNumber, 0, 0, redTotal, RedScores.dq2 || RedScores.noshow2, TMatchOutcome.UNKNOWN);
+                MatchResult blue1Result = new MatchResult(s.Blue1.TeamNumber, EventCode, MatchNumber, 0, 0, blueTotal, BlueScores.dq1 || BlueScores.noshow1, TMatchOutcome.UNKNOWN);
+                MatchResult blue2Result = new MatchResult(s.Blue2.TeamNumber, EventCode, MatchNumber, 0, 0, blueTotal, BlueScores.dq2 || BlueScores.noshow2, TMatchOutcome.UNKNOWN);
+
+                long redRP = 0;
+                long blueRP = 0;
+                bool tie = false;
+                bool redWins = false;
+                bool blueWins = false;
+
+                if (redTotal > blueTotal)
+                    {
+                    redRP = 2;
+                    redWins = true;
+                    red1Result.Outcome = TMatchOutcome.WIN;
+                    red2Result.Outcome = TMatchOutcome.WIN;
+                    blue1Result.Outcome = TMatchOutcome.LOSS;
+                    blue2Result.Outcome = TMatchOutcome.LOSS;
+                    }
+                else if (redTotal < blueTotal)
+                    {
+                    blueRP = 2;
+                    blueWins = true;
+                    red1Result.Outcome = TMatchOutcome.LOSS;
+                    red2Result.Outcome = TMatchOutcome.LOSS;
+                    blue1Result.Outcome = TMatchOutcome.WIN;
+                    blue2Result.Outcome = TMatchOutcome.WIN;
+                    }
+                else
+                    {
+                    Trace.Assert(redTotal == blueTotal);
+                    redRP = 1;
+                    blueRP = 1;
+                    tie = true;
+                    red1Result.Outcome = TMatchOutcome.TIE;
+                    red2Result.Outcome = TMatchOutcome.TIE;
+                    blue1Result.Outcome = TMatchOutcome.TIE;
+                    blue2Result.Outcome = TMatchOutcome.TIE;
+                    }
+
+                bool red1Counts = !red1Result.DQorNoShow && !s.Red1Surrogate;
+                bool red2Counts = !red2Result.DQorNoShow && !s.Red2Surrogate;
+                bool blue1Counts = !blue1Result.DQorNoShow && !s.Blue1Surrogate;
+                bool blue2Counts = !blue2Result.DQorNoShow && !s.Blue2Surrogate;
+
+                if (red1Counts) red1Result.RankingPoints += redRP;
+                if (red2Counts) red2Result.RankingPoints += redRP;
+                if (blue1Counts) blue1Result.RankingPoints += blueRP;
+                if (blue2Counts) blue2Result.RankingPoints += blueRP;
+
+                if (tie)
+                    {
+                    long tieBreaker = Math.Min(RedScores.ScoredPoints, BlueScores.ScoredPoints);
+                    if (red1Counts) red1Result.TieBreakingPoints += tieBreaker;
+                    if (red2Counts) red2Result.TieBreakingPoints += tieBreaker;
+                    if (blue1Counts) blue1Result.TieBreakingPoints += tieBreaker;
+                    if (blue2Counts) blue2Result.TieBreakingPoints += tieBreaker;
+                    }
+                else
+                    {
+                    bool bullet3 = redWins && BlueScores.dq1 && BlueScores.dq2 || blueWins && RedScores.dq1 && RedScores.dq2;
+                    if (bullet3)
+                        {
+                        if (redWins)
+                            { 
+                            long tieBreaker = RedScores.ScoredPoints;
+                            if (red1Counts) red1Result.TieBreakingPoints += tieBreaker;
+                            if (red2Counts) red2Result.TieBreakingPoints += tieBreaker;
+                            }
+                        if (blueWins)
+                            {
+                            long tieBreaker = BlueScores.ScoredPoints;
+                            if (blue1Counts) blue1Result.TieBreakingPoints += tieBreaker;
+                            if (blue2Counts) blue2Result.TieBreakingPoints += tieBreaker;
+                            }
+                        }
+                    else
+                        {
+                        long tieBreaker = redWins ? BlueScores.ScoredPoints : RedScores.ScoredPoints;
+                        if (red1Counts) red1Result.TieBreakingPoints += tieBreaker;
+                        if (red2Counts) red2Result.TieBreakingPoints += tieBreaker;
+                        if (blue1Counts) blue1Result.TieBreakingPoints += tieBreaker;
+                        if (blue2Counts) blue2Result.TieBreakingPoints += tieBreaker;
+                        }
+                    }
+
+                if (!s.Red1Surrogate) results.Add(red1Result);
+                if (!s.Red2Surrogate) results.Add(red2Result);
+                if (!s.Blue1Surrogate) results.Add(blue1Result);
+                if (!s.Blue2Surrogate) results.Add(blue2Result);
+
+                return results;
+                }
+            }
 
         public void AddCommitHistory(Commit commit)
             {
@@ -109,12 +229,12 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public PlayedMatch(Database db, FMSScheduleDetailId scheduleDetailId) : base(db, db.ThisFMSEventId, scheduleDetailId)
+        public PlayedMatchThisEvent(Database db, FMSScheduleDetailId scheduleDetailId) : base(db, db.ThisFMSEventId, scheduleDetailId)
             {
             Initialize();
             }
 
-        public PlayedMatch(Database db, DBTables.Match.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
+        public PlayedMatchThisEvent(Database db, DBTables.Match.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             Initialize();
             Load(row);
@@ -165,9 +285,86 @@ namespace FEMC.DAL
             RowVersion.Value = row.RowVersion.Value;
             }
 
+
+        public void Load(PhaseData.Row row)
+            {
+            Randomization = EnumUtil.From<TRandomization>(row.Randomization.NonNullValue);
+            MatchState = EnumUtil.From<TMatchState>(row.Status.NonNullValue);
+            StartTime = row.Start.DateTimeNonNull;
+            // more
+            }
+
+        public void Load(QualsScores.Row row)
+            {
+            isQual = true;
+            if (row.Alliance.NonNullValue == 0)
+                {
+                RedScores.Load(row);
+                }
+            else
+                {
+                BlueScores.Load(row);
+                }
+            }
+
+        public void Load(ElimsScores.Row row)
+            {
+            isQual = false;
+            if (row.Alliance.NonNullValue == 0)
+                {
+                RedScores.Load(row);
+                }
+            else
+                {
+                BlueScores.Load(row);
+                }
+            }
+
+        public void Load(PhaseGameSpecific.Row row)
+            {
+            if (row.Alliance.NonNullValue == 0)
+                {
+                RedScores.Load(row);
+                }
+            else
+                {
+                BlueScores.Load(row);
+                }
+            }
+
+        public void Load(PhaseResults.Row row)
+            {
+            // This data seems redundant with that in DBTables.Match
+            }
+
+        public void Load(PhaseCommitHistory.Row row)
+            {
+            AddCommitHistory(new Commit(row.Ts.DateTimeOffsetNonNull, EnumUtil.From<TCommitType>(row.CommitType.NonNullValue)));
+            // more
+            }
+
+        public void Load(QualsScoresHistory.Row row)
+            {
+            // We don't need history here
+            }
+
+        public void Load(ElimsScoresHistory.Row row)
+            {
+            // We don't need history here
+            }
+
+        public void Load(PhaseGameSpecificHistory.Row row)
+            {
+            // We don't need history here
+            }
+
+        //----------------------------------------------------------------------------------------
+        // ScoreDetails
+        //----------------------------------------------------------------------------------------
+
         // see SQLiteMatchDAO.java/commitMatch. We're a little simpler here because the C# type system is
         // stronger than the Java type system
-        public byte[] EncodeScoreDetails() 
+        public byte[] EncodeScoreDetails()
             {
             FMSScoreDetails details = new FMSScoreDetails();
             details.RedAllianceScore = new FMSSkystoneScoreDetail(RedScores, BlueScores.PenaltyPoints);
@@ -231,76 +428,6 @@ namespace FEMC.DAL
                 return json;
                 }
             }
-    
-        public void Load(PhaseData.Row row)
-            {
-            Randomization = EnumUtil.From<TRandomization>(row.Randomization.NonNullValue);
-            Status = EnumUtil.From<TMatchState>(row.Status.NonNullValue);
-            StartTime = row.Start.DateTimeNonNull;
-            // more
-            }
-
-        public void Load(QualsScores.Row row)
-            {
-            if (row.Alliance.NonNullValue == 0)
-                {
-                RedScores.Load(row);
-                }
-            else
-                {
-                BlueScores.Load(row);
-                }
-            }
-
-        public void Load(ElimsScores.Row row)
-            {
-            if (row.Alliance.NonNullValue == 0)
-                {
-                RedScores.Load(row);
-                }
-            else
-                {
-                BlueScores.Load(row);
-                }
-            }
-
-        public void Load(PhaseGameSpecific.Row row)
-            {
-            if (row.Alliance.NonNullValue == 0)
-                {
-                RedScores.Load(row);
-                }
-            else
-                {
-                BlueScores.Load(row);
-                }
-            }
-
-        public void Load(PhaseResults.Row row)
-            {
-            // This data seems redundant with that in DBTables.Match
-            }
-
-        public void Load(PhaseCommitHistory.Row row)
-            {
-            AddCommitHistory(new Commit(row.Ts.DateTimeOffsetNonNull, EnumUtil.From<TCommitType>(row.CommitType.NonNullValue)));
-            // more
-            }
-
-        public void Load(QualsScoresHistory.Row row)
-            {
-            // We don't need history here
-            }
-
-        public void Load(ElimsScoresHistory.Row row)
-            {
-            // We don't need history here
-            }
-
-        public void Load(PhaseGameSpecificHistory.Row row)
-            {
-            // We don't need history here
-            }
 
         //----------------------------------------------------------------------------------------
         // Saving
@@ -308,7 +435,7 @@ namespace FEMC.DAL
 
         public void SaveNonCommitMatchHistory(TCommitType commitType) // see SQLiteMatchDAO/saveNonCommitMatchHistory
             {
-            PlayedMatch m = this;
+            PlayedMatchThisEvent m = this;
 
             m.AddCommitHistory(new Commit(m.NewCommitInstant, commitType));
             DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
@@ -350,11 +477,39 @@ namespace FEMC.DAL
                 }
             }
 
-        public void CommitMatch()
+        public void CommitMatch() // MatchSubsystem.java / commitMatch
             {
-            PlayedMatch m = this;
+            PlayedMatchThisEvent m = this;
 
             m.AddCommitHistory(new Commit(m.NewCommitInstant, TCommitType.COMMIT));
+            if (m.StartTime <= DateTimeAsInteger.NegativeOne)
+                {
+                m.StartTime = DateTimeOffset.UtcNow;
+                }
+
+            if (m.MatchType==TMatchType.TEST)
+                {
+                m.MatchState = TMatchState.Committed;
+                }
+            else if (m.MatchType == TMatchType.QUALS)
+                {
+                m.CommitMatchCore();
+                m.MatchState = TMatchState.Committed;
+
+                Database.ThisEvent.CalculateAndSetRankings();
+                // this.event.leagueSystem.calculateAndSetAllLeagueRankings(); // TODO
+
+                }
+            else // if (m.MatchType == TMatchType.ELIMS)
+                {
+                throw new NotImplementedException($"{GetType().Name}.{nameof(CommitMatch)}: {m.MatchType}");
+                }
+            }
+
+        protected void CommitMatchCore() // MatchDAO.java / commitMatch
+            {
+            PlayedMatchThisEvent m = this;
+
             DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
 
             // BLOCK

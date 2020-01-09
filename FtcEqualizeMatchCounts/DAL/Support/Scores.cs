@@ -42,6 +42,18 @@ namespace FEMC.DAL.Support
             Match = match;
             }
 
+        public void SetDqFromCard()
+            {
+            if (card1 >= 2)
+                {
+                dq1 = true;
+                }
+            if (card2 >= 2)
+                {
+                dq2 = true;
+                }
+            }
+
         protected virtual void SetEqualizationMatch()
             {
             major = 0;
@@ -96,29 +108,6 @@ namespace FEMC.DAL.Support
             adjust = row.Adjust.NonNullValue;
             }
 
-        public void Save(ElimsScores.Row row)
-            {
-            row.Card.Value = card1;
-            row.DQ.Value = dq1;
-            row.NoShow1.Value = noshow1;
-            row.NoShow2.Value = noshow2;
-            row.NoShow3.Value = noshow3;
-            row.Major.Value = major;
-            row.Minor.Value = minor;
-            row.Adjust.Value = adjust;
-            }
-        public void Save(ElimsScoresHistory.Row row)
-            {
-            row.Card.Value = card1;
-            row.DQ.Value = dq1;
-            row.NoShow1.Value = noshow1;
-            row.NoShow2.Value = noshow2;
-            row.NoShow3.Value = noshow3;
-            row.Major.Value = major;
-            row.Minor.Value = minor;
-            row.Adjust.Value = adjust;
-            }
-
         public void Load(ElimsScores.Row row)
             {
             card1 = row.Card.NonNullValue;
@@ -131,6 +120,30 @@ namespace FEMC.DAL.Support
             major = row.Major.NonNullValue;
             minor = row.Minor.NonNullValue;
             adjust = row.Adjust.NonNullValue;
+            }
+
+        public void Save(ElimsScores.Row row)
+            {
+            row.Card.Value = card1;
+            row.DQ.Value = dq1;
+            row.NoShow1.Value = noshow1;
+            row.NoShow2.Value = noshow2;
+            row.NoShow3.Value = noshow3;
+            row.Major.Value = major;
+            row.Minor.Value = minor;
+            row.Adjust.Value = adjust;
+            }
+        
+        public void Save(ElimsScoresHistory.Row row)
+            {
+            row.Card.Value = card1;
+            row.DQ.Value = dq1;
+            row.NoShow1.Value = noshow1;
+            row.NoShow2.Value = noshow2;
+            row.NoShow3.Value = noshow3;
+            row.Major.Value = major;
+            row.Minor.Value = minor;
+            row.Adjust.Value = adjust;
             }
         }
     }

@@ -54,9 +54,9 @@ namespace FEMC.DAL
         //----------------------------------------------------------------------------------------
 
         // Play this match with the required Win for Blue
-        protected PlayedMatch PlayMatch()
+        protected PlayedMatchThisEvent PlayMatch()
             {
-            PlayedMatch m = new PlayedMatch(Database, FMSScheduleDetailId);
+            PlayedMatchThisEvent m = new PlayedMatchThisEvent(Database, FMSScheduleDetailId);
             // match.MatchNumber = MatchNumber; // not needed: match number comes via FMSScheduleDetailId
             m.FmsMatchId.Value = FMSMatchIdGuid;
             m.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
@@ -205,7 +205,7 @@ namespace FEMC.DAL
 
         public void ScoreMatch()
             {
-            PlayedMatch m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
+            PlayedMatchThisEvent m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
 
             m.SaveNonCommitMatchHistory(TCommitType.EDIT_SAVED); // mirror what we see ScoreKeeper do
             m.CommitMatch();

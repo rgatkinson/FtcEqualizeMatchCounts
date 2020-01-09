@@ -6,7 +6,7 @@ namespace FEMC.DAL
     class MatchResult : IComparable<MatchResult> // org.usfirst.ftc.event.MatchResult
         {
         public long    TeamNumber;
-        public String  EventCode;
+        public string  EventCode;
         public long    MatchNumber;
         public long    RankingPoints;
         public long    TieBreakingPoints;
@@ -17,6 +17,18 @@ namespace FEMC.DAL
         public override string ToString()
             {
             return $"{GetType().Name}: {EventCode}, {MatchNumber}, {TeamNumber}";
+            }
+
+        public MatchResult(long teamNumber, string eventCode, long matchNumber, long rp, long tbp, long score, bool dqOrNoShow, TMatchOutcome outcome)
+            {
+            TeamNumber = teamNumber;
+            EventCode = eventCode;
+            MatchNumber = matchNumber;
+            RankingPoints = rp;
+            TieBreakingPoints = tbp;
+            Score = score;
+            DQorNoShow = dqOrNoShow;
+            Outcome = outcome;
             }
 
         public int CompareTo(MatchResult other) // cloned from org.usfirst.ftc.event.MatchResult.compareTo: this is semantically important to selecting which league history matches count

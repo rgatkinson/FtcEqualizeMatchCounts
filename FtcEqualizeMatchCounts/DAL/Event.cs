@@ -1,11 +1,12 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using FEMC.DAL.Support;
 using FEMC.Enums;
 
 namespace FEMC.DAL
     {
-    class Event : DBObject
+    abstract class Event : DBObject
         {
         //----------------------------------------------------------------------------------------
         // Accessing
@@ -32,6 +33,11 @@ namespace FEMC.DAL
 
         public override string ToString() => $"{GetType().Name}: EventCode={EventCode} Name={Name}";
 
+        public abstract ICollection<SimpleTeam> SimpleTeams
+            {
+            get;
+            }
+
         //----------------------------------------------------------------------------------------
         // Construction
         //----------------------------------------------------------------------------------------
@@ -45,7 +51,12 @@ namespace FEMC.DAL
             Status = status;
             }
 
-        public void AddMatch(Match match)
+        public void AddMatch(LeagueHistoryMatch match)
+            {
+            Matches.Add(match);
+            }
+
+        public void AddMatch(ScheduledMatch match)
             {
             Matches.Add(match);
             }

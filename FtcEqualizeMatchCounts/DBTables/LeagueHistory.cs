@@ -8,7 +8,7 @@ namespace FEMC.DBTables
         {
         public class Row : TableRow<Row, (long, string, long)>
             {
-            public NullableLong Team;
+            public NullableLong TeamNumber;
             public StringColumn EventCode;
             public NullableLong Match;
             public NullableLong RankingPoints;
@@ -17,7 +17,7 @@ namespace FEMC.DBTables
             public BooleanAsInteger DQorNoShow;
             public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"; see TMatchOutcome
 
-            public override (long, string, long) PrimaryKey => (Team.NonNullValue, EventCode.NonNullValue, Match.NonNullValue);
+            public override (long, string, long) PrimaryKey => (TeamNumber.NonNullValue, EventCode.NonNullValue, Match.NonNullValue);
             }
 
         public LeagueHistory(Database database) : base(database)

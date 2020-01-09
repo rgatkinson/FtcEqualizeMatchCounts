@@ -1,4 +1,5 @@
-﻿using FEMC.Enums;
+﻿using System.Collections.Generic;
+using FEMC.Enums;
 
 namespace FEMC.DAL
     {
@@ -20,7 +21,7 @@ namespace FEMC.DAL
         public override bool IsEqualizationMatch => Scheduled.IsEqualizationMatch;
         public override TMatchType MatchType => Scheduled.MatchType;
 
-        public override bool Plays(Team team) => Scheduled.Plays(team);
+        public override ICollection<int> PlayedTeams => Scheduled.PlayedTeams;
 
         //----------------------------------------------------------------------------------------
         // Construction

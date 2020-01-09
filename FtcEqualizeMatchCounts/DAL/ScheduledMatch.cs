@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Permissions;
 using FEMC.DBTables;
@@ -37,7 +38,6 @@ namespace FEMC.DAL
                 }
             }
 
-
         public Team Red1;
         public bool Red1Surrogate;
         public Team Red2;
@@ -73,14 +73,16 @@ namespace FEMC.DAL
         // Accessing
         //----------------------------------------------------------------------------------------
 
-        // Does this team play in this match?
-        public override bool Plays(Team team)
+        public override ICollection<int> PlayedTeams
             {
-            if (!Red1Surrogate && Red1 == team) return true;
-            if (!Red2Surrogate && Red2 == team) return true;
-            if (!Blue1Surrogate && Blue1 == team) return true;
-            if (!Blue2Surrogate && Blue2 == team) return true;
-            return false;
+            get {
+                List<int> result = new List<int>();
+                if (!Red1Surrogate) result.Add(Red1.TeamNumber);
+                if (!Red2Surrogate) result.Add(Red2.TeamNumber);
+                if (!Blue1Surrogate) result.Add(Blue1.TeamNumber);
+                if (!Blue2Surrogate) result.Add(Blue2.TeamNumber);
+                return result;
+                }
             }
 
         public Team GetTeam(TAlliance alliance, TStation station)

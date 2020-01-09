@@ -27,11 +27,11 @@ namespace FEMC
         public readonly List<Team>                                       Teams = new List<Team>();
         public readonly IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public readonly IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
-        public readonly IDictionary<long, List<PlayedMatch>>             PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatch>>();
-        public readonly IDictionary<Tuple<string,long>, LeagueHistoryMatch> LeagueHistoryMatchesByEventAndMatchNumber = new Dictionary<Tuple<string,long>, LeagueHistoryMatch>(); // key: event code, match number
+        public readonly IDictionary<long, List<PlayedMatchThisEvent>>    PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatchThisEvent>>();
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
         public readonly List<EqualizationMatch>                          NewEqualizationMatches = new List<EqualizationMatch>();
         public readonly List<EqualizationMatch>                          LoadedEqualizationMatches = new List<EqualizationMatch>();
+        public readonly LeagueSubsystem                                  LeagueSubsystem;
         public List<EqualizationMatch> UnscoredEqualizationMatches => new List<EqualizationMatch>((NewEqualizationMatches.FindAll(match => !match.IsScored)).Concat(LoadedEqualizationMatches.FindAll(match => !match.IsScored)));
         public List<EqualizationMatch> UnscoredLoadedEqualizationMatches => new List<EqualizationMatch>(LoadedEqualizationMatches.FindAll(match => !match.IsScored));
 
@@ -53,8 +53,9 @@ namespace FEMC
         private DateTimeOffset tournamentEndBlockStart;
         private TimeSpan      tournamentEndBlockDuration;
         public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
-        public Event          ThisEvent => EventsByCode[ThisEventCode];
+        public ThisEvent      ThisEvent => (ThisEvent)EventsByCode[ThisEventCode];
         public FMSEventId     ThisFMSEventId => TableColumn.CreateFromDatabaseValue<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
+        public int            ThisEventMatchesPerTeam => int.Parse(Tables.Config.Map["matchesPerTeam"].Value.NonNullValue);
         public DateTimeOffset TournamentNominalStart => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeOffsetNonNull;
         public DateTimeOffset TournamentNominalEnd => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeOffsetNonNull;
 
@@ -88,6 +89,7 @@ namespace FEMC
             this.programOptions = programOptions;
             fileName = Path.GetFullPath(programOptions.Filename);
             Tables = new Tables(this);
+            LeagueSubsystem = new LeagueSubsystem(this);
             }
 
         ~Database()
@@ -256,7 +258,7 @@ namespace FEMC
             ScheduledMatchesByNumber.Clear();
             ScheduledMatchesById.Clear();
             PlayedMatchesByNumber.Clear();
-            LeagueHistoryMatchesByEventAndMatchNumber.Clear();
+            LeagueSubsystem.Clear();
             EventsByCode.Clear();
 
             NewEqualizationMatches.Clear();
@@ -267,13 +269,19 @@ namespace FEMC
             {
             foreach (var row in Tables.LeagueMeets.Rows)
                 {
-                Event anEvent = new Event(this, row, TEventType.LEAGUE_MEET, TEventStatus.ARCHIVED);
                 if (row.EventCode.NonNullValue == ThisEventCode)
                     {
-                    anEvent.Type = EnumUtil.From<TEventType>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue));
-                    anEvent.Status = EnumUtil.From<TEventStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)));
+                    ThisEvent thisEvent = new ThisEvent(this, row,
+                        EnumUtil.From<TEventType>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue)),
+                        EnumUtil.From<TEventStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)))
+                        );
+                    EventsByCode[thisEvent.EventCode] = thisEvent;
                     }
-                EventsByCode[anEvent.EventCode] = anEvent;
+                else
+                    {
+                    HistoricalLeagueMeet anEvent = new HistoricalLeagueMeet(this, row, TEventType.LEAGUE_MEET, TEventStatus.ARCHIVED);
+                    EventsByCode[anEvent.EventCode] = anEvent;
+                    }
                 }
 
             foreach (var row in Tables.Team.Rows)
@@ -303,21 +311,25 @@ namespace FEMC
             // fmsMatch
             foreach (var row in Tables.Match.Rows)
                 {
-                PlayedMatch playedMatch = new PlayedMatch(this, row);
-                if (!PlayedMatchesByNumber.TryGetValue(playedMatch.MatchNumber, out List<PlayedMatch> playedMatches))
+                PlayedMatchThisEvent playedMatch = new PlayedMatchThisEvent(this, row);
+                if (!PlayedMatchesByNumber.TryGetValue(playedMatch.MatchNumber, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    playedMatches = new List<PlayedMatch>();
+                    playedMatches = new List<PlayedMatchThisEvent>();
                     PlayedMatchesByNumber[playedMatch.MatchNumber] = playedMatches;
                     }
                 playedMatches.Add(playedMatch);
+                }
+            foreach (var matches in PlayedMatchesByNumber.Values)
+                {
+                matches.Sort((m1, m2) => (int)(m2.PlayNumber - m1.PlayNumber)); // descending by play number
                 }
 
             // psData
             foreach (var row in Tables.QualsData.Rows.Concat(Tables.ElimsData.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -327,9 +339,9 @@ namespace FEMC
             // psScores
             foreach (var row in Tables.QualsScores.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -337,9 +349,9 @@ namespace FEMC
                 }
             foreach (var row in Tables.ElimsScores.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -349,9 +361,9 @@ namespace FEMC
             // psGame
             foreach (var row in Tables.QualsGameSpecific.Rows.Concat(Tables.ElimsGameSpecific.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -361,9 +373,9 @@ namespace FEMC
             // psResult
             foreach (var row in Tables.QualsResults.Rows.Concat(Tables.ElimsResults.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -373,9 +385,9 @@ namespace FEMC
             // psHistory
             foreach (var row in Tables.QualsCommitHistory.Rows.Concat(Tables.ElimsCommitHistory.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -385,9 +397,9 @@ namespace FEMC
             // psScoresHistory
             foreach (var row in Tables.QualsScoresHistory.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -395,9 +407,9 @@ namespace FEMC
                 }
             foreach (var row in Tables.ElimsScoresHistory.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -407,16 +419,16 @@ namespace FEMC
             // psGameHistory
             foreach (var row in Tables.QualsGameSpecificHistory.Rows.Concat(Tables.ElimsGameSpecificHistory.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatch> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatch match in playedMatches)
+                    foreach (PlayedMatchThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
                     }
                 }
 
-            LeagueHistoryMatch.DetermineLeagueMatchesThatCount(this, programOptions.LeagueMatchesToConsider);
+            LeagueSubsystem.DetermineLeagueMatchesThatCount(programOptions.LeagueMatchesToConsider);
             }
 
         public void ReportEvents(IndentedTextWriter writer)

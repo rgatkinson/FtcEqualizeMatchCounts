@@ -1,19 +1,58 @@
-﻿using System;
+﻿using FEMC.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FEMC.Enums;
 
 namespace FEMC.DAL
     {
     class LeagueSubsystem
         {
-        public static void DetermineLeagueMatchesThatCount(Database db, int matchesToConsider) // modeled after LeagueSubsystem.CalculateLeagueRankings
-            {
-            MakeLeagueHistoryMatches(db);
+        //---------------------------------------------------------------------------------------------------
+        // State
+        //---------------------------------------------------------------------------------------------------
 
-            IDictionary<long, ISet<MatchResult>> history = GetLeagueHistory(db);
+        protected readonly Database db;
+        protected readonly IDictionary<(string, long), LeagueHistoryMatch> MatchesByEventAndMatchNumber = new Dictionary<(string, long), LeagueHistoryMatch>(); // key: event code, match number
+        protected IDictionary<long, ISet<MatchResult>> history; // team -> MatchResults
+
+        //---------------------------------------------------------------------------------------------------
+        // State
+        //---------------------------------------------------------------------------------------------------
+
+        public LeagueSubsystem(Database db)
+            {
+            this.db = db;
+            }
+
+        //---------------------------------------------------------------------------------------------------
+        // Rankings
+        //---------------------------------------------------------------------------------------------------
+
+
+        //---------------------------------------------------------------------------------------------------
+        // Loading
+        //---------------------------------------------------------------------------------------------------
+
+        public void Clear()
+            {
+            MatchesByEventAndMatchNumber.Clear();
+            }
+
+        public void DetermineLeagueMatchesThatCount(int matchesToConsider) // modeled after LeagueSubsystem.CalculateLeagueRankings
+            {
+            MakeLeagueHistoryMatches();
+
+            history = GetLeagueHistory(); // team -> MatchResults
+
+            foreach (var matches in history.Values)
+                {
+                foreach (MatchResult matchResult in matches)
+                    {
+                    (string, long) key = (matchResult.EventCode, matchResult.MatchNumber);
+                    LeagueHistoryMatch match = MatchesByEventAndMatchNumber[key];
+                    match.AddMatchResult(matchResult);
+                    }
+                }
 
             var teamsToConsider = db.TeamsByNumber.Keys;
             foreach (var tx in teamsToConsider)
@@ -43,8 +82,8 @@ namespace FEMC.DAL
                 List<LeagueHistoryMatch> usedMatches = new List<LeagueHistoryMatch>();
                 foreach (var matchResult in usedMatchResults)
                     {
-                    Tuple<string, long> key = new Tuple<string, long>(matchResult.EventCode, matchResult.MatchNumber);
-                    usedMatches.Add(db.LeagueHistoryMatchesByEventAndMatchNumber[key]);
+                    (string, long) key = (matchResult.EventCode, matchResult.MatchNumber);
+                    usedMatches.Add(MatchesByEventAndMatchNumber[key]);
                     }
 
                 if (db.TeamsByNumber.TryGetValue(tx, out Team team))
@@ -54,19 +93,19 @@ namespace FEMC.DAL
                 }
             }
 
-        public static void MakeLeagueHistoryMatches(Database db)
+        protected void MakeLeagueHistoryMatches()
             {
             // (Team, Event Code, Match) is the logical primary key. We clump four teams together into a match
 
-            db.LeagueHistoryMatchesByEventAndMatchNumber.Clear();
+            MatchesByEventAndMatchNumber.Clear();
             foreach (var row in db.Tables.LeagueHistory.Rows)
-                { 
+                {
                 // Find the right LeagueHistoryMatch that goes with this row
-                var key = new Tuple<string,long>(row.EventCode.NonNullValue, row.Match.NonNullValue);
-                if (!db.LeagueHistoryMatchesByEventAndMatchNumber.TryGetValue(key, out LeagueHistoryMatch historicalMatch))
+                (string, long) key = (row.EventCode.NonNullValue, row.Match.NonNullValue);
+                if (!MatchesByEventAndMatchNumber.TryGetValue(key, out LeagueHistoryMatch historicalMatch))
                     {
                     historicalMatch = new LeagueHistoryMatch(db, row.EventCode.NonNullValue, row.Match.NonNullValue);
-                    db.LeagueHistoryMatchesByEventAndMatchNumber[key] = historicalMatch;
+                    MatchesByEventAndMatchNumber[key] = historicalMatch;
 
                     // Correlate LeagueHistoryMatch's with their event if they are, in fact, *historical*.
                     // Using only historical matches avoids double-counting as matches accumulate in *this* event.
@@ -77,31 +116,26 @@ namespace FEMC.DAL
                         }
                     }
 
-                // Add this team to the match if it's a team we know about in this event (if it isn't, then we don't care about it)
-                if (db.TeamsByNumber.TryGetValue(row.TeamNumber.NonNullValue, out Team team))
-                    {
-                    historicalMatch.Teams.Add(team);
-                    }
+                historicalMatch.TeamNumbers.Add((int)row.TeamNumber.NonNullValue);
                 }
             }
 
         // Returns map from team number to league history matches involving that team
-        public static IDictionary<long, ISet<MatchResult>> GetLeagueHistory(Database db) // see SQLiteLeagueDAO.getLeagueHistory()
+        protected IDictionary<long, ISet<MatchResult>> GetLeagueHistory() // see SQLiteLeagueDAO.getLeagueHistory()
             {
             IDictionary<long, ISet<MatchResult>> result = new Dictionary<long, ISet<MatchResult>>();
             foreach (var row in db.Tables.LeagueHistory.Rows)
                 {
-                MatchResult matchResult = new MatchResult()
-                    {
-                    TeamNumber = row.TeamNumber.NonNullValue,
-                    EventCode = row.EventCode.NonNullValue,
-                    MatchNumber = row.Match.NonNullValue,
-                    RankingPoints = row.RankingPoints.NonNullValue,
-                    TieBreakingPoints = row.TieBreakingPoints.NonNullValue,
-                    Score = row.Score.NonNullValue,
-                    DQorNoShow = row.DQorNoShow.NonNullValue,
-                    Outcome = EnumUtil.From<TMatchOutcome>(row.MatchOutcome.NonNullValue)
-                    };
+                MatchResult matchResult = new MatchResult(
+                    row.TeamNumber.NonNullValue,
+                    row.EventCode.NonNullValue,
+                    row.Match.NonNullValue,
+                    row.RankingPoints.NonNullValue,
+                    row.TieBreakingPoints.NonNullValue,
+                    row.Score.NonNullValue,
+                    row.DQorNoShow.NonNullValue,
+                    EnumUtil.From<TMatchOutcome>(row.MatchOutcome.NonNullValue)
+                    );
 
                 if (!result.TryGetValue(matchResult.TeamNumber, out ISet<MatchResult> set))
                     {
@@ -112,6 +146,7 @@ namespace FEMC.DAL
                 set.Add(matchResult);
                 }
 
+            // Make sure that all the teams of the this event are in the history
             foreach (var teamNumber in db.TeamsByNumber.Keys)
                 {
                 if (!result.ContainsKey(teamNumber))

@@ -49,7 +49,7 @@ namespace FEMC
 
         public override void LoadDatabaseValue(object databaseValue)
             {
-            SetValue((string?) databaseValue);
+            SetValue((string) databaseValue);
             }
 
         public override object GetDatabaseValue()

@@ -14,7 +14,16 @@ namespace FEMC.DAL
         protected TimeSpan? duration = null;
         public TimeSpan Duration => duration ?? throw new NotImplementedException("EqualizationMatch.Duration");
 
-        public bool IsScored => Database.Tables.QualsGameSpecific.Rows.Exists(row => Equals(row.MatchNumber.NonNullValue, MatchNumber)); // one of possibly many things we could test
+        public bool IsScored
+            {
+            get
+                {
+                // TODO: is there a better FMSEventId-based way to do this?
+                return Database.Tables.QualsGameSpecific.Rows.Exists(row => Equals(row.MatchNumber.NonNullValue, MatchNumber))  // one of possibly many things we could test
+                    || Database.Tables.ElimsGameSpecific.Rows.Exists(row => Equals(row.MatchNumber.NonNullValue, MatchNumber));
+                }
+            }
+
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -206,7 +215,6 @@ namespace FEMC.DAL
         public void ScoreMatch()
             {
             MatchPlayedThisEvent m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
-
             m.SaveNonCommitMatchHistory(TCommitType.EDIT_SAVED); // mirror what we see ScoreKeeper do
             m.CommitMatch();
             }

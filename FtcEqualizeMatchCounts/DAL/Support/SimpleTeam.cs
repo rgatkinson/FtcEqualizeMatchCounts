@@ -34,7 +34,7 @@ namespace FEMC.DAL.Support
         // Support
         //--------------------------------------------------------------------------------
 
-        public class TCompareByTeamNumber : IEqualityComparer<SimpleTeam>
+        public class TEqualByTeamNumber : IEqualityComparer<SimpleTeam>
             {
             public bool Equals(SimpleTeam teamA, SimpleTeam teamB)
                 {
@@ -47,6 +47,6 @@ namespace FEMC.DAL.Support
                 }
             }
 
-        public static TCompareByTeamNumber CompareByTeamNumber = new TCompareByTeamNumber();
+        public static TEqualByTeamNumber EqualByTeamNumber = new TEqualByTeamNumber();
         }
     }

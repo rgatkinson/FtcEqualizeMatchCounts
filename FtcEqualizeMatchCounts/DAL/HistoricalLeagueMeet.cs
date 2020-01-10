@@ -21,7 +21,7 @@ namespace FEMC.DAL
         public override ICollection<SimpleTeam> SimpleTeams
             {
             get {
-                ISet<SimpleTeam> result = new HashSet<SimpleTeam>(SimpleTeam.CompareByTeamNumber);
+                ISet<SimpleTeam> result = new HashSet<SimpleTeam>(SimpleTeam.EqualByTeamNumber);
 
                 foreach (var row in Database.Tables.LeagueHistory.Rows)
                     {

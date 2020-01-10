@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using FEMC.DAL.Support;
 
 namespace FEMC.DAL
@@ -34,6 +35,43 @@ namespace FEMC.DAL
             {
             CombinedLeagueRankings.Clear();
             CombinedLeagueRankings.AddAll(CalculateLeagueRankings());
+            }
+
+        public void CreateExportTemp() // see LeagueRoutesLogic.java / createExportTemp
+            {
+            // 'Download Archive' from the ScoreKeeper is handled by LeagueRoutsLogic.handleLeagueExport. This happens
+            // irrespective of whether the current event is a league event or not. That function in turn calls createExportTemp
+            // to create the returned file, which in turn calls LeagueDAO.addMeet to add all the COMMITTED qualification matches 
+            // to the leagueHistory of the exported archive. We seek to emulate that here, just to be completely faithful
+            // to the ScoreKeeper behavior
+            //
+            ISet<MatchResult> newResults = new HashSet<MatchResult>(MatchResult.Equalitor);
+            foreach (var m in Database.ThisEvent.CommittedQualsMatchesByMatchNumber)
+                {
+                newResults.AddAll(m.MatchResults);
+                }
+
+            ThisEvent thisEvent = Database.ThisEvent;
+            var meet = Database.Tables.LeagueMeets.NewRow();
+            meet.EventCode.Value = thisEvent.EventCode;
+            meet.Name.Value = thisEvent.Name;
+            meet.Start.Value = thisEvent.Start;
+            meet.End.Value = thisEvent.End;
+            meet.InsertOrReplace();
+
+            foreach (var lmr in newResults)
+                {
+                var ps = Database.Tables.LeagueHistory.NewRow();
+                ps.TeamNumber.Value = lmr.TeamNumber;
+                ps.EventCode.Value = lmr.EventCode;
+                ps.MatchNumber.Value = lmr.MatchNumber;
+                ps.RankingPoints.Value = lmr.RankingPoints;
+                ps.TieBreakingPoints.Value = lmr.TieBreakingPoints;
+                ps.Score.Value = lmr.Score;
+                ps.DQorNoShow.Value = lmr.DQorNoShow;
+                ps.MatchOutcome.Value = lmr.Outcome.GetStringValue();
+                ps.InsertOrReplace();
+                }
             }
 
         //---------------------------------------------------------------------------------------------------
@@ -138,10 +176,10 @@ namespace FEMC.DAL
             foreach (var row in Database.Tables.LeagueHistory.Rows)
                 {
                 // Find the right LeagueHistoryMatch that goes with this row
-                (string, long) key = (row.EventCode.NonNullValue, row.Match.NonNullValue);
+                (string, long) key = (row.EventCode.NonNullValue, row.MatchNumber.NonNullValue);
                 if (!HistoricalMatchesByEventAndMatchNumber.TryGetValue(key, out HistoricalMatch historicalMatch))
                     {
-                    historicalMatch = new HistoricalMatch(Database, row.EventCode.NonNullValue, row.Match.NonNullValue);
+                    historicalMatch = new HistoricalMatch(Database, row.EventCode.NonNullValue, row.MatchNumber.NonNullValue);
                     HistoricalMatchesByEventAndMatchNumber[key] = historicalMatch;
 
                     // Correlate LeagueHistoryMatch's with their event if they are, in fact, *historical*.
@@ -179,7 +217,7 @@ namespace FEMC.DAL
                     MatchResult matchResult = new MatchResult(
                         row.TeamNumber.NonNullValue,
                         row.EventCode.NonNullValue,
-                        row.Match.NonNullValue,
+                        row.MatchNumber.NonNullValue,
                         row.RankingPoints.NonNullValue,
                         row.TieBreakingPoints.NonNullValue,
                         row.Score.NonNullValue,

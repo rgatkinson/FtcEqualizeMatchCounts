@@ -52,12 +52,16 @@ namespace FEMC
         public int            FirstEqualizationMatchNumber => 1000;
         private DateTimeOffset tournamentEndBlockStart;
         private TimeSpan      tournamentEndBlockDuration;
-        public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
         public ThisEvent      ThisEvent => (ThisEvent)EventsByCode[ThisEventCode];
+
+        public string         ThisEventCode => Tables.Config.Map["code"].Value.NonNullValue;
+        public string         ThisEventName => Tables.Config.Map["name"].Value.NonNullValue;
         public FMSEventId     ThisFMSEventId => TableColumn.CreateFromDatabaseValue<FMSEventId>(Tables.Config.Map["FMSEventId"].Value.NonNullValue);
         public int            ThisEventMatchesPerTeam => int.Parse(Tables.Config.Map["matchesPerTeam"].Value.NonNullValue);
-        public DateTimeOffset TournamentNominalStart => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeOffsetNonNull;
-        public DateTimeOffset TournamentNominalEnd => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeOffsetNonNull;
+        public DateTimeOffset ThisEventNominalStart => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["start"].Value.NonNullValue)).DateTimeOffsetNonNull;
+        public DateTimeOffset ThisEventNominalEnd => TableColumn.CreateFromDatabaseValue<DateTimeAsInteger>(long.Parse(Tables.Config.Map["end"].Value.NonNullValue)).DateTimeOffsetNonNull;
+        public TEventType     ThisEventType => EnumUtil.From<TEventType>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue));
+        public TEventStatus   ThisEventStatus => EnumUtil.From<TEventStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)));
 
         public List<Event> OtherEvents
             {
@@ -269,16 +273,26 @@ namespace FEMC
             LoadedEqualizationMatches.Clear();
             }
 
+        public void AddOrReplacePlayedMatch(MatchPlayedThisEvent matchPlayed)
+            {
+            if (!PlayedMatchesByNumber.TryGetValue(matchPlayed.MatchNumber, out List<MatchPlayedThisEvent> playedMatches))
+                {
+                playedMatches = new List<MatchPlayedThisEvent>();
+                PlayedMatchesByNumber[matchPlayed.MatchNumber] = playedMatches;
+                }
+            //
+            playedMatches.RemoveAll(existing => matchPlayed.PlayNumber == existing.PlayNumber);
+            playedMatches.Add(matchPlayed);
+            playedMatches.Sort((m1, m2) => (int)(m2.PlayNumber - m1.PlayNumber)); // descending by play number
+            }
+
         public void LoadDataAccessLayer()
             {
             foreach (var row in Tables.LeagueMeets.Rows)
                 {
                 if (row.EventCode.NonNullValue == ThisEventCode)
                     {
-                    ThisEvent thisEvent = new ThisEvent(this, row,
-                        EnumUtil.From<TEventType>(int.Parse(Tables.Config.Map["type"].Value.NonNullValue)),
-                        EnumUtil.From<TEventStatus>(int.Parse((Tables.Config.Map["status"].Value.NonNullValue)))
-                        );
+                    ThisEvent thisEvent = new ThisEvent(this, row, ThisEventType, ThisEventStatus);
                     EventsByCode[thisEvent.EventCode] = thisEvent;
                     }
                 else
@@ -286,6 +300,18 @@ namespace FEMC
                     HistoricalLeagueMeet anEvent = new HistoricalLeagueMeet(this, row, TEventType.LEAGUE_MEET, TEventStatus.ARCHIVED);
                     EventsByCode[anEvent.EventCode] = anEvent;
                     }
+                }
+
+            if (!EventsByCode.ContainsKey(ThisEventCode))
+                {
+                // *Always* need ThisEvent to be real. Make if we didn't previously encounter. Code path taken only in non-leagues?
+                var row = Tables.LeagueMeets.NewRow();
+                row.EventCode.Value = ThisEventCode;
+                row.Name.Value = ThisEventName;
+                row.Start.Value = ThisEventNominalStart;
+                row.End.Value = ThisEventNominalEnd;
+                ThisEvent thisEvent = new ThisEvent(this, row, ThisEventType, ThisEventStatus);
+                EventsByCode[thisEvent.EventCode] = thisEvent;
                 }
 
             foreach (var row in Tables.Team.Rows)
@@ -316,16 +342,7 @@ namespace FEMC
             foreach (var row in Tables.Match.Rows)
                 {
                 MatchPlayedThisEvent matchPlayed = new MatchPlayedThisEvent(this, row);
-                if (!PlayedMatchesByNumber.TryGetValue(matchPlayed.MatchNumber, out List<MatchPlayedThisEvent> playedMatches))
-                    {
-                    playedMatches = new List<MatchPlayedThisEvent>();
-                    PlayedMatchesByNumber[matchPlayed.MatchNumber] = playedMatches;
-                    }
-                playedMatches.Add(matchPlayed);
-                }
-            foreach (var matches in PlayedMatchesByNumber.Values)
-                {
-                matches.Sort((m1, m2) => (int)(m2.PlayNumber - m1.PlayNumber)); // descending by play number
+                AddOrReplacePlayedMatch(matchPlayed);
                 }
 
             // psData
@@ -541,7 +558,7 @@ namespace FEMC
 
             List<Team> rotating = new List<Team>(completedTeams);
             NewEqualizationMatches.Clear();
-            tournamentEndBlockStart = TournamentNominalEnd + TimeSpan.FromDays(2); // two days: 1. haven't run eliminations yet 2. End is only day-granular
+            tournamentEndBlockStart = ThisEventNominalEnd + TimeSpan.FromDays(2); // two days: 1. haven't run eliminations yet 2. End is only day-granular
             tournamentEndBlockDuration = TimeSpan.FromMinutes(10);
 
             DateTimeOffset equalizationMatchStart = tournamentEndBlockStart + tournamentEndBlockDuration + TimeSpan.FromMinutes(10);

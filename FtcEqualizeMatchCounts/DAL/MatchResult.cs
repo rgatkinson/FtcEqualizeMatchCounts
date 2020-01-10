@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using FEMC.Enums;
 
 namespace FEMC.DAL
@@ -58,5 +59,32 @@ namespace FEMC.DAL
 
             return (int)result;
             }
+
+        //--------------------------------------------------------------------------------
+        // Support
+        //--------------------------------------------------------------------------------
+
+        // Separate class to keep our core equality logic on MatchResult the same as ScoreKeeper's
+        public class TEqualitor : IEqualityComparer<MatchResult>
+            {
+            public bool Equals(MatchResult a, MatchResult b)
+                {
+                return object.Equals(a?.TeamNumber, b?.TeamNumber)
+                    && object.Equals(a?.EventCode, b?.EventCode)
+                    && object.Equals(a?.MatchNumber, b?.MatchNumber)
+                    && object.Equals(a?.RankingPoints, b?.RankingPoints)
+                    && object.Equals(a?.Score, b?.Score)
+                    && object.Equals(a?.DQorNoShow, b?.DQorNoShow)
+                    && object.Equals(a?.Outcome, b?.Outcome);
+                }
+
+            public int GetHashCode(MatchResult res)
+                {
+                return HashCode.Combine(GetType(), res, 0x9083141);
+                }
+            }
+
+        public static TEqualitor Equalitor = new TEqualitor();
+
         }
     }

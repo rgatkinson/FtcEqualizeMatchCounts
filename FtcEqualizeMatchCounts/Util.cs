@@ -94,7 +94,7 @@ namespace FEMC
 
     public static class CollectionUtil
         {
-        public static void AddAll<T>(this ICollection<T> self, ICollection<T> them)
+        public static void AddAll<T>(this ICollection<T> self, IEnumerable<T> them)
             {
             foreach (var it in them)
                 {
@@ -172,11 +172,11 @@ namespace FEMC
 
         public static string GetStringValue(this Enum value)
             {
-            string stringValue = value.ToString();
+            string stringValue = value.ToString(); // default to non-attribute
+            // does attribute override?
             Type type = value.GetType();
             FieldInfo fieldInfo = type.GetField(value.ToString());
-            StringValue[] attrs = fieldInfo.GetCustomAttributes(typeof(StringValue), false) as StringValue[];
-            if (attrs.Length > 0)
+            if (fieldInfo.GetCustomAttributes(typeof(StringValue), false) is StringValue[] attrs && attrs.Length > 0)
                 {
                 stringValue = attrs[0].Value;
                 }

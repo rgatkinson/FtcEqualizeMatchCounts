@@ -10,14 +10,14 @@ namespace FEMC.DBTables
             {
             public NullableLong TeamNumber;
             public StringColumn EventCode;
-            public NullableLong Match;
+            public NullableLong MatchNumber;
             public NullableLong RankingPoints;
             public NullableLong TieBreakingPoints;
             public NullableLong Score;
             public BooleanAsInteger DQorNoShow;
             public StringColumn MatchOutcome; // "WIN", "LOSS", "TIE"; see TMatchOutcome
 
-            public override (long, string, long) PrimaryKey => (TeamNumber.NonNullValue, EventCode.NonNullValue, Match.NonNullValue);
+            public override (long, string, long) PrimaryKey => (TeamNumber.NonNullValue, EventCode.NonNullValue, MatchNumber.NonNullValue);
             }
 
         public LeagueHistory(Database database) : base(database)

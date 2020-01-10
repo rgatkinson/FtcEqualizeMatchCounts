@@ -497,8 +497,8 @@ namespace FEMC.DAL
                 m.MatchState = TMatchState.Committed;
 
                 Database.ThisEvent.CalculateAndSetRankings();
-                Database.LeagueSubsystem.CalculateAndSetAllLeagueRankings();
-
+                Database.LeagueSubsystem.CalculateAndSetAllLeagueRankings(); // more a formality/mirroring ScoreKeeper, as this makes no persistent updates
+                Database.LeagueSubsystem.CreateExportTemp();
                 }
             else // if (m.MatchType == TMatchType.ELIMS)
                 {
@@ -611,6 +611,8 @@ namespace FEMC.DAL
                 fmsMatch.RowVersion.Value = m.RowVersion.Value;             // 31
 
                 fmsMatch.InsertOrReplace();
+
+                Database.AddOrReplacePlayedMatch(this);
                 }
 
             foreach (var s in new [] { m.RedScores, m.BlueScores })

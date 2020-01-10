@@ -14,7 +14,8 @@ namespace FEMC.DAL
 
         public string EventCode;
         public string Name;
-        public DateTime? Start;
+        public DateTimeOffset? Start;
+        public DateTimeOffset? End;
         public TEventType Type;
         public TEventStatus Status;
         public List<Match> Matches = new List<Match>();
@@ -28,8 +29,8 @@ namespace FEMC.DAL
             return result;
             } }
 
-        public DateTime StartNonNull => Start ?? StartIfNull;
-        public static DateTime StartIfNull = new DateTime(2019, 09, 01); // arbitrary
+        public DateTimeOffset StartNonNull => Start ?? StartIfNull;
+        public static DateTimeOffset StartIfNull = new DateTimeOffset(new DateTime(2019, 09, 01, 0, 0, 0, DateTimeKind.Utc)); // arbitrary
 
         public override string ToString() => $"{GetType().Name}: EventCode={EventCode} Name={Name}";
 
@@ -42,11 +43,12 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public Event(Database db, DBTables.LeagueMeets.Row row, TEventType type, TEventStatus status) : base(db)
+        protected Event(Database db, DBTables.LeagueMeets.Row row, TEventType type, TEventStatus status) : base(db)
             {
             EventCode = row.EventCode.Value;
             Name = row.Name.Value;
-            Start = row.Start.LocalDateTime;
+            Start = row.Start.DateTimeOffset;
+            End = row.End.DateTimeOffset;
             Type = type;
             Status = status;
             }

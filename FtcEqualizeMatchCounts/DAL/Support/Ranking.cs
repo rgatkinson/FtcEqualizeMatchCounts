@@ -25,7 +25,7 @@ namespace FEMC.DAL.Support
 
         public override string ToString()
             {
-            return $"{GetType().Name}: {Team.TeamNumber}: RP={RankingPoints}, TBP={TieBreakingPoints} Played={MatchesPlayed}";
+            return $"{GetType().Name}: {Team.TeamNumber}: RP={RankingPoints}, TBP={TieBreakingPoints} Played={MatchesPlayed} Ranking={RankingValue}";
             }
 
         public int TotalScore => HighestMatches.Sum();

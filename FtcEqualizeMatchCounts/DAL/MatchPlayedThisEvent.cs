@@ -13,7 +13,7 @@ using System.IO.Compression;
 
 namespace FEMC.DAL
     {
-    class PlayedMatchThisEvent : ThisEventMatch, IPlayedMatch
+    class MatchPlayedThisEvent : ThisEventMatch, IPlayedMatch
         {
         //----------------------------------------------------------------------------------------
         // State
@@ -229,12 +229,12 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public PlayedMatchThisEvent(Database db, FMSScheduleDetailId scheduleDetailId) : base(db, db.ThisFMSEventId, scheduleDetailId)
+        public MatchPlayedThisEvent(Database db, FMSScheduleDetailId scheduleDetailId) : base(db, db.ThisFMSEventId, scheduleDetailId)
             {
             Initialize();
             }
 
-        public PlayedMatchThisEvent(Database db, DBTables.Match.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
+        public MatchPlayedThisEvent(Database db, DBTables.Match.Row row) : base(db, row.FMSEventId, row.FMSScheduleDetailId)
             {
             Initialize();
             Load(row);
@@ -435,7 +435,7 @@ namespace FEMC.DAL
 
         public void SaveNonCommitMatchHistory(TCommitType commitType) // see SQLiteMatchDAO/saveNonCommitMatchHistory
             {
-            PlayedMatchThisEvent m = this;
+            MatchPlayedThisEvent m = this;
 
             m.AddCommitHistory(new Commit(m.NewCommitInstant, commitType));
             DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
@@ -448,7 +448,7 @@ namespace FEMC.DAL
                 psHistory.Start.Value = m.StartTime;
                 psHistory.Randomization.Value = (int)m.Randomization;
                 psHistory.CommitType.Value = (int?)commitType;
-                psHistory.AddToTableAndSave();
+                psHistory.Insert();
                 }
 
             foreach (var s in new [] { m.RedScores, m.BlueScores })
@@ -462,7 +462,7 @@ namespace FEMC.DAL
                     psScoresHistory.Ts.Value = commitTime;
                     psScoresHistory.Alliance.Value = alliance;
                     s.Save(psScoresHistory);
-                    psScoresHistory.AddToTableAndSave();
+                    psScoresHistory.Insert();
                     }
 
                 // BLOCK
@@ -472,14 +472,14 @@ namespace FEMC.DAL
                     psGameHistory.Ts.Value = commitTime;
                     psGameHistory.Alliance.Value = alliance;
                     s.Save(psGameHistory);
-                    psGameHistory.AddToTableAndSave();
+                    psGameHistory.Insert();
                     }
                 }
             }
 
         public void CommitMatch() // MatchSubsystem.java / commitMatch
             {
-            PlayedMatchThisEvent m = this;
+            MatchPlayedThisEvent m = this;
 
             m.AddCommitHistory(new Commit(m.NewCommitInstant, TCommitType.COMMIT));
             if (m.StartTime <= DateTimeAsInteger.NegativeOne)
@@ -497,7 +497,7 @@ namespace FEMC.DAL
                 m.MatchState = TMatchState.Committed;
 
                 Database.ThisEvent.CalculateAndSetRankings();
-                // this.event.leagueSystem.calculateAndSetAllLeagueRankings(); // TODO
+                Database.LeagueSubsystem.CalculateAndSetAllLeagueRankings();
 
                 }
             else // if (m.MatchType == TMatchType.ELIMS)
@@ -508,7 +508,7 @@ namespace FEMC.DAL
 
         protected void CommitMatchCore() // MatchDAO.java / commitMatch
             {
-            PlayedMatchThisEvent m = this;
+            MatchPlayedThisEvent m = this;
 
             DateTimeOffset commitTime = m.CommitHistoryLatest.Ts;
 
@@ -531,7 +531,7 @@ namespace FEMC.DAL
                 psHistory.Start.Value = m.StartTime;
                 psHistory.Randomization.Value = (int)m.Randomization;
                 psHistory.CommitType.Value = (int?)m.CommitHistoryLatest.CommitType;
-                psHistory.AddToTableAndSave();
+                psHistory.InsertOrReplace();
                 }
 
             // BLOCK
@@ -542,7 +542,7 @@ namespace FEMC.DAL
                 psResult.BlueScore.Value = m.BlueScore;
                 psResult.RedPenaltyCommitted.Value = m.RedPenalty;
                 psResult.BluePenaltyCommitted.Value = m.BluePenalty;
-                psResult.AddToTableAndSave();
+                psResult.InsertOrReplace();
                 }
 
             // BLOCK
@@ -610,7 +610,7 @@ namespace FEMC.DAL
                 fmsMatch.FMSEventId.Value = m.FMSEventId.Value;             // 30
                 fmsMatch.RowVersion.Value = m.RowVersion.Value;             // 31
 
-                fmsMatch.AddToTableAndSave();
+                fmsMatch.InsertOrReplace();
                 }
 
             foreach (var s in new [] { m.RedScores, m.BlueScores })
@@ -623,7 +623,7 @@ namespace FEMC.DAL
                     psScores.MatchNumber.Value = MatchNumber;
                     psScores.Alliance.Value = alliance;
                     s.Save(psScores);
-                    psScores.AddToTableAndSave();
+                    psScores.InsertOrReplace();
                     }
 
                 // BLOCK
@@ -633,7 +633,7 @@ namespace FEMC.DAL
                     psScoresHistory.Ts.Value = commitTime;
                     psScoresHistory.Alliance.Value = alliance;
                     s.Save(psScoresHistory);
-                    psScoresHistory.AddToTableAndSave();
+                    psScoresHistory.InsertOrReplace();
                     }
 
                 // BLOCK
@@ -642,7 +642,7 @@ namespace FEMC.DAL
                     psGame.MatchNumber.Value = MatchNumber;
                     psGame.Alliance.Value = alliance;
                     s.Save(psGame);
-                    psGame.AddToTableAndSave();
+                    psGame.InsertOrReplace();
                     }
 
                 // BLOCK
@@ -652,7 +652,7 @@ namespace FEMC.DAL
                     psGameHistory.Ts.Value = commitTime;
                     psGameHistory.Alliance.Value = alliance;
                     s.Save(psGameHistory);
-                    psGameHistory.AddToTableAndSave();
+                    psGameHistory.InsertOrReplace();
                     }
                 }
             }

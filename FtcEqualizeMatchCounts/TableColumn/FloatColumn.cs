@@ -42,12 +42,16 @@ namespace FEMC
             SetValue(value != null ? (double?)double.Parse(value) : (double?)null);
             }
 
-        public override void SetValue(object runtimeValue)
+        public override void SetRuntimeValue(object runtimeValue)
             {
             SetValue((double?) runtimeValue);
             }
+        public override object GetRuntimeValue()
+            {
+            return Value;
+            }
 
-        public override void LoadDatabaseValue(object databaseValue)
+        public override void SetDatabaseValue(object databaseValue)
             {
             SetValue((string) databaseValue);
             }

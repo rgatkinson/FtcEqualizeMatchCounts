@@ -19,17 +19,17 @@ namespace FEMC.DAL
             }
 
         public int ScheduledMatchCountThisEvent => ScheduledMatchesThisEvent.Count;
-        public int LeagueHistoryMatchCount => LeagueHistoryMatchesThatCount.Count;
+        public int LeagueHistoryMatchCount => HistoricalMatchesUsed.Count;
         public int PlayedMatchCountThisEvent => PlayedMatchesThisEvent.Count;
         public int EqualizationMatchCount => EqualizationMatches.Count;
         public int AveragingMatchCount => AveragingMatches.Count;
 
-        public List<LeagueHistoryMatch> LeagueHistoryMatchesThatCount = new List<LeagueHistoryMatch>();
+        public List<HistoricalMatch> HistoricalMatchesUsed = new List<HistoricalMatch>();
         public List<Match> AveragingMatches
             {
             get {
                 var result = new List<Match>();
-                result.AddRange(LeagueHistoryMatchesThatCount);
+                result.AddRange(HistoricalMatchesUsed);
                 result.AddRange(EqualizationMatches);
                 return result;
                 }
@@ -51,10 +51,10 @@ namespace FEMC.DAL
                 }
             }
 
-        public List<PlayedMatchThisEvent> PlayedMatchesThisEvent
+        public List<MatchPlayedThisEvent> PlayedMatchesThisEvent
             {
             get {
-                var result = new List<PlayedMatchThisEvent>();
+                var result = new List<MatchPlayedThisEvent>();
                 foreach (var matches in Database.PlayedMatchesByNumber.Values)
                     {
                     foreach (var match in matches)

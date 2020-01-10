@@ -27,7 +27,7 @@ namespace FEMC
         public readonly List<Team>                                       Teams = new List<Team>();
         public readonly IDictionary<long, ScheduledMatch>                ScheduledMatchesByNumber = new Dictionary<long, ScheduledMatch>();
         public readonly IDictionary<FMSScheduleDetailId, ScheduledMatch> ScheduledMatchesById = new Dictionary<FMSScheduleDetailId, ScheduledMatch>();
-        public readonly IDictionary<long, List<PlayedMatchThisEvent>>    PlayedMatchesByNumber = new Dictionary<long, List<PlayedMatchThisEvent>>();
+        public readonly IDictionary<long, List<MatchPlayedThisEvent>>    PlayedMatchesByNumber = new Dictionary<long, List<MatchPlayedThisEvent>>();
         public readonly IDictionary<string, Event>                       EventsByCode = new Dictionary<string, Event>();
         public readonly List<EqualizationMatch>                          NewEqualizationMatches = new List<EqualizationMatch>();
         public readonly List<EqualizationMatch>                          LoadedEqualizationMatches = new List<EqualizationMatch>();
@@ -130,6 +130,10 @@ namespace FEMC
 
             Connection = new SqliteConnection(cs);
             Connection.Open();
+
+            var cmd = Connection.CreateCommand();
+            cmd.CommandText = "PRAGMA foreign_keys = ON;";
+            cmd.ExecuteNonQuery();
             }
 
         public bool IsTransactionInProgress => Transaction != null;
@@ -311,13 +315,13 @@ namespace FEMC
             // fmsMatch
             foreach (var row in Tables.Match.Rows)
                 {
-                PlayedMatchThisEvent playedMatch = new PlayedMatchThisEvent(this, row);
-                if (!PlayedMatchesByNumber.TryGetValue(playedMatch.MatchNumber, out List<PlayedMatchThisEvent> playedMatches))
+                MatchPlayedThisEvent matchPlayed = new MatchPlayedThisEvent(this, row);
+                if (!PlayedMatchesByNumber.TryGetValue(matchPlayed.MatchNumber, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    playedMatches = new List<PlayedMatchThisEvent>();
-                    PlayedMatchesByNumber[playedMatch.MatchNumber] = playedMatches;
+                    playedMatches = new List<MatchPlayedThisEvent>();
+                    PlayedMatchesByNumber[matchPlayed.MatchNumber] = playedMatches;
                     }
-                playedMatches.Add(playedMatch);
+                playedMatches.Add(matchPlayed);
                 }
             foreach (var matches in PlayedMatchesByNumber.Values)
                 {
@@ -327,9 +331,9 @@ namespace FEMC
             // psData
             foreach (var row in Tables.QualsData.Rows.Concat(Tables.ElimsData.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -339,9 +343,9 @@ namespace FEMC
             // psScores
             foreach (var row in Tables.QualsScores.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -349,9 +353,9 @@ namespace FEMC
                 }
             foreach (var row in Tables.ElimsScores.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -361,9 +365,9 @@ namespace FEMC
             // psGame
             foreach (var row in Tables.QualsGameSpecific.Rows.Concat(Tables.ElimsGameSpecific.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -373,9 +377,9 @@ namespace FEMC
             // psResult
             foreach (var row in Tables.QualsResults.Rows.Concat(Tables.ElimsResults.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -385,9 +389,9 @@ namespace FEMC
             // psHistory
             foreach (var row in Tables.QualsCommitHistory.Rows.Concat(Tables.ElimsCommitHistory.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -397,9 +401,9 @@ namespace FEMC
             // psScoresHistory
             foreach (var row in Tables.QualsScoresHistory.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -407,9 +411,9 @@ namespace FEMC
                 }
             foreach (var row in Tables.ElimsScoresHistory.Rows)
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
@@ -419,16 +423,16 @@ namespace FEMC
             // psGameHistory
             foreach (var row in Tables.QualsGameSpecificHistory.Rows.Concat(Tables.ElimsGameSpecificHistory.Rows))
                 {
-                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<PlayedMatchThisEvent> playedMatches))
+                if (PlayedMatchesByNumber.TryGetValue(row.MatchNumber.NonNullValue, out List<MatchPlayedThisEvent> playedMatches))
                     {
-                    foreach (PlayedMatchThisEvent match in playedMatches)
+                    foreach (MatchPlayedThisEvent match in playedMatches)
                         {
                         match.Load(row);
                         }
                     }
                 }
 
-            LeagueSubsystem.DetermineLeagueMatchesThatCount(programOptions.LeagueMatchesToConsider);
+            LeagueSubsystem.Load();
             }
 
         public void ReportEvents(IndentedTextWriter writer)

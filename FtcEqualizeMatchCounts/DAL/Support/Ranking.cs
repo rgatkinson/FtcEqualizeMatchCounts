@@ -23,6 +23,11 @@ namespace FEMC.DAL.Support
         public List<int> HighestMatches = new List<int>();
         public List<int> HighestTBP = new List<int>();
 
+        public override string ToString()
+            {
+            return $"{GetType().Name}: {Team.TeamNumber}: RP={RankingPoints}, TBP={TieBreakingPoints} Played={MatchesPlayed}";
+            }
+
         public int TotalScore => HighestMatches.Sum();
         public int AverageScore => MatchesPlayed==0 ? 0 : TotalScore / MatchesPlayed; // TODO: rounding? ScoreKeeper has bug (they use int division; we mirror)?
         public int Highest => HighestMatches.Count==0 ? 0 : HighestMatches[0];
@@ -147,14 +152,13 @@ namespace FEMC.DAL.Support
             List<Ranking> sortedRankings = new List<Ranking>(rankings);
 
             int i;
-            sortedRankings.Sort((ranking1, ranking2) => ranking2.Team.TeamNumber - ranking1.Team.TeamNumber);
+            sortedRankings.Sort((ranking1, ranking2) => ranking2.Team.TeamNumber - ranking1.Team.TeamNumber); // decreasing, don't know why
 
             List<int> randomNumbers = new List<int>();
             for (i = 0; i < sortedRankings.Count; i++)
                 {
                 randomNumbers.Add(i);
                 }
-
             randomNumbers.Shuffle(randomSeed);
 
             for (i = 0; i < sortedRankings.Count; ++i)

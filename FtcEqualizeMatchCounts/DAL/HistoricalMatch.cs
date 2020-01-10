@@ -5,7 +5,7 @@ using FEMC.Enums;
 
 namespace FEMC.DAL
     {
-    class LeagueHistoryMatch : Match, IPlayedMatch
+    class HistoricalMatch : Match, IPlayedMatch
         {
         //----------------------------------------------------------------------------------------
         // Accessing
@@ -30,7 +30,7 @@ namespace FEMC.DAL
         // Construction
         //----------------------------------------------------------------------------------------
 
-        public LeagueHistoryMatch(Database db, string eventCode, long matchNumber) : base(db)
+        public HistoricalMatch(Database db, string eventCode, long matchNumber) : base(db)
             {
             this.eventCode = eventCode;
             this.matchNumber = matchNumber;

@@ -6,13 +6,13 @@ namespace FEMC.DBTables
         {
         public class Row : TableRow<Row, StringColumn>
             {
-            public StringColumn Code;
+            public StringColumn LeagueCode;
             public StringColumn Name;
             public StringColumn Country;
             public StringColumn State;
             public StringColumn City;
 
-            public override StringColumn PrimaryKey => Code;
+            public override StringColumn PrimaryKey => LeagueCode;
             }
 
         public LeagueInfo(Database database) : base(database)

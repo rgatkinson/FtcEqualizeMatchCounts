@@ -14,7 +14,7 @@ namespace FEMC
         // State
         //----------------------------------------------------------------------------------------------------------------------
 
-        public AbstractTable<TableRow<TRow, TPrimaryKey>> Table = null;
+        public AbstractTable<TableRow<TRow, TPrimaryKey>, TPrimaryKey> Table = null;
         public List<FieldInfo> LocalStoredFields => localStoredFields;
 
         private List<FieldInfo> localStoredFields;
@@ -131,10 +131,14 @@ namespace FEMC
         // "we embrace the fact that SQLite only supports four primitive types (INTEGER, REAL, TEXT, and BLOB)
         // and implement ADO.NET APIs in a way that helps you coerce values between these and .NET types"
         // 
-        public void SetFieldFromDatabase(int index, object databaseValue)
+        public void SetDatabaseValue(int index, object databaseValue)
             {
             FieldInfo field = LocalStoredFields[index];
+            SetDatabaseValue(field, databaseValue);
+            }
 
+        public void SetDatabaseValue(FieldInfo field, object databaseValue)
+            { 
             if (field.FieldType == typeof(string))
                 {
                 field.SetValue(this, databaseValue);
@@ -150,16 +154,41 @@ namespace FEMC
             else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
                 {
                 TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
-                column.LoadDatabaseValue(databaseValue);
+                column.SetDatabaseValue(databaseValue);
                 field.SetValue(this, column);
                 }
             else
                 {
-                throw new NotImplementedException($"FileType={field.FieldType} not yet implemented");
+                throw new NotImplementedException($"FieldType={field.FieldType} not yet implemented");
                 }
             }
 
-        public object AsDatabaseValue(FieldInfo field, object value)
+        public object GetDatabaseValue(FieldInfo field)
+            {
+            if (field.FieldType == typeof(string))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(long))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType == typeof(double))
+                {
+                return field.GetValue(this);
+                }
+            else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
+                {
+                TableColumn column = (TableColumn)field.GetValue(this);
+                return column.GetDatabaseValue();
+                }
+            else
+                {
+                throw new NotImplementedException($"FieldType={field.FieldType} not yet implemented");
+                }
+            }
+
+        public static object AsDatabaseValue(FieldInfo field, object value)
             {
             if (field.FieldType == typeof(string))
                 {
@@ -176,12 +205,12 @@ namespace FEMC
             else if (field.FieldType.IsSubclassOf(typeof(TableColumn)))
                 {
                 TableColumn column = (TableColumn)Activator.CreateInstance(field.FieldType);
-                column.SetValue(value);
+                column.SetRuntimeValue(value);
                 return column.GetDatabaseValue();
                 }
             else
                 {
-                throw new NotImplementedException($"FileType={field.FieldType} not yet implemented");
+                throw new NotImplementedException($"FieldType={field.FieldType} not yet implemented");
                 }
             }
 
@@ -222,6 +251,11 @@ namespace FEMC
 
             cmd.CommandText = builder.ToString();
             var cRows = cmd.ExecuteNonQuery();
+
+            foreach (var existingRow in Table.RowsWhere(whereArray))
+                {
+                Table.DeleteRow(existingRow);
+                }
             }
 
         protected void AppendWhere(StringBuilder builder, SqliteCommand cmd, IEnumerable<(FieldInfo, SqlOperator, object)> whereArray)
@@ -285,14 +319,35 @@ namespace FEMC
                 {
                 throw new UnexpectedRowCountException("UPDATE", Table.TableName, 1, cRows);
                 }
+
+            // Update our loaded table too
+            foreach (var existing in Table.RowsWhere(whereArray))
+                {
+                foreach (var field in columnsArray)
+                    {
+                    object databaseValue = GetDatabaseValue(field);
+                    existing.SetDatabaseValue(field, databaseValue);
+                    }
+                }
             }
 
-        public void SaveToDatabase()
+        public void InsertOrReplace()
+            {
+            InsertReplaceCore(true);
+            }
+
+        public void Insert()
+            {
+            InsertReplaceCore(false);
+            }
+
+        protected void InsertReplaceCore(bool allowReplace)
             {
             using var cmd = Table.Database.Connection.CreateCommand();
 
             StringBuilder builder = new StringBuilder();
-            builder.Append($"INSERT INTO { Table.TableName } VALUES (");
+            string verb = allowReplace ? "INSERT OR REPLACE" : "INSERT";
+            builder.Append($"{verb} INTO { Table.TableName } VALUES (");
 
             bool first = true;
             foreach (FieldInfo field in LocalStoredFields)
@@ -313,13 +368,14 @@ namespace FEMC
             var cRows = cmd.ExecuteNonQuery();
             if (cRows != 1)
                 {
-                throw new UnexpectedRowCountException("INSERT", Table.TableName, 1, cRows);
+                throw new UnexpectedRowCountException(verb, Table.TableName, 1, cRows);
                 }
-            }
 
-        public void AddToTable()
-            {
-            Table.AddRow(this);
+            if (allowReplace)
+                {
+                Table.DeleteRowWithKey(PrimaryKey);
+                }
+            Table.InsertRow(this);
             }
 
         protected void SetParameterValue(SqliteParameter parameter, FieldInfo field)
@@ -361,12 +417,5 @@ namespace FEMC
                 }
             return result;
             }
-
-        public void AddToTableAndSave()
-            {
-            AddToTable();
-            SaveToDatabase();
-            }
-
         }
     }

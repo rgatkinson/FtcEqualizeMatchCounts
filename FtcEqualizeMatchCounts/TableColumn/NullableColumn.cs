@@ -38,7 +38,7 @@ namespace FEMC
             Value = value;
             }
 
-        public override void LoadDatabaseValue(object databaseValue)
+        public override void SetDatabaseValue(object databaseValue)
             {
             LoadDatabaseValue((T?)databaseValue);
             }
@@ -53,9 +53,14 @@ namespace FEMC
             Value = t;
             }
 
-        public override void SetValue(object runtimeValue)
+        public override void SetRuntimeValue(object runtimeValue)
             {
             SetValue((T?)runtimeValue);
+            }
+
+        public override object GetRuntimeValue()
+            {
+            return Value;
             }
         }
     }

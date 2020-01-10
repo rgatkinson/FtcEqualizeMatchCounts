@@ -54,9 +54,9 @@ namespace FEMC.DAL
         //----------------------------------------------------------------------------------------
 
         // Play this match with the required Win for Blue
-        protected PlayedMatchThisEvent PlayMatch()
+        protected MatchPlayedThisEvent PlayMatch()
             {
-            PlayedMatchThisEvent m = new PlayedMatchThisEvent(Database, FMSScheduleDetailId);
+            MatchPlayedThisEvent m = new MatchPlayedThisEvent(Database, FMSScheduleDetailId);
             // match.MatchNumber = MatchNumber; // not needed: match number comes via FMSScheduleDetailId
             m.FmsMatchId.Value = FMSMatchIdGuid;
             m.PlayNumber = 1; // odd, but that's what SQLiteMachDAO.commitMatch() does
@@ -112,8 +112,8 @@ namespace FEMC.DAL
             matchScheduleRow.Type.Value = blocksRow.Type.Value;
             matchScheduleRow.Label.Value = blocksRow.Label.Value;
 
-            blocksRow.AddToTableAndSave();
-            matchScheduleRow.AddToTableAndSave();
+            blocksRow.Insert();
+            matchScheduleRow.Insert();
             }
 
         public static void SaveEqualizationMatchesBlock(Database db, DateTimeOffset start, int count)
@@ -126,7 +126,7 @@ namespace FEMC.DAL
             blocksRow.Count.Value = count;
             blocksRow.Label.Value = null;
 
-            blocksRow.AddToTableAndSave();
+            blocksRow.Insert();
             }
 
         public void SaveToDatabase()
@@ -174,10 +174,10 @@ namespace FEMC.DAL
             matchScheduleRow.Type.Value = (int)TMatchScheduleType.Match;
             matchScheduleRow.Label.Value = Description;
 
-            scheduledMatchRow.AddToTableAndSave();
-            qualsRow.AddToTableAndSave();
-            qualsDataRow.AddToTableAndSave();
-            matchScheduleRow.AddToTableAndSave();
+            scheduledMatchRow.Insert();
+            qualsRow.Insert();
+            qualsDataRow.Insert();
+            matchScheduleRow.Insert();
 
             foreach (var alliance in EnumUtil.GetValues<TAlliance>())
                 {
@@ -198,14 +198,14 @@ namespace FEMC.DAL
                     row.ModifedOn = scheduledMatchRow.ModifiedOn;
                     row.ModifiedBy = scheduledMatchRow.ModifiedBy;
 
-                    row.AddToTableAndSave();
+                    row.Insert();
                     }
                 }
             }
 
         public void ScoreMatch()
             {
-            PlayedMatchThisEvent m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
+            MatchPlayedThisEvent m = PlayMatch();   // See SQLiteMatchDAO.java.commitMatch()
 
             m.SaveNonCommitMatchHistory(TCommitType.EDIT_SAVED); // mirror what we see ScoreKeeper do
             m.CommitMatch();

@@ -92,6 +92,17 @@ namespace FEMC
             }
         }
 
+    public static class CollectionUtil
+        {
+        public static void AddAll<T>(this ICollection<T> self, ICollection<T> them)
+            {
+            foreach (var it in them)
+                {
+                self.Add(it);
+                }
+            }
+        }
+
     public class StringValue : Attribute
         {
         public string Value { get; private set; }

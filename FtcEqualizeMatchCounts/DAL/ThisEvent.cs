@@ -14,7 +14,7 @@ namespace FEMC.DAL
         // State
         //----------------------------------------------------------------------------------------
 
-        protected readonly IDictionary<long, Ranking> rankings = new Dictionary<long, Ranking>();
+        protected readonly IDictionary<long, Ranking> calculatedRankings = new Dictionary<long, Ranking>();
 
         //----------------------------------------------------------------------------------------
         // Construction
@@ -50,7 +50,7 @@ namespace FEMC.DAL
             {
             get {
                 List<Ranking> result = new List<Ranking>();
-                foreach (var ranking in rankings.Values)
+                foreach (var ranking in calculatedRankings.Values)
                     {
                     result.Add(ranking.Copy());
                     }
@@ -61,10 +61,10 @@ namespace FEMC.DAL
 
         public void CalculateAndSetRankings()
             {
-            rankings.Clear();
+            calculatedRankings.Clear();
             foreach (var pair in CalculateRankings())
                 {
-                rankings.Add(pair);
+                calculatedRankings.Add(pair);
                 }
             SaveRankings(RankingsList);
             }
@@ -96,41 +96,57 @@ namespace FEMC.DAL
                 row.SortOrder5.Value = 0;
                 row.SortOrder6.Value = 0;
                 row.ModifiedOn.Value = r.Timestamp;
-                row.AddToTableAndSave();
+                row.InsertOrReplace();
                 }
             }
 
         protected IDictionary<long, Ranking> CalculateRankings() // MatchSubsystem.java / calculateRankings
             {
             IDictionary<long, Ranking> rankings = new Dictionary<long, Ranking>(); // key is team number
-            TRankingType type = Ranking.GetType(Database.ThisEventMatchesPerTeam);
 
+            TRankingType type = Ranking.GetType(Database.ThisEventMatchesPerTeam);
             foreach (var team in SimpleTeams)
                 {
                 rankings[team.TeamNumber] = new Ranking(type, team);
                 }
 
-            List<PlayedMatchThisEvent> playedMatches = new List<PlayedMatchThisEvent>(CommittedQualsMatches);
-            playedMatches.Sort((m1, m2) => (int)(m1.MatchNumber - m2.MatchNumber));
-
-            foreach (var m in playedMatches)
-                {
-                foreach (var result in m.MatchResults)
-                    {
-                    rankings[result.TeamNumber].AddMatch((int)result.RankingPoints, (int)result.Score, (int)result.TieBreakingPoints, result.DQorNoShow, result.Outcome);
-                    }
-                }
-
+            AddThisEventRankings(rankings);
             Ranking.SortRankings(rankings.Values, Environment.TickCount);
             return rankings;
             }
 
-        protected IEnumerable<PlayedMatchThisEvent> CommittedQualsMatches
+        public void AddThisEventRankings(IDictionary<long, Ranking> rankings)
+            {
+            IEnumerable<MatchPlayedThisEvent> playedMatches = CommittedQualsMatchesByMatchNumber;
+            foreach (var m in playedMatches)
+                {
+                foreach (var result in m.MatchResults)
+                    {
+                    // Paranoia: be robust about missing teams
+                    if (!rankings.TryGetValue(result.TeamNumber, out var ranking))
+                        {
+                        ranking = new Ranking(Ranking.GetType(Database.ThisEventMatchesPerTeam), new SimpleTeam(result.TeamNumber));
+                        rankings[result.TeamNumber] = ranking;
+                        }
+                    ranking.AddMatch((int)result.RankingPoints, (int)result.Score, (int)result.TieBreakingPoints, result.DQorNoShow, result.Outcome);
+                    }
+                }
+            }
+
+        public IEnumerable<MatchPlayedThisEvent> CommittedQualsMatchesByMatchNumber
+            {
+            get
+                {
+                return CommittedQualsMatches.OrderBy(match => match.MatchNumber);
+                }
+            }
+
+        public IEnumerable<MatchPlayedThisEvent> CommittedQualsMatches
             {
             get {
                 foreach (var matches in Database.PlayedMatchesByNumber.Values) // sorted descending by play number
                     {
-                    PlayedMatchThisEvent match = matches[0];
+                    MatchPlayedThisEvent match = matches[0];
                     if (match.IsQual && match.MatchState == TMatchState.Committed)
                         {
                         yield return match;

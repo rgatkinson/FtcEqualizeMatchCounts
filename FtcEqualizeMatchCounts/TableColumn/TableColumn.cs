@@ -7,22 +7,23 @@ namespace FEMC
     {
     abstract class TableColumn
         {
-        public static T CreateFromValue<T>(object value) where T: TableColumn, new()
+        public static T CreateFromRuntimeValue<T>(object value) where T: TableColumn, new()
             {
             T t = new T();
-            t.SetValue(value);
+            t.SetRuntimeValue(value);
             return t;
             }
 
         public static T CreateFromDatabaseValue<T>(object databaseValue) where T : TableColumn, new()
             {
             T t = new T();
-            t.LoadDatabaseValue(databaseValue);
+            t.SetDatabaseValue(databaseValue);
             return t;
             }
 
-        public abstract void SetValue(object runtimeValue);
-        public abstract void LoadDatabaseValue(object databaseValue);
+        public abstract void SetRuntimeValue(object runtimeValue);
+        public abstract object GetRuntimeValue();
+        public abstract void SetDatabaseValue(object databaseValue);
         public abstract object GetDatabaseValue();
 
         public void SaveDatabaseValue(SqliteParameter parameter)

@@ -17,12 +17,17 @@ namespace FEMC
             Value = value;
             }
 
-        public override void SetValue(object runtimeValue)
+        public override void SetRuntimeValue(object runtimeValue)
             {
             SetValue((byte[])runtimeValue);
             }
 
-        public override void LoadDatabaseValue(object databaseValue)
+        public override object GetRuntimeValue()
+            {
+            return Value;
+            }
+
+        public override void SetDatabaseValue(object databaseValue)
             {
             SetValue((byte[])databaseValue);
             }

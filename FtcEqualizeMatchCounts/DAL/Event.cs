@@ -51,7 +51,7 @@ namespace FEMC.DAL
             Status = status;
             }
 
-        public void AddMatch(LeagueHistoryMatch match)
+        public void AddMatch(HistoricalMatch match)
             {
             Matches.Add(match);
             }

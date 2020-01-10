@@ -125,7 +125,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAL\EqualizationMatch.cs" />
-    <Compile Include="DAL\LeagueHistoryMatch.cs" />
+    <Compile Include="DAL\HistoricalMatch.cs" />
+    <Compile Include="DAL\LeagueData.cs" />
     <Compile Include="DAL\LeagueSubsystem.cs" />
     <Compile Include="DAL\MatchResult.cs" />
     <Compile Include="DAL\IPlayedMatch.cs" />
@@ -162,7 +163,7 @@
     <Compile Include="DBTables\LeagueMeets.cs" />
     <Compile Include="DAL\Event.cs" />
     <Compile Include="DAL\ScheduledMatch.cs" />
-    <Compile Include="DAL\PlayedMatchThisEvent.cs" />
+    <Compile Include="DAL\MatchPlayedThisEvent.cs" />
     <Compile Include="DBTables\Blocks.cs" />
     <Compile Include="DBTables\PhaseCommitHistory.cs" />
     <Compile Include="DBTables\PhaseResults.cs" />

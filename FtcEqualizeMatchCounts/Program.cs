@@ -52,16 +52,16 @@ namespace FEMC
             return copyrightAttr?.Copyright;
             }
 
-        private OptionSet options;
-        private Program program;
+        private OptionSet Options;
+        private Program Program;
 
         public ProgramOptions(Program program)
             {
-            this.program = program;
-            options = new OptionSet
+            this.Program = program;
+            Options = new OptionSet
                 {
                     { "m|max",     $"equalize to the maximum number of averaging matches of any team (default)", (string m) => OptionMGiven = m != null },
-                    { "c=|count=", $"equalize to the indicated number of averaging matches", (int count) => { AveragingMatchCountCap = count; OptionCGiven = true; } },
+                    { "c=|count=", $"equalize to the (at most) this number of averaging matches", (int count) => { AveragingMatchCountCap = count; OptionCGiven = true; } },
                     { "f=|file=",  $"the name of the scoring database", (string f) => Filename = f },
                     { "s|score",   $"automatically score equalization matches", (string s) => ScoreEqualizationMatches = s != null },
                     { "v|verbose", $"use verbose reporting", (string v) => Verbose = v != null },
@@ -87,7 +87,7 @@ namespace FEMC
             {
             try
                 {
-                ExtraOptions = options.Parse(args);
+                ExtraOptions = Options.Parse(args);
                 if (Filename == null && ExtraOptions.Count > 0)
                     {
                     Filename = ExtraOptions[0];
@@ -146,7 +146,7 @@ namespace FEMC
 
         private void Throw(string message, string optionName = null)
             {
-            throw new OptionException(options.MessageLocalizer($"Error: { message }"), optionName);
+            throw new OptionException(Options.MessageLocalizer($"Error: { message }"), optionName);
             }
 
 
@@ -154,7 +154,7 @@ namespace FEMC
             {
             IndentedTextWriter writer = StdErr;
 
-            program.OutputBannerAndCopyright(writer);
+            Program.OutputBannerAndCopyright(writer);
 
             if (e != null)
                 {
@@ -163,13 +163,28 @@ namespace FEMC
 
             writer.WriteLine($"Usage: { ProgramName } [OPTIONS]* scoringDatabase.db:");
             writer.Indent++;
-            writer.WriteLine("Equalize the number of Averaging Matches of all teams in the FTC scoring database");
-            writer.WriteLine("by adding never-played Equalization Matches as necessary. After importing into ");
-            writer.WriteLine("the FTC Score Keeper, these added matches need to be manually scored as Wins for Blue.");
+            writer.WriteLine("Equalize the number of Averaging Matches of all teams in the FTC scoring database by");
+            writer.WriteLine("adding never-to-be-played Equalization Matches as necessary to achieve for each the team");
+            writer.WriteLine("an averaging match count that is at least the indicated averaging match count goal.");
+            writer.WriteLine();
+            writer.WriteLine("If the -s option is used, then these added Equalization Matches are scored automatically.");
+            writer.WriteLine("Otherwise, after importing the updated database into the FTC Score Keeper, these added ");
+            writer.WriteLine("matches need to be manually scored as Wins for Blue.");
+            writer.WriteLine();
+            writer.WriteLine("In no case are any matches ever *removed*.");
             writer.WriteLine();
             writer.Indent--;
             writer.WriteLine("Options:");
-            options.WriteOptionDescriptions(writer);
+            Options.WriteOptionDescriptions(writer);
+            writer.WriteLine();
+            writer.Indent++;
+            writer.WriteLine("If both -m and -c are used, the averaging match count goal will be the maximum current ");
+            writer.WriteLine("averaging match count of any existing team, but capped by the value provided with -c.");
+            writer.WriteLine();
+            writer.WriteLine("If -m is used without -c, the behavior is as if both -m and -c 10 were used.");
+            writer.WriteLine();
+            writer.WriteLine("If -c is used without -m, the averaging match count goal is the value provided.");
+            writer.Indent--;
             if (e==null)
                 Program.ExitApp();
             else

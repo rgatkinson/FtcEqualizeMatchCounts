@@ -2,11 +2,16 @@
 using FEMC.Enums;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace FEMC.DAL.Support
     {
     class Ranking : IComparable<Ranking>
         {
+        //------------------------------------------------------------------------------------
+        // State
+        //------------------------------------------------------------------------------------
+
         public TRankingType RankingType;
         public int RankingPoints;
         public int TieBreakingPoints;
@@ -32,11 +37,30 @@ namespace FEMC.DAL.Support
         public int AverageScore => MatchesPlayed==0 ? 0 : TotalScore / MatchesPlayed; // TODO: rounding? ScoreKeeper has bug (they use int division; we mirror)?
         public int Highest => HighestMatches.Count==0 ? 0 : HighestMatches[0];
 
-        public void SetRanking(int ranking, DateTimeOffset timestamp)
+        public static readonly string RANKING_FORMAT = DecimalFormat("0.00");
+        public static readonly string TBP_RANKING_FORMAT = DecimalFormat("##0.0");
+
+        // DisplayedRankingPoints and DisplayedTieBreakingPoints reflect what is *actually* shown on the pit display screen
+        public string DisplayedRankingPoints => MatchesPlayed==0 ? "--" : string.Format(RANKING_FORMAT, (double)RankingPoints / (double)MatchesPlayed);
+        public string DisplayedTieBreakingPoints => MatchesPlayed == 0 ? "--" : string.Format(TBP_RANKING_FORMAT, (double)TieBreakingPoints / (double)TBPMatchesPlayed);
+
+        protected static string DecimalFormat(string format)
             {
-            RankingValue = ranking;
-            Timestamp = timestamp;
+            StringBuilder result = new StringBuilder();
+            result.Append("{0:");
+            result.Append(format);
+            result.Append("}");
+            return result.ToString();
             }
+
+        public static TRankingType GetType(int matchCount)
+            {
+            return matchCount > 6 ? TRankingType.MORE_THAN_6 : TRankingType.LESS_THAN_7;
+            }
+
+        //------------------------------------------------------------------------------------
+        // Construction
+        //------------------------------------------------------------------------------------
 
         public Ranking(TRankingType rankingType, SimpleTeam team)
             {
@@ -70,7 +94,7 @@ namespace FEMC.DAL.Support
                 HighestTBP.Sort((m1, m2) => m1 - m2);
                 }
 
-            TBPMatchesPlayed = getTBPMatchesPlayed(RankingType, MatchesPlayed, NumDQedOrNoShow);
+            TBPMatchesPlayed = GetTBPMatchesPlayed(RankingType, MatchesPlayed, NumDQedOrNoShow);
             HighestMatches.Add(total);
             HighestTBP.Sort((m1, m2) => m1 - m2);
 
@@ -91,7 +115,7 @@ namespace FEMC.DAL.Support
                 }
             }
 
-        public static int getTBPMatchesPlayed(TRankingType type, int matchesPlayed, int numDQedOrNoShow)
+        protected static int GetTBPMatchesPlayed(TRankingType type, int matchesPlayed, int numDQedOrNoShow)
             {
             int eligibleToDrop = matchesPlayed - numDQedOrNoShow;
             int TBPMatchesPlayed;
@@ -106,6 +130,16 @@ namespace FEMC.DAL.Support
 
             TBPMatchesPlayed = Math.Max(1, TBPMatchesPlayed);
             return TBPMatchesPlayed;
+            }
+
+        //------------------------------------------------------------------------------------
+        // Accessing
+        //------------------------------------------------------------------------------------
+
+        public void SetRanking(int ranking, DateTimeOffset timestamp)
+            {
+            RankingValue = ranking;
+            Timestamp = timestamp;
             }
 
         public int CompareTo(Ranking them)
@@ -184,9 +218,5 @@ namespace FEMC.DAL.Support
                 }
             }
 
-        public static TRankingType GetType(int matchCount)
-            {
-            return matchCount > 6 ? TRankingType.MORE_THAN_6 : TRankingType.LESS_THAN_7;
-            }
         }
     }

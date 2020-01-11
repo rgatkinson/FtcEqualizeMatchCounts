@@ -34,7 +34,7 @@ namespace FEMC.DAL
         public void CalculateAndSetAllLeagueRankings() // leagueSubsystem.java / calculateAndSetAllLeagueRankings()
             {
             CombinedLeagueRankings.Clear();
-            CombinedLeagueRankings.AddAll(CalculateLeagueRankings());
+            CombinedLeagueRankings.AddAll(CalculateLeagueRankings(false));
             }
 
         public void CreateExportTemp() // see LeagueRoutesLogic.java / createExportTemp
@@ -89,12 +89,12 @@ namespace FEMC.DAL
             {
             MakeHistoricalMatches();
             LeagueMatchHistory = GetLeagueMatchHistory; // team -> MatchResults
-            CalculateLeagueRankings(); // for its side-effects
+            CalculateLeagueRankings(true); // for its side-effects
             }
 
         // Modelled after LeagueSubsystem.java / CalculateLeagueRankings
         // But we only for the current league. Side effect of setting LeagueMatchHistoryUsed in teams
-        public IDictionary<long, Ranking> CalculateLeagueRankings()
+        public IDictionary<long, Ranking> CalculateLeagueRankings(bool updateHistoricalMatchesUsed)
             {
             IDictionary<long, Ranking> rankings = new Dictionary<long, Ranking>();
 
@@ -157,7 +157,7 @@ namespace FEMC.DAL
                     (string, long) key = (matchResult.EventCode, matchResult.MatchNumber);
                     usedHistoricalMatchesThisTeam.Add(HistoricalMatchesByEventAndMatchNumber[key]);
                     }
-                if (Database.TeamsByNumber.TryGetValue(tx, out Team team))
+                if (updateHistoricalMatchesUsed && Database.TeamsByNumber.TryGetValue(tx, out Team team))
                     {
                     team.HistoricalMatchesUsed = usedHistoricalMatchesThisTeam; // must NEVER include matches from this event
                     }

@@ -1,7 +1,7 @@
 # FtcEqualizeMatchCounts
 
 ## Summary
-``FtcEqualizeMatchCounts`` is a tool for editing the database used by the [First Tech Challenge ScoreKeeper software](https://github.com/FIRST-Tech-Challenge/scorekeeper) so as that at the start of a League Tournament all teams have the same number of Averaging Matches accrued from prior League Meets. The tool does this by adding never-to-be-played Equalization Matches to the event schedule as necessary. After importing the edited database back into ScoreKeeper, these Equalization Matches need to be manually scored as Wins for Blue (unless the ``-s`` option is used). Equalization Matches are clearly distinguished from other Qualification Matches by having a match number of 1000 or more.
+``FtcEqualizeMatchCounts`` is a tool for editing the database used by the [First Tech Challenge ScoreKeeper software](https://github.com/FIRST-Tech-Challenge/scorekeeper) so as that at the start of a League Tournament all teams have the same number of Averaging Matches accrued from prior League Meets. The tool does this by adding never-to-be-played Equalization Matches to the event schedule as necessary. After importing the edited database back into ScoreKeeper, these Equalization Matches need to be manually scored as shutout Wins for Blue (unless the ``-s`` option is used). Equalization Matches are clearly distinguished from other Qualification Matches by having a match number of 1000 or more.
 
 ## Installation
 ``FtcEqualizeMatchCounts`` is a Windows-only command line tool. To install, run the ``Setup`` program found in the release. Once installed, run the 'FTC Equalize Match Counts Command Prompt' item from the Start Menu to open a command prompt window with the tool in scope. Running ``FtcEqualizeMatchCounts -?`` will then print a brief usage message.
@@ -19,5 +19,5 @@ To use the tool proceed as follows.
 *	Import the now-modified database using ‘Data Import’ on that same page
 *	(Optional): Observe the added Equalization Matches on the Match Schedule
 *	Finish setting up the event if needed
-*	If the ``-s`` option was not used to automatically score added Equalization Matches, then on the Match Control Page use ‘Enter Scores’ to score each Equalization Match as a win for Blue
+*	If the ``-s`` option was not used to automatically score added Equalization Matches, then on the Match Control Page use ‘Enter Scores’ to score each Equalization Match as a Win for Blue with zero points for Red.
 

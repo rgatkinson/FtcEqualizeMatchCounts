@@ -91,12 +91,12 @@ namespace FEMC.DAL.Support
             else
                 {
                 HighestTBP.Add(TBP);
-                HighestTBP.Sort((m1, m2) => m1 - m2);
+                HighestTBP.Sort((m1, m2) => m2 - m1); // decreasing order
                 }
 
             TBPMatchesPlayed = GetTBPMatchesPlayed(RankingType, MatchesPlayed, NumDQedOrNoShow);
             HighestMatches.Add(total);
-            HighestTBP.Sort((m1, m2) => m1 - m2);
+            HighestMatches.Sort((m1, m2) => m2 - m1);
 
             TieBreakingPoints = HighestTBP.Take(Math.Max(TBPMatchesPlayed - NumDQedOrNoShow, 0)).Sum();
             switch (outcome)
@@ -171,7 +171,7 @@ namespace FEMC.DAL.Support
                         score = HighestMatches[0] - them.HighestMatches[0];
                         if (score == 0)
                             {
-                            score = Random - them.Random;
+                            score = Random - them.Random; // TODO: Shouldn't we use random even if there are no highest matches?
                             }
                         }
 

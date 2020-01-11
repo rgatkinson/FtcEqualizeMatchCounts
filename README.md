@@ -13,11 +13,11 @@ To use the tool proceed as follows.
 *	Run ``FTCEqualizeMatchCounts event.db`` to edit the database.
     - The default options are usually sufficient
     - The default is to bring all teams up to the same Averaging Match count; this may be ten or less than ten, depending on league history. Use ``-c 10`` if exactly ten averaging matches is desired.
-    - Added Equalization Matches are not automatically scored by default, but can be by using the -s option, though at present this option has received less testing than the rest of the logic.
+    - Added Equalization Matches are not automatically scored by default, but can be by using the ``-s`` option, though at present this option has received less testing than the rest of the logic.
     - Note: a backup of the unmodified database file is made before changes are made
 *	Return to ScoreKeeper and ‘hide’ the event using ‘Event Hiding’ on the ‘Event Admin / Server’ page.
 *	Import the now-modified database using ‘Data Import’ on that same page
 *	(Optional): Observe the added Equalization Matches on the Match Schedule
 *	Finish setting up the event if needed
-*	If the -s option was not used to automatically score added Equalization Matches, then on the Match Control Page use ‘Enter Scores’ to score each Equalization Match as a win for Blue
+*	If the ``-s`` option was not used to automatically score added Equalization Matches, then on the Match Control Page use ‘Enter Scores’ to score each Equalization Match as a win for Blue
 
